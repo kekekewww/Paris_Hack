@@ -2,7 +2,7 @@ import { ServiceError } from './service-error.js';
 
 /** HTTP implementation of the shared claim service contract. */
 export class ApiClaimService {
-  constructor({ baseUrl = '/api/v1', timeout = 15000, fetchImpl = globalThis.fetch } = {}) {
+  constructor({ baseUrl = '/api/v1', timeout = 15000, analysisTimeout = 95000, messageTimeout = 50000, fetchImpl = globalThis.fetch } = {}) {
     // Backslashes can be treated as URL separators by browsers. Keep document
     // uploads on a same-origin path, including when configuration is supplied.
     if (typeof baseUrl !== 'string' || !/^\/(?!\/)/.test(baseUrl) || /[\\?#\s]/.test(baseUrl)) {
@@ -17,10 +17,15 @@ export class ApiClaimService {
     this.baseUrl = baseUrl.replace(/\/+$/, '');
     this.mode = 'api';
     this.timeout = timeout;
-    this.fetchImpl = fetchImpl;
+    if (!Number.isFinite(analysisTimeout) || analysisTimeout <= 0) throw new TypeError('文件分析逾時時間必須大於零。');
+    this.analysisTimeout = analysisTimeout;
+    if (!Number.isFinite(messageTimeout) || messageTimeout <= 0) throw new TypeError('對話逾時時間必須大於零。');
+    this.messageTimeout = messageTimeout;
+    // 瀏覽器原生 fetch 必須使用 Window/Worker receiver，不能把服務物件當作 this。
+    this.fetchImpl = fetchImpl.bind(globalThis);
   }
 
-  async request(path, { method = 'GET', json, formData } = {}) {
+  async request(path, { method = 'GET', json, formData, timeoutMs = this.timeout } = {}) {
     const controller = new AbortController();
     const headers = { Accept: 'application/json' };
     const options = {
@@ -45,7 +50,7 @@ export class ApiClaimService {
         timer = setTimeout(() => {
           reject(new ServiceError('TIMEOUT', '服務回應逾時，請稍後重試。'));
           controller.abort();
-        }, this.timeout);
+        }, timeoutMs);
       });
       const request = async () => {
         const response = await this.fetchImpl(`${this.baseUrl}${path}`, options);
@@ -101,6 +106,7 @@ export class ApiClaimService {
     return this.request(`/cases/${encodeURIComponent(id)}/messages`, {
       method: 'POST',
       json: { message, ...(document_id === undefined ? {} : { document_id }) },
+      timeoutMs: this.messageTimeout,
     });
   }
 
@@ -121,6 +127,7 @@ export class ApiClaimService {
     return this.request(`/cases/${encodeURIComponent(id)}/documents/${encodeURIComponent(docId)}/analyze`, {
       method: 'POST',
       formData,
+      timeoutMs: this.analysisTimeout,
     });
   }
 

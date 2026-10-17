@@ -1,0 +1,8 @@
+{
+  "input_hashes_unchanged": true,
+  "audited_package_count": 33,
+  "expected_runtime_count": 33,
+  "vulnerability_count": 0,
+  "skipped": [],
+  "complete_runtime_coverage": true
+}

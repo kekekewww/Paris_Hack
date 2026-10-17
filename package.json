@@ -1,1 +1,22 @@
-{"name":"cardif-claim-preparation","version":"0.1.0","private":true,"type":"module","scripts":{"dev":"vite --host 127.0.0.1 --port 5174","build":"vite build","test":"node --test tests/*.test.js","test:e2e":"playwright test"},"devDependencies":{"@axe-core/playwright":"4.10.2","@playwright/test":"1.56.1","vite":"6.4.4"},"dependencies":{"pdfjs-dist":"^6.4.299"}}
+{
+  "name": "cardif-claim-preparation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/prepare-assets.mjs && vite --host 127.0.0.1 --port 5174",
+    "build": "node scripts/prepare-assets.mjs && vite build",
+    "test": "node --test tests/*.test.js",
+    "test:e2e": "playwright test",
+    "test:pdf": "playwright test -c playwright.pdf.config.js",
+    "test:api": "playwright test -c playwright.api.config.js"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.10.2",
+    "@playwright/test": "1.56.1",
+    "vite": "6.4.4"
+  },
+  "dependencies": {
+    "pdfjs-dist": "6.4.299"
+  }
+}

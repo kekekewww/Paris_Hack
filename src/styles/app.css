@@ -8,3 +8,4 @@
 
 /* 小字標籤使用既有深綠，維持薄荷底色上的 WCAG AA 文字對比。 */
 .eyebrow{color:var(--brand-dark)}
+.pdf-page-frame{position:relative;width:100%;overflow:hidden}.pdf-page-frame canvas{display:block;width:100%;height:auto;background:white}.preview-wrap select{font-size:12px}

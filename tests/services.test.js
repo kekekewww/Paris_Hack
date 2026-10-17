@@ -240,3 +240,24 @@ test('HTTP adapter reports network, malformed response and timeout failures', as
   const uncooperative = new ApiClaimService({ timeout: 10, fetchImpl: async () => new Promise(() => {}) });
   await assert.rejects(uncooperative.health(), error => error.code === 'TIMEOUT');
 });
+
+test('document analysis has its own bounded timeout budget for real OCR', async () => {
+  const delayed = async () => {
+    await new Promise(resolve => setTimeout(resolve, 30));
+    return Response.json({ id: 'synthetic-case', documents: [] });
+  };
+  const service = new ApiClaimService({ timeout: 10, analysisTimeout: 150, fetchImpl: delayed });
+  await assert.rejects(service.health(), error => error.code === 'TIMEOUT');
+  const result = await service.analyzeDocument('synthetic-case', 'application', demoFile());
+  assert.equal(result.id, 'synthetic-case');
+});
+
+test('conversation requests wait for their bounded server response budget', async () => {
+  const service = new ApiClaimService({ timeout: 10, messageTimeout: 150, fetchImpl: async () => {
+    await new Promise(resolve => setTimeout(resolve, 30));
+    return Response.json({ case: { id: 'synthetic-case' }, response: { message: '合成測試回覆' } });
+  } });
+  await assert.rejects(service.health(), error => error.code === 'TIMEOUT');
+  const result = await service.sendMessage('synthetic-case', '合成問題');
+  assert.equal(result.response.message, '合成測試回覆');
+});

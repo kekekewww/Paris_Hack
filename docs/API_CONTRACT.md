@@ -14,7 +14,7 @@ const service = createClaimService({ mode: 'mock' });
 
 Mock 建構參數為 `{ delay = 180, storage = sessionStorage, registry = officialRegistry }`。測試可注入 `delay: 0` 與實作 `getItem/setItem/removeItem` 的記憶體 storage。`simulateFailure(code?, message?)` 只令下一次服務呼叫失敗，重試可以恢復。Mock 案件僅保存在同一分頁的 sessionStorage，不存檔案 Blob、base64 或原文內容；請只使用合成展示資料。清除案件也會移除該案件的訊息及檢查結果。
 
-API 建構參數為 `{ baseUrl = '/api/v1', timeout = 15000, fetchImpl = fetch }`。`baseUrl` 必須是以單一 `/` 開頭的同源相對路徑，禁止完整 URL、雙斜線及反斜線；檔案不會傳到任意網域。
+API 建構參數為 `{ baseUrl = '/api/v1', timeout = 15000, messageTimeout = 50000, analysisTimeout = 95000, fetchImpl = fetch }`。一般讀寫為15秒、對話50秒、文件分析95秒；分別涵蓋後端對話45秒與分析90秒的處理預算，避免合法回覆尚在處理就被前端提早取消。瀏覽器原生fetch綁定至globalThis，保持Window／Worker呼叫語意。`baseUrl` 必須是以單一 `/` 開頭的同源相對路徑，禁止完整 URL、雙斜線及反斜線；檔案不會傳到任意網域。
 
 ## 方法與端點
 
@@ -22,7 +22,7 @@ API 建構參數為 `{ baseUrl = '/api/v1', timeout = 15000, fetchImpl = fetch }
 
 | 前端方法 | HTTP | 路徑 | Request | 回傳 |
 | --- | --- | --- | --- | --- |
-| `health()` | GET | `/health` | — | `{status, service_mode, llm_provider, ocr_provider}` |
+| `health()` | GET | `/health` | — | `{status, service_mode, llm_provider, ocr_provider, llm_configured?, llm_verified?}` |
 | `getClaimTypes()` | GET | `/claim-types` | — | `ClaimType[]` |
 | `createCase(input)` | POST | `/cases` | `CreateCase` JSON | `Case` |
 | `getCase(id)` | GET | `/cases/{id}` | — | `Case` |
@@ -35,6 +35,10 @@ API 建構參數為 `{ baseUrl = '/api/v1', timeout = 15000, fetchImpl = fetch }
 | `deleteCase(id)` | DELETE | `/cases/{id}` | — | `{deleted: true, id}` |
 
 建立案件時 HTTP 後端使用 201，其他成功回應使用 200。`deleteCase` 必須回傳 JSON；無此案件則 404。資料服務不提供任何正式理賠送件端點。
+
+真實後端會以 `claim_session` 的 HttpOnly、SameSite=Strict cookie 識別匿名 owner；adapter 使用同源 cookie，不在 JSON 或 JavaScript 暴露 token。HTTPS 須配置 Secure cookie。不同 owner、已刪除或到期案件均回 `404 CASE_NOT_FOUND`。案件自建立起固定保留 24 小時，每 owner 最多 20 件，每案最多 100 回成功對話。API 回應 `Cache-Control: no-store`；跨來源需符合明確 allowlist，不能只更改前端 `baseUrl` 連外。
+
+真實 health 的 `llm_configured` 只代表外部模式必填設定齊備，`llm_verified` 在本版固定為 false；health 不發送模型請求。預設 `grounded_rules` 不使用生成式模型，兩個旗標均為 false。對話與分析仍以每次回應的 `provider`／`is_simulated` 為準。
 
 ## 案件與條件
 
@@ -160,6 +164,12 @@ type Analysis = {
 
 頁碼從 1 開始；座標以每頁左上角為 `(0,0)`，寬高與位置皆為 0–1 正規化比例。低信心或不可辨識不能標為通過。簽名區只能標疑似缺漏，不能驗證真偽。
 
+真實 OCR 的 `extracted_fields.value` 是辨識狀態標記，不回傳姓名、證號、保單號碼、日期或其他欄位原文：辨識到內容時為「已辨識內容（隱私遮罩）」，否則為「未可靠辨識內容」。`document_type` 僅描述是否可辨識申請書標題，不代表驗真。請由欄位 ID、信心、頁碼與 findings 判讀指定檢查結果，再對照暫時預覽人工確認；不能從遮罩字串推定格式已正確。原始上傳檔、欄位原值與抽取全文不持久保存。
+
+低品質影像先做真實影像清晰度預檢。全部頁面因品質不足而跳過 OCR 時，`provider='quality_precheck'`、`is_simulated=false`、`analysis_status='uncertain'`、`extracted_fields=[]`，只提供 `image_quality` 人工確認 finding；不回傳已辨識欄位、空白欄位或文件類型結論。其形狀仍是相同的 Analysis，不新增品質量測欄位。UI 必須明示未執行 OCR。混合文件若有文字層／清晰掃描頁，provider 按實際執行的 `pdf_text`／`rapidocr` 回傳，但有品質不足頁時整體仍 uncertain。清晰度閾值是工程預檢條件，不是官方理賠文件要求；官方連結僅供表單參考。
+
+品質提示的 page_number 與 bounding_box.page_number 必須是實際跳過頁；位置為人工提示區，不是模型定位。`confidence` 是保守調整後的初步參考，品質不足時上限 0.49，並非校準正確率、文字純平均或整份文件完整率；全部品質預檢時為 0，UI 不呈現成模型辨識信心。
+
 ## 官方來源
 
 `Source` 至少包含 `source_id`、`title`、`official_url`、`document_type`、`related_claim_types`、`page_number`、`version_or_updated_at`、`checked_at`、`verification_status`；版本未知保留 null。來源 URL 必須是經查核的官方 HTTPS URL。`getSource('cardif-claims')` 額外提供 `submission`，包含 `postal:{address,recipient,steps}`、`official_online_entry:{url,label,verification_status,details}` 與 `support:{phone,hours}`，供準備摘要呈現官方送件方式；助手不代替使用者送件。
@@ -174,8 +184,19 @@ type Analysis = {
 | 422 | `VALIDATION_ERROR` | 無效類別、條件、情境或訊息 |
 | 422 | `INVALID_DOCUMENT_STATUS` / `REQUIRED_DOCUMENT` / `INVALID_FINDING` | 不允許的手動狀態或不存在的疑點 |
 | 422 | `EMPTY_FILE` / `INVALID_FILE` / `DOCUMENT_NOT_APPLICABLE` | 空檔、格式內容不符或文件不適用 |
-| 413 | `FILE_TOO_LARGE` / `TOO_MANY_PAGES` | 大小或頁數限制 |
+| 422 | `ENCRYPTED_PDF` / `INVALID_SOURCE` | 加密 PDF 或來源不符安全規則 |
+| 413 | `FILE_TOO_LARGE` / `TOO_MANY_PAGES` / `IMAGE_TOO_LARGE` | 大小、頁數或解碼後像素限制 |
 | 415 | `UNSUPPORTED_FILE_TYPE` | 非 PDF/JPG/PNG |
+| 403 | `ORIGIN_NOT_ALLOWED` | Origin 或跨站來源不允許 |
+| 431 | `HEADERS_TOO_LARGE` | 請求標頭超過 16 KB |
+| 429 | `RATE_LIMITED` / `CASE_LIMIT` / `MESSAGE_LIMIT` | 每 IP／每分鐘配額、owner 案件或案件對話上限；RATE_LIMITED 附 Retry-After |
+| 409 | `CASE_EXISTS` | 案件 ID 衝突 |
+| 503 | `OCR_BUSY` / `OCR_TIMEOUT` / `OCR_UNAVAILABLE` | OCR 單工容量、處理預算或模型不可用 |
+| 503 | `LLM_NOT_CONFIGURED` / `INVALID_LLM_CONFIG` | 外部模型未配置或設定不合法 |
+| 503 | `LLM_TIMEOUT` / `LLM_PROVIDER_ERROR` / `INVALID_LLM_RESPONSE` | 真模型請求逾時、失敗或回覆不符證據邊界 |
+| 502 / 503 | `INVALID_AI_RESPONSE` / `INVALID_PROVIDER_RESPONSE` | 結構、引用或非模擬檢查未通過 |
+| 503 | `PROVIDER_UNAVAILABLE` / `INVALID_REGISTRY` / `FRONTEND_UNAVAILABLE` | 服務、官方索引或前端產物不可用 |
+| 500 | `INTERNAL_ERROR` | 未預期服務錯誤，不回傳原始內容或堆疊 |
 | 503 | `SIMULATED_FAILURE` / `STORAGE_UNAVAILABLE` | Mock 故障演示或瀏覽器儲存失敗 |
 | 0 | `NETWORK_ERROR` / `TIMEOUT` / `INVALID_RESPONSE` | HTTP adapter 網路、逾時、非 JSON 回覆 |
 

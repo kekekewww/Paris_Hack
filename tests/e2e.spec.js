@@ -236,7 +236,7 @@ test('不支援的檔案會被拒絕且可重新選擇', async ({ page }) => {
     name: 'unsupported.txt', mimeType: 'text/plain', buffer: Buffer.from('synthetic demo only'),
   });
   const analyze = dialog.getByRole('button', { name: '開始分析', exact: true });
-  if (await analyze.isEnabled()) await analyze.click();
+  await expect(analyze).toBeDisabled();
   await expect(dialog.getByText(/PDF.*JPG|PDF.*PNG|格式.*不支援|不支援.*格式|格式不符/).first()).toBeVisible();
   await dialog.getByLabel('選擇文件', { exact: true }).setInputFiles({
     name: 'recovered.png', mimeType: 'image/png', buffer: syntheticPng,
@@ -256,7 +256,7 @@ test('超過 10 MB 的檔案會被拒絕', async ({ page }) => {
     name: 'oversized.png', mimeType: 'image/png', buffer: oversized,
   });
   const analyze = dialog.getByRole('button', { name: '開始分析', exact: true });
-  if (await analyze.isEnabled()) await analyze.click();
+  await expect(analyze).toBeDisabled();
   await expect(dialog.getByText(/不可超過.*10|超過.*10.*MB|10.*MB.*限制/).first()).toBeVisible();
 });
 
@@ -343,6 +343,8 @@ test('助手收合不阻礙文件操作，且鍵盤可關閉檢查視窗', async
 
 test('首頁與文件工作區符合基本 WCAG A / AA 自動檢查', async ({ page }) => {
   await page.goto('/?service=mock#triage');
+  await expect(page.getByRole('button', { name: '開始使用', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: '開始搜尋', exact: true })).toBeEnabled();
   await waitForEntryMotion(page);
   const landing = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
   expect(landing.violations.map(({ id, nodes }) => ({ id, nodes: nodes.map(({ target, failureSummary }) => ({ target, failureSummary })) }))).toEqual([]);
