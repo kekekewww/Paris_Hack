@@ -1,0 +1,1597 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>法國巴黎人壽 - 理賠申請服務系統</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans TC"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              DEFAULT: '#00875A',
+              light: '#E8F6EF',
+              dark: '#006B46',
+              accent: '#8FE0BA'
+            }
+          },
+          spacing: {
+            '88': '22rem',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #F8FAF9;
+      color: #1F2937;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.02);
+      border-radius: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #CFEFE0;
+      border-radius: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #8FE0BA;
+    }
+    .sidebar-transition {
+      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+    }
+    .bg-watermark-birds {
+      position: fixed;
+      left: -30px;
+      bottom: -30px;
+      width: 360px;
+      height: 360px;
+      background-image: radial-gradient(circle at center, rgba(0, 135, 90, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .watermark-motif {
+      position: fixed;
+      left: 1%;
+      bottom: 2%;
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+      transform: rotate(-5deg) scale(1.1);
+    }
+    .top-right-glow {
+      position: fixed;
+      right: -80px;
+      top: -80px;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(143, 224, 186, 0.18) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+  </style>
+</head>
+<body class="min-h-full font-sans antialiased text-gray-800 flex flex-col justify-between selection:bg-brand selection:text-white">
+
+  <!-- ========================================================================= -->
+  <!-- VIEW 1: 分流選擇首頁 (TRIAGE)                                              -->
+  <!-- ========================================================================= -->
+  <div id="viewTriage" class="flex-1 flex flex-col w-full z-10 transition-opacity duration-200">
+    <!-- Header -->
+    <header class="w-full bg-white/95 backdrop-blur-md border-b border-emerald-50 px-6 sm:px-12 py-4 flex items-center justify-between z-20 sticky top-0 shadow-[0_1px_10px_rgba(0,135,90,0.03)]">
+      <div class="flex items-center gap-4">
+        <div class="inline-flex items-center cursor-pointer group" onclick="switchView('triage')">
+          <img src="data:image/png;base64,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" alt="BNP PARIBAS CARDIF 法國巴黎人壽" class="h-9 sm:h-10 w-auto object-contain" />
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-5xl mx-auto px-4 sm:px-8 py-10 sm:py-14 flex flex-col justify-center w-full">
+      <!-- Title section (Left-aligned, matching Image 1 without badge) -->
+      <div class="mb-8 sm:mb-10 w-full max-w-4xl mx-auto">
+        <h1 class="text-3xl sm:text-4xl md:text-[38px] font-extrabold text-gray-900 tracking-tight leading-tight">
+          理賠申請，<span class="text-[#00875A]">需要什麼？</span>
+        </h1>
+        <div class="w-9 h-1 bg-[#00875A] rounded-full my-3"></div>
+        <p class="text-gray-500 text-sm sm:text-base font-normal">
+          選擇你想要的協助方式
+        </p>
+      </div>
+
+      <!-- Two Cards (Matching Image 1) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 w-full max-w-4xl mx-auto">
+        <!-- Card 1: AI 智慧引導 -->
+        <div class="bg-gradient-to-br from-[#F4FAF7] to-[#E9F6F0] border border-[#CFEFE0] rounded-3xl p-8 sm:p-10 shadow-[0_4px_24px_rgba(0,135,90,0.05)] hover:shadow-[0_8px_32px_rgba(0,135,90,0.1)] transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
+          <div class="absolute right-0 bottom-0 translate-x-6 translate-y-6 w-36 h-36 bg-white/40 rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-500"></div>
+          
+          <div>
+            <!-- AI Bubble Icon (Enlarged Hero Icon, NO stars) -->
+            <div class="pt-1 mb-6 sm:mb-8 group-hover:scale-105 transition-transform origin-left">
+              <svg class="w-24 h-24 sm:w-[104px] sm:h-[104px]" width="104" height="104" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M30 48C40.4934 48 49 39.7173 49 29.5C49 19.2827 40.4934 11 30 11C19.5066 11 11 19.2827 11 29.5C11 33.7225 12.4418 37.6163 14.887 40.6725L12.5 48.5L20.8988 46.2872C23.6335 47.3828 26.7169 48 30 48Z" stroke="#00875A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+                <text x="30" y="29.5" text-anchor="middle" dominant-baseline="central" font-family="'Noto Sans TC', sans-serif" font-size="16" font-weight="800" fill="#00875A" letter-spacing="0.5">AI</text>
+              </svg>
+            </div>
+
+            <!-- Title (Enlarged prominent font) -->
+            <h2 class="text-2xl sm:text-[28px] md:text-[31px] font-extrabold text-gray-900 leading-snug tracking-tight">
+              不清楚理賠所需？
+            </h2>
+            <div class="text-2xl sm:text-[28px] md:text-[31px] font-extrabold text-[#00875A] leading-snug tracking-tight">
+              AI 智慧引導
+            </div>
+          </div>
+
+          <div class="pt-8 sm:pt-10 z-10">
+            <button type="button" onclick="switchView('assistant')" class="w-fit inline-flex items-center gap-2.5 px-7 py-3 rounded-full bg-[#007048] hover:bg-[#005a38] text-white font-bold text-base shadow-[0_4px_16px_rgba(0,112,72,0.22)] hover:shadow-[0_6px_22px_rgba(0,112,72,0.32)] hover:translate-x-0.5 transition-all duration-200">
+              <span>開始使用</span>
+              <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 2: 文件快速搜尋 -->
+        <div class="bg-white border border-[#E5EAE7] rounded-3xl p-8 sm:p-10 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_32px_rgba(0,135,90,0.08)] transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
+          <div class="absolute right-0 bottom-0 translate-x-6 translate-y-6 w-36 h-36 bg-[#F4FAF7] rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-500"></div>
+          
+          <div>
+            <!-- Document with Lines + Magnifying Glass Icon (Enlarged Hero Icon) -->
+            <div class="pt-1 mb-6 sm:mb-8 group-hover:scale-105 transition-transform origin-left">
+              <svg class="w-24 h-24 sm:w-[104px] sm:h-[104px]" width="104" height="104" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Document body with folded corner -->
+                <path d="M16 11C13.7909 11 12 12.7909 12 15V45C12 47.2091 13.7909 49 16 49H28M16 11H34L44 21V28" stroke="#00875A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+                <!-- Fold corner flap -->
+                <path d="M34 11V21H44" stroke="#00875A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+                <!-- Document lines -->
+                <path d="M19 21H27" stroke="#00875A" stroke-width="2.4" stroke-linecap="round" />
+                <path d="M19 27H35" stroke="#00875A" stroke-width="2.4" stroke-linecap="round" />
+                <path d="M19 33H29" stroke="#00875A" stroke-width="2.4" stroke-linecap="round" />
+                <!-- Magnifying glass at bottom right with white fill to overlay cleanly -->
+                <circle cx="38" cy="38" r="8" stroke="#00875A" stroke-width="2.6" fill="white" />
+                <path d="M44 44L50 50" stroke="#00875A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+
+            <!-- Title (Enlarged prominent font) -->
+            <h2 class="text-2xl sm:text-[28px] md:text-[31px] font-extrabold text-gray-900 leading-snug tracking-tight">
+              我清楚理賠所需！
+            </h2>
+            <div class="text-2xl sm:text-[28px] md:text-[31px] font-extrabold text-[#00875A] leading-snug tracking-tight">
+              文件快速搜尋
+            </div>
+          </div>
+
+          <div class="pt-8 sm:pt-10 z-10">
+            <button type="button" onclick="switchView('search')" class="w-fit inline-flex items-center gap-2.5 px-7 py-3 rounded-full bg-white hover:bg-[#F2FAF5] text-[#007048] border-2 border-[#007048] font-bold text-base hover:shadow-sm hover:translate-x-0.5 transition-all duration-200">
+              <span>開始搜尋</span>
+              <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Disclaimer Banner -->
+    <footer class="w-full bg-[#F4F9F6] border-t border-[#DDF0E6] py-3.5 px-4 text-center mt-auto z-10">
+      <div class="max-w-5xl mx-auto flex items-center justify-center gap-2 text-xs text-gray-500 font-medium leading-relaxed">
+        <svg class="w-4 h-4 text-[#00875A] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>溫馨提醒：AI 助手僅協助您準備理賠資料與檢查清單，最終理賠結果與給付項目仍須依保單條款及保險公司審查為準。</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- VIEW 2: AI 智慧引導流程 (ASSISTANT)                                         -->
+  <!-- ========================================================================= -->
+  <div id="viewAssistant" class="hidden flex-1 flex-col w-full z-10 transition-opacity duration-200">
+    <!-- Header with direct jump button to Search positioned next to Logo -->
+    <header class="w-full bg-white/95 backdrop-blur-md border-b border-emerald-50 px-6 sm:px-10 py-4 flex items-center justify-between z-20 sticky top-0 shadow-[0_1px_10px_rgba(0,135,90,0.03)]">
+      <div class="flex items-center gap-3 sm:gap-4 flex-wrap">
+        <div class="inline-flex items-center cursor-pointer group" onclick="switchView('triage')" title="返回理賠分流首頁">
+          <img src="data:image/png;base64,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" alt="BNP PARIBAS CARDIF 法國巴黎人壽" class="h-9 sm:h-10 w-auto object-contain" />
+        </div>
+        <!-- 跳轉到另一邊的綠色按鈕 (取代原返回分流位置) -->
+        <button type="button" onclick="switchView('search')" class="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-full bg-[#EBF7F0] hover:bg-[#D8F2E3] text-[#00875A] border border-[#8FE0BA] text-xs sm:text-sm font-semibold shadow-sm hover:shadow transition-all active:scale-95 group" title="前往查找文件頁面">
+          <svg class="w-4 h-4 stroke-[2.2] group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+          <span>前往查找文件</span>
+        </button>
+      </div>
+      <div class="flex items-center gap-3">
+        
+      </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <div class="flex-1 flex relative w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6 z-10 gap-6">
+      <!-- Left Floating Sidebar Container: 純待辦清單 (完全移除個人資訊) -->
+      <aside id="asstSidebarContainer" class="sidebar-transition relative z-20 flex-shrink-0 self-start">
+        <div id="asstSidebarPanel" class="w-72 sm:w-88 bg-[#EDF8F2] rounded-[28px] p-4 sm:p-5 border border-[#CFEFE0] shadow-[0_10px_30px_rgba(0,135,90,0.05)] flex flex-col gap-4 sidebar-transition relative min-h-[500px]">
+          
+                    <!-- 個人資訊 卡片 (單一空白欄位) -->
+          <div id="asstPersonalInfoCard" class="bg-white rounded-2xl p-4 sm:p-5 shadow-[0_2px_8px_rgba(0,135,90,0.03)] border border-[#E1F3EA] flex flex-col">
+            <div class="flex items-center gap-2 pb-2.5 border-b border-[#E8F6EF]">
+              <div class="w-6 h-6 flex items-center justify-center text-brand">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
+              </div>
+              <span class="font-bold text-gray-800 text-[15px]">個人資訊</span>
+            </div>
+            <!-- 純白留白空間 (無任何灰色線框與底色) -->
+            <div class="w-full h-16 sm:h-20"></div>
+          </div>
+
+<div id="asstTodoListCard" class="bg-white rounded-2xl p-4 sm:p-5 shadow-[0_2px_8px_rgba(0,135,90,0.03)] border border-[#E1F3EA] flex flex-col gap-3 flex-1">
+            <!-- Header row -->
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 flex items-center justify-center text-brand">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                  </svg>
+                </div>
+                <span class="font-bold text-gray-800 text-[15px]">待辦清單</span>
+                <span id="asstTodoBadge" class="bg-[#00875A] text-white text-[11px] font-semibold px-2 py-0.5 rounded-full leading-none">0</span>
+              </div>
+              <button type="button" onclick="promptClearAllTodos()" class="text-xs text-gray-400 hover:text-red-500 transition-colors" title="清空待辦事項">清空重設</button>
+            </div>
+
+            <!-- Items container (支持 AI 註解與填寫範例按鈕) -->
+            <div id="asstTodoItemsContainer" class="flex flex-col gap-2.5 max-h-[340px] sm:max-h-[380px] overflow-y-auto custom-scroll pr-1 flex-1"></div>
+
+            <!-- Add Todo Button & Form -->
+            <div class="pt-2 border-t border-gray-100">
+              <button type="button" onclick="asstToggleAddTodoForm()" class="w-full py-2.5 px-3 rounded-xl border border-dashed border-[#8EE0BA] hover:border-brand bg-[#F9FCFA] hover:bg-[#F0FAF5] text-brand text-xs font-semibold flex items-center justify-center gap-1.5 transition-all group">
+                <svg class="w-4 h-4 stroke-[2.2] group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                <span>手動添加待辦事項</span>
+              </button>
+              <div id="asstAddTodoForm" class="hidden mt-2.5 p-3 rounded-xl bg-[#F6FCF9] border border-[#CFEFE0] flex flex-col gap-2">
+                <div class="text-xs font-semibold text-gray-700">新增待辦事項內容：</div>
+                <input type="text" id="asstNewTodoTitle" placeholder="例如：補簽要保書回條、補上傳收據..." class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 outline-none focus:border-brand bg-white" onkeydown="if(event.key==='Enter'){event.preventDefault();asstSubmitAddTodo();}" />
+                <div class="flex items-center justify-end gap-2 pt-1">
+                  <button type="button" onclick="asstToggleAddTodoForm(false)" class="px-2.5 py-1 text-xs text-gray-500 hover:text-gray-700">取消</button>
+                  <button type="button" onclick="asstSubmitAddTodo()" class="px-3 py-1 text-xs font-medium text-white bg-[#00875A] hover:bg-brand-dark rounded-lg shadow-sm">確認新增</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Sidebar Collapse / Expand Toggle Button (固定於面板垂直正中心) -->
+        <button id="asstSidebarToggleBtn" onclick="asstToggleSidebar()" class="absolute -right-3.5 sm:-right-4 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white border border-[#BCE8D3] shadow-[0_2px_8px_rgba(0,135,90,0.12)] flex items-center justify-center text-brand hover:bg-[#F2FAF5] hover:scale-105 active:scale-95 transition-all z-30" title="收合/展開側邊欄">
+          <svg id="asstToggleIcon" class="w-3.5 h-3.5 stroke-[2.6] transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m11 17-5-5 5-5m7 10-5-5 5-5" />
+          </svg>
+        </button>
+      </aside>
+
+      <!-- Main Workspace (Central Consultation & Dialogue Layout) -->
+      <main class="flex-1 flex flex-col items-center justify-start min-h-[calc(100vh-140px)] z-10 px-2 sm:px-6 w-full">
+        <!-- Welcoming Hero (visible when no messages yet) -->
+        <div id="asstWelcomeSection" class="w-full max-w-2xl flex flex-col items-center text-center my-auto py-8">
+          <div class="w-16 h-16 rounded-3xl bg-[#E8F6EF] text-[#00875A] flex items-center justify-center mb-6 shadow-sm">
+            <!-- Matching AI Bubble Icon (No stars) -->
+            <svg width="42" height="42" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M30 48C40.4934 48 49 39.7173 49 29.5C49 19.2827 40.4934 11 30 11C19.5066 11 11 19.2827 11 29.5C11 33.7225 12.4418 37.6163 14.887 40.6725L12.5 48.5L20.8988 46.2872C23.6335 47.3828 26.7169 48 30 48Z" stroke="#00875A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+              <text x="30" y="35" text-anchor="middle" font-family="'Noto Sans TC', sans-serif" font-size="16" font-weight="700" fill="#00875A" letter-spacing="0.5">AI</text>
+            </svg>
+          </div>
+          <h1 class="text-3xl sm:text-4xl md:text-[40px] font-bold text-gray-900 tracking-tight leading-snug mb-3">
+            讓我們協助您的理賠流程
+          </h1>
+          
+        </div>
+
+        <!-- Chat Consultation Thread (Shown when messages exist) -->
+        <div id="asstChatContainer" class="hidden w-full max-w-3xl flex-col gap-5 py-4 overflow-y-auto mb-6 custom-scroll"></div>
+
+        <!-- Prompt Input Bar (Pinned / Responsive) -->
+        <div class="w-full max-w-2xl relative sticky bottom-4 z-20 mt-auto">
+          <form onsubmit="event.preventDefault(); handleAssistantPrompt();" class="w-full bg-white rounded-full border-2 border-[#8FE0BA] shadow-[0_8px_32px_rgba(0,135,90,0.12)] hover:shadow-[0_10px_36px_rgba(0,135,90,0.16)] focus-within:border-brand pl-3 pr-2 py-2 flex items-center gap-2.5 transition-all">
+            <!-- Plus Button (+) & Dropdown Menu -->
+            <div class="relative flex-shrink-0" id="asstPlusMenuContainer">
+              <button type="button" id="asstPlusBtn" onclick="asstTogglePlusMenu(event)" class="w-9 h-9 rounded-full flex items-center justify-center text-brand hover:bg-[#F2FAF5] transition-all" title="添加附件或匯入">
+                <svg id="asstPlusIcon" class="w-6 h-6 stroke-[2.2] transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+              </button>
+              <input type="file" id="asstLocalFileInput" class="hidden" onchange="asstHandleFileSelected(event)" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
+              <div id="asstPlusDropdownMenu" class="hidden absolute left-0 bottom-full mb-3 w-48 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_12px_32px_rgba(0,135,90,0.18)] border border-[#CFEFE0] p-1.5 z-50 flex-col gap-1 transition-all">
+                <button type="button" onclick="asstTriggerUploadFile(event)" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#F0FAF5] text-gray-700 hover:text-brand transition-colors text-left group">
+                  <div class="w-7 h-7 rounded-lg bg-[#E8F6EF] text-brand flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
+                    <svg class="w-4 h-4 stroke-[2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                    </svg>
+                  </div>
+                  <div class="flex flex-col">
+                    <span class="text-xs font-bold text-gray-800 group-hover:text-brand">上傳檔案</span>
+                    <span class="text-[10px] text-gray-400">本機照片或 PDF</span>
+                  </div>
+                </button>
+                <div class="h-px bg-gray-100 my-0.5"></div>
+                <button type="button" onclick="asstTriggerCloudImport(event)" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#F0FAF5] text-gray-700 hover:text-brand transition-colors text-left group">
+                  <div class="w-7 h-7 rounded-lg bg-[#E8F6EF] text-brand flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
+                    <svg class="w-4 h-4 stroke-[2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.245 4.5 4.5 0 00-8.472-2.348A4.5 4.5 0 004.5 12.75a4.5 4.5 0 00-2.25 2.25z" />
+                    </svg>
+                  </div>
+                  <div class="flex flex-col">
+                    <span class="text-xs font-bold text-gray-800 group-hover:text-brand">匯入雲端硬碟檔案</span>
+                    <span class="text-[10px] text-gray-400">Google Drive / OneDrive</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <div class="h-6 w-px bg-gray-200 flex-shrink-0"></div>
+
+            <input type="text" id="asstUserInput" placeholder="試著描述您發生了什麼（例如：就醫原因、開刀、住院...）" autocomplete="off" oninput="saveCurrentDraftInput()" class="flex-1 bg-transparent border-none outline-none text-sm sm:text-base text-gray-800 placeholder-gray-400 font-normal px-2" />
+
+            <button type="submit" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#00875A] hover:bg-brand-dark active:scale-95 text-white flex items-center justify-center shadow-md hover:shadow-lg transition-all flex-shrink-0" title="送出描述">
+              <svg class="w-5 h-5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </button>
+          </form>
+        </div>
+      </main>
+    </div>
+
+    <!-- Bottom Disclaimer Banner -->
+    <footer class="w-full bg-[#F4F9F6] border-t border-[#DDF0E6] py-3.5 px-4 text-center mt-auto z-10">
+      <div class="max-w-5xl mx-auto flex items-center justify-center gap-2 text-xs text-gray-500 font-medium leading-relaxed">
+        <svg class="w-4 h-4 text-[#00875A] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>溫馨提醒：AI 助手僅協助您準備理賠資料與檢查清單，最終理賠結果與給付項目仍須依保單條款及保險公司審查為準。</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- VIEW 3: 文件快速搜尋 (SEARCH)                                              -->
+  <!-- ========================================================================= -->
+  <div id="viewSearch" class="hidden flex-1 flex-col w-full z-10 transition-opacity duration-200">
+    <!-- Header with direct jump button to Assistant positioned next to Logo -->
+    <header class="w-full bg-white/95 backdrop-blur-md border-b border-emerald-50 px-6 sm:px-10 py-4 flex items-center justify-between z-20 sticky top-0 shadow-[0_1px_10px_rgba(0,135,90,0.03)]">
+      <div class="flex items-center gap-3 sm:gap-4 flex-wrap">
+        <div class="inline-flex items-center cursor-pointer group" onclick="switchView('triage')" title="返回理賠分流首頁">
+          <img src="data:image/png;base64,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" alt="BNP PARIBAS CARDIF 法國巴黎人壽" class="h-9 sm:h-10 w-auto object-contain" />
+        </div>
+        <!-- 跳轉到另一邊的綠色按鈕 (取代原返回分流位置) -->
+        <button type="button" onclick="switchView('assistant')" class="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-full bg-[#EBF7F0] hover:bg-[#D8F2E3] text-[#00875A] border border-[#8FE0BA] text-xs sm:text-sm font-semibold shadow-sm hover:shadow transition-all active:scale-95 group" title="前往 AI 智慧引導頁面">
+          <svg class="w-4 h-4 stroke-[2.2] group-hover:scale-110 transition-transform text-[#00875A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a.75.75 0 0 1-.79-.937l.487-1.95A7.838 7.838 0 0 1 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+          </svg>
+          <span>前往 AI 智慧引導</span>
+        </button>
+      </div>
+      <div class="flex items-center gap-3">
+        
+      </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <div class="flex-1 flex relative w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6 z-10 gap-6">
+      <!-- Left Floating Sidebar Container (純待辦清單，無個人資訊) -->
+      <aside id="searchSidebarContainer" class="sidebar-transition relative z-20 flex-shrink-0 self-start">
+        <div id="searchSidebarPanel" class="w-72 sm:w-88 bg-[#EDF8F2] rounded-[28px] p-4 sm:p-5 border border-[#CFEFE0] shadow-[0_10px_30px_rgba(0,135,90,0.05)] flex flex-col gap-4 sidebar-transition relative min-h-[500px]">
+          
+
+<div id="searchTodoListCard" class="bg-white rounded-2xl p-4 sm:p-5 shadow-[0_2px_8px_rgba(0,135,90,0.03)] border border-[#E1F3EA] flex flex-col gap-3 flex-1">
+            <!-- Header row -->
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 flex items-center justify-center text-brand">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                  </svg>
+                </div>
+                <span class="font-bold text-gray-800 text-[15px]">待辦清單</span>
+                <span id="searchTodoBadge" class="bg-[#00875A] text-white text-[11px] font-semibold px-2 py-0.5 rounded-full leading-none">0</span>
+              </div>
+              <button type="button" onclick="promptClearAllTodos()" class="text-xs text-gray-400 hover:text-red-500 transition-colors" title="清空待辦事項">清空重設</button>
+            </div>
+
+            <!-- Items Container (支持 AI 註解與填寫範例按鈕) -->
+            <div id="searchTodoItemsContainer" class="flex flex-col gap-2.5 max-h-[440px] sm:max-h-[480px] overflow-y-auto custom-scroll pr-1 flex-1"></div>
+
+            <!-- Add Todo Button & Form -->
+            <div class="pt-2 border-t border-gray-100">
+              <button type="button" onclick="searchToggleAddTodoForm()" class="w-full py-2.5 px-3 rounded-xl border border-dashed border-[#8EE0BA] hover:border-brand bg-[#F9FCFA] hover:bg-[#F0FAF5] text-brand text-xs font-semibold flex items-center justify-center gap-1.5 transition-all group">
+                <svg class="w-4 h-4 stroke-[2.2] group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                <span>手動添加待辦事項</span>
+              </button>
+              <div id="searchAddTodoForm" class="hidden mt-2.5 p-3 rounded-xl bg-[#F6FCF9] border border-[#CFEFE0] flex flex-col gap-2">
+                <div class="text-xs font-semibold text-gray-700">新增待辦事項內容：</div>
+                <input type="text" id="searchNewTodoTitle" placeholder="例如：補簽要保書回條、補上傳收據..." class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 outline-none focus:border-brand bg-white" onkeydown="if(event.key==='Enter'){event.preventDefault();searchSubmitAddTodo();}" />
+                <div class="flex items-center justify-end gap-2 pt-1">
+                  <button type="button" onclick="searchToggleAddTodoForm(false)" class="px-2.5 py-1 text-xs text-gray-500 hover:text-gray-700">取消</button>
+                  <button type="button" onclick="searchSubmitAddTodo()" class="px-3 py-1 text-xs font-medium text-white bg-[#00875A] hover:bg-brand-dark rounded-lg shadow-sm">確認新增</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Sidebar Collapse / Expand Toggle Button (固定於面板垂直正中心) -->
+        <button id="searchSidebarToggleBtn" onclick="searchToggleSidebar()" class="absolute -right-3.5 sm:-right-4 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white border border-[#BCE8D3] shadow-[0_2px_8px_rgba(0,135,90,0.12)] flex items-center justify-center text-brand hover:bg-[#F2FAF5] hover:scale-105 active:scale-95 transition-all z-30" title="收合/展開側邊欄">
+          <svg id="searchToggleIcon" class="w-3.5 h-3.5 stroke-[2.6] transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m11 17-5-5 5-5m7 10-5-5 5-5" />
+          </svg>
+        </button>
+      </aside>
+
+      <!-- Main Workspace (Central Search & Document Catalog) -->
+      <main class="flex-1 flex flex-col items-center z-10 px-2 sm:px-6">
+        <div class="w-full max-w-4xl flex flex-col items-center">
+          
+          <h1 class="text-3xl sm:text-4xl md:text-[40px] font-bold text-gray-900 tracking-tight leading-snug mb-7 text-center">
+            快速查找理賠所需文件
+          </h1>
+          
+
+          <!-- Search Bar (左側無放大鏡，Enter 不會自動新增至清單) -->
+          <div class="w-full max-w-2xl relative mb-6">
+            <form onsubmit="event.preventDefault(); handleSearchSubmit();" class="w-full bg-white rounded-full border-2 border-[#8FE0BA] shadow-[0_6px_28px_rgba(0,135,90,0.08)] hover:shadow-[0_8px_32px_rgba(0,135,90,0.12)] focus-within:border-brand focus-within:shadow-[0_8px_32px_rgba(0,135,90,0.16)] pl-5 sm:pl-6 pr-2 py-2 flex items-center gap-2.5 transition-all">
+              <input 
+                type="text" 
+                id="searchUserInput" 
+                placeholder="搜尋文件名稱或情境，如：申請書、收據、診斷證明、手術紀錄..." 
+                autocomplete="off" 
+                oninput="handleSearchInput(this.value)"
+                class="flex-1 bg-transparent border-none outline-none text-sm sm:text-base text-gray-800 placeholder-gray-400 font-normal px-1 py-1"
+              />
+
+              <button type="submit" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#00875A] hover:bg-brand-dark active:scale-95 text-white flex items-center justify-center shadow-md hover:shadow-lg transition-all flex-shrink-0" title="搜尋">
+                <svg class="w-5 h-5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </button>
+            </form>
+          </div>
+
+          <!-- Quick Scenario Filter Tags -->
+          <div class="flex items-center justify-center flex-wrap gap-2 mb-10 w-full max-w-2xl">
+            <span class="text-xs text-gray-400 mr-1 select-none">推薦搜尋：</span>
+            <button type="button" onclick="selectTag('理賠申請書')" class="px-3 py-1 rounded-full bg-white hover:bg-[#EBF7F0] text-gray-600 hover:text-brand border border-gray-200 hover:border-[#8EE0BA] text-xs font-medium transition-all shadow-sm">理賠申請書</button>
+            <button type="button" onclick="selectTag('診斷證明書')" class="px-3 py-1 rounded-full bg-white hover:bg-[#EBF7F0] text-gray-600 hover:text-brand border border-gray-200 hover:border-[#8EE0BA] text-xs font-medium transition-all shadow-sm">診斷證明書</button>
+            <button type="button" onclick="selectTag('醫療收據')" class="px-3 py-1 rounded-full bg-white hover:bg-[#EBF7F0] text-gray-600 hover:text-brand border border-gray-200 hover:border-[#8EE0BA] text-xs font-medium transition-all shadow-sm">醫療費用收據</button>
+            <button type="button" onclick="selectTag('手術紀錄')" class="px-3 py-1 rounded-full bg-white hover:bg-[#EBF7F0] text-gray-600 hover:text-brand border border-gray-200 hover:border-[#8EE0BA] text-xs font-medium transition-all shadow-sm">手術紀錄說明書</button>
+            <button type="button" onclick="selectTag('出院病歷')" class="px-3 py-1 rounded-full bg-white hover:bg-[#EBF7F0] text-gray-600 hover:text-brand border border-gray-200 hover:border-[#8EE0BA] text-xs font-medium transition-all shadow-sm">出院病歷摘要</button>
+            <button type="button" onclick="selectTag('')" class="px-3 py-1 rounded-full bg-[#EBF7F0] text-brand border border-[#8EE0BA] text-xs font-semibold transition-all shadow-sm">顯示全部</button>
+          </div>
+
+          <!-- Document Catalog / Search Results -->
+          <div class="w-full">
+            <div id="searchDocGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5"></div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+
+    <!-- Bottom Disclaimer Banner -->
+    <footer class="w-full bg-[#F4F9F6] border-t border-[#DDF0E6] py-3.5 px-4 text-center mt-auto z-10">
+      <div class="max-w-5xl mx-auto flex items-center justify-center gap-2 text-xs text-gray-500 font-medium leading-relaxed">
+        <svg class="w-4 h-4 text-[#00875A] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>溫馨提醒：AI 助手僅協助您準備理賠資料與檢查清單，最終理賠結果與給付項目仍須依保單條款及保險公司審查為準。</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: 查看填寫範例 (VIEW SAMPLE EXAMPLE)                                   -->
+  <!-- ========================================================================= -->
+  <div id="exampleModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-emerald-100 animate-in fade-in zoom-in-95 duration-200">
+      <!-- Header -->
+      <div class="px-6 py-4 bg-[#EDF8F2] border-b border-[#CFEFE0] flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-white text-[#00875A] flex items-center justify-center shadow-sm">
+            <svg class="w-5 h-5 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+            </svg>
+          </div>
+          <div>
+            <h3 id="exampleModalTitle" class="text-base font-bold text-gray-900">理賠申請書 - 填寫範例與注意事項</h3>
+            <p class="text-xs text-[#00875A] font-medium">法國巴黎人壽官方表單範本說明</p>
+          </div>
+        </div>
+        <button onclick="closeExampleModal()" class="w-8 h-8 rounded-full bg-white hover:bg-gray-100 text-gray-400 hover:text-gray-700 flex items-center justify-center transition-colors">
+          <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Content Body -->
+      <div id="exampleModalBody" class="p-6 overflow-y-auto custom-scroll space-y-4"></div>
+
+      <!-- Footer -->
+      <div class="px-6 py-3.5 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3">
+        <span class="text-xs text-gray-500">如有疑義，可致電免付費服務專線 0800-012-899</span>
+        <div class="flex items-center gap-2">
+          <button onclick="closeExampleModal()" class="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-200 rounded-xl transition-colors">關閉</button>
+          <button id="exampleModalDownloadBtn" onclick="triggerAction('download', currentViewingExampleDoc)" class="px-4 py-2 text-xs font-semibold text-white bg-[#00875A] hover:bg-brand-dark rounded-xl shadow-sm transition-all flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            <span>下載空白檔案</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subtle Toast Notification (全局通用) -->
+  <div id="toastNotification" class="fixed bottom-12 left-1/2 -translate-x-1/2 bg-gray-900/95 backdrop-blur text-white text-xs sm:text-sm px-5 py-2.5 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none translate-y-3 z-50 flex items-center gap-2"></div>
+
+  <!-- Background Decorative Watermarks (Matching Image 1's soft birds and glow) -->
+  <div class="bg-watermark-birds"></div>
+  <div class="watermark-motif">
+    <svg width="180" height="180" viewBox="0 0 100 100" fill="currentColor" class="text-[#00875A]">
+      <path d="M15 75 C18 64, 25 56, 38 50 C31 58, 27 68, 24 78 Z" />
+      <path d="M36 48 C42 36, 55 28, 72 21 C63 30, 56 42, 51 54 Z" />
+    </svg>
+  </div>
+  <div class="top-right-glow"></div>
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT: APPLICATION LOGIC & STATE PERSISTENCE                         -->
+  <!-- ========================================================================= -->
+  <script>
+    // ================= 全局狀態與持久化 (LOCALSTORAGE) =================
+    const STORAGE_KEY = 'bnp_cardif_claim_state_v2';
+
+    let currentView = 'triage';
+    let isAsstSidebarCollapsed = false;
+    let isSearchSidebarCollapsed = false;
+    let currentSearchFilter = '';
+    let currentViewingExampleDoc = '';
+
+    // 共享待辦清單 (兩頁完全雙向同步)
+    let todoItems = [];
+
+    // AI 諮詢對話紀錄 (重整不遺失)
+    let chatMessages = [];
+
+    // 官方文件資料庫
+    const officialDocs = [
+      { id: 'doc_1', title: '理賠申請書', desc: '適用於各項醫療、意外或身故理賠申請，需由要保人/被保險人親自簽名。', hasOfficialDoc: true, hasDownload: true },
+      { id: 'doc_2', title: '診斷證明書（正本）', desc: '需載明完整病名、就醫日期、住院或手術名稱，由主治醫師開具並蓋醫院印章與關防。', hasOfficialDoc: true, hasDownload: true },
+      { id: 'doc_3', title: '醫療費用收據與明細', desc: '醫院出具之醫療費用收據正本及費用明細清單，須清楚列出自費與健保項目。', hasOfficialDoc: true, hasDownload: true },
+      { id: 'doc_4', title: '手術紀錄說明書', desc: '若申請手術相關醫療保險金，需檢附手術紀錄單影本或醫師特別說明書。', hasOfficialDoc: true, hasDownload: true },
+      { id: 'doc_5', title: '出院病歷摘要紀錄', desc: '若有住院治療，需由醫院病歷室申請出院病歷摘要（含病程紀錄說明）。', hasOfficialDoc: true, hasDownload: true },
+      { id: 'doc_6', title: '交通事故證明 / 意外說明書', desc: '因交通事故或突發意外事故致傷者，請檢附警局道路交通事故當事人登記聯單。', hasOfficialDoc: true, hasDownload: true },
+      { id: 'doc_7', title: '存摺封面影本', desc: '理賠給付專用帳戶存摺封面影本，帳戶戶名須與受益人本人姓名完全相符。', hasOfficialDoc: true, hasDownload: true },
+      { id: 'doc_8', title: '身分證件影本', desc: '要保人、被保險人及受益人之身分證正反面清晰影本（未成年者附戶口名簿）。', hasOfficialDoc: true, hasDownload: true }
+    ];
+
+    // 表單填寫範例詳細指引資料庫
+    const sampleGuideData = {
+      '理賠申請書': {
+        title: '理賠申請書（個人保險理賠專用）',
+        tips: [
+          { label: '被保險人基本資料', desc: '請填寫最新之通訊地址、行動電話及 Email，以便理賠進度即時簡訊通知。' },
+          { label: '事故原因與經過', desc: '請清楚勾選「疾病」或「意外傷害」，並簡要說明發病日期或意外發生之人事時地物。' },
+          { label: '理賠給付匯款帳戶', desc: '請提供被保險人本人之銀行或郵局帳號，並黏貼存摺封面影本以利自動撥款。' },
+          { label: '親筆簽名（極重要）', desc: '被保險人須親筆簽名。若未滿 18 歲，法定代理人（父/母或監護人）亦需一併親自簽署。' }
+        ]
+      },
+      '診斷證明書（正本）': {
+        title: '醫師診斷證明書（正本檢附指引）',
+        tips: [
+          { label: '病名需明確具體', desc: '需由合格註冊醫師開具完整病名診斷（避免僅寫「疑似」或模糊症狀）。' },
+          { label: '就醫與住院日期', desc: '請務必載明入出院確切日期（如：115年10月01日至10月05日住院共5日）。' },
+          { label: '手術名稱與處置', desc: '若有手術，需詳列具體術式名稱（例如：闌尾切除術、骨折內固定復位手術）。' },
+          { label: '醫院大印與醫師簽章', desc: '需蓋有醫療院所正式關防大印與主治醫師之私章/簽字，影本或未蓋印者不予受理。' }
+        ]
+      },
+      '醫療費用收據與明細': {
+        title: '醫療費用收據正本與自費明細清單',
+        tips: [
+          { label: '正本收據戳印', desc: '實支實付醫療險原則上需檢附醫院正式收據正本（載有收費編號與金額戳記）。' },
+          { label: '費用明細清單', desc: '請一併附上醫療費用明細表，詳列病房費、手術費、特殊材料費（如自費骨板）及健保自付額。' }
+        ]
+      },
+      '手術紀錄說明書': {
+        title: '手術紀錄說明書 / 手術單影本',
+        annotation: '⚠️ 因為你補充有接受手術，請進一步確認手術相關文件。',
+        tips: [
+          { label: '手術紀錄內容', desc: '需載明手術名稱、術式位置、手術日期、麻醉方式及醫師執行之主要處置步驟。' },
+          { label: '替代方案', desc: '若醫院未開具專屬手術紀錄單，可由主治醫師於診斷證明書之醫囑欄詳細載明「手術名稱及術式代碼」。' }
+        ]
+      },
+      '出院病歷摘要紀錄': {
+        title: '醫院出院病歷摘要紀錄',
+        annotation: '⚠️ 因為你補充有住院治療，請備齊出院病歷摘要相關文件。',
+        tips: [
+          { label: '申請方式', desc: '需至醫院病歷課申請正式蓋章之「出院病歷摘要（Discharge Summary）」。' },
+          { label: '內容要項', desc: '應涵蓋主訴（Chief Complaint）、入院原因、治療病程經過、主要檢查結果及出院醫囑指示。' }
+        ]
+      },
+      '交通事故證明 / 意外說明書': {
+        title: '交通事故證明 / 意外傷害事故說明書',
+        annotation: '⚠️ 因為你補充涉及交通事故或意外，請進一步確認相關事故證明文件。',
+        tips: [
+          { label: '警方證明聯單', desc: '車禍案件請檢附警察局交通隊開具之「道路交通事故當事人登記聯單」或研判表。' },
+          { label: '意外事故說明', desc: '若非車禍之跌倒摔傷，請填寫本公司之「意外事故說明書」，簡述跌倒受傷之具體過程。' }
+        ]
+      },
+      '存摺封面影本': {
+        title: '理賠專用存摺封面影本',
+        tips: [
+          { label: '戶名核對', desc: '存摺帳戶戶名須與被保險人或保單指定受益人姓名完全一致，無法匯入他人或朋友帳號。' },
+          { label: '清楚辨識', desc: '帳號、銀行代碼（總行與分行代號）及戶名需字跡清楚無反光反黑。' }
+        ]
+      },
+      '身分證件影本': {
+        title: '身分證明文件影本',
+        tips: [
+          { label: '正反面影印', desc: '請將國民身分證正反面影本清晰黏貼於申請書專用欄位。' },
+          { label: '未成年人檢附', desc: '被保險人若未滿 14 歲未領有身分證，得以戶口名簿影本或戶籍謄本正本替代。' }
+        ]
+      }
+    };
+
+    // ================= 持久化儲存與讀取 (LOCALSTORAGE) =================
+    function saveAppState() {
+      try {
+        const state = {
+          currentView: currentView,
+          todoItems: todoItems,
+          chatMessages: chatMessages,
+          asstDraftInput: document.getElementById('asstUserInput') ? document.getElementById('asstUserInput').value : '',
+          searchFilter: currentSearchFilter || '',
+          updatedAt: Date.now()
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.warn('localStorage save failed:', e);
+      }
+    }
+
+    function loadAppState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch (e) {
+        console.warn('localStorage load failed:', e);
+        return null;
+      }
+    }
+
+    function saveCurrentDraftInput() {
+      saveAppState();
+    }
+
+    // 清空重設所有待辦事項
+    function promptClearAllTodos() {
+      if (todoItems.length === 0 && chatMessages.length === 0) {
+        showToast('目前待辦清單已經是空的！');
+        return;
+      }
+      if (confirm('確定要清空所有的待辦事項與對話紀錄嗎？此操作會同步重設兩邊的清單內容。')) {
+        todoItems = [];
+        chatMessages = [];
+        try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
+        syncAllTodoLists();
+        renderChatMessages();
+        saveAppState();
+        showToast('已清空所有待辦事項與紀錄！');
+      }
+    }
+
+    // ================= 頁面無縫切換 (SPA 單頁路由) =================
+    function switchView(target) {
+      currentView = target;
+      window.location.hash = '#' + target;
+      saveAppState();
+
+      const vTriage = document.getElementById('viewTriage');
+      const vAssistant = document.getElementById('viewAssistant');
+      const vSearch = document.getElementById('viewSearch');
+
+      vTriage.classList.add('hidden');
+      vAssistant.classList.add('hidden');
+      vSearch.classList.add('hidden');
+
+      if (target === 'triage') {
+        vTriage.classList.remove('hidden');
+        document.title = '理賠申請分流 - 法國巴黎人壽';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (target === 'assistant') {
+        vAssistant.classList.remove('hidden');
+        document.title = 'AI 智慧引導 - 法國巴黎人壽';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        assistantRenderTodoList();
+        renderChatMessages();
+        setTimeout(asstUpdateToggleBtnPos, 50);
+      } else if (target === 'search') {
+        vSearch.classList.remove('hidden');
+        document.title = '文件快速搜尋 - 法國巴黎人壽';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        searchRenderTodoList();
+        renderDocLibrary();
+        setTimeout(searchUpdateToggleBtnPos, 50);
+      }
+    }
+
+    // ================= 智慧引導：對話與情境分析 =================
+    function fillPromptAndSubmit(text) {
+      const input = document.getElementById('asstUserInput');
+      if (input) {
+        input.value = text;
+        handleAssistantPrompt();
+      }
+    }
+
+    function handleAssistantPrompt() {
+      const input = document.getElementById('asstUserInput');
+      if (!input) return;
+      const val = input.value.trim();
+      if (!val) return;
+
+      input.value = '';
+      saveAppState();
+
+      // 新增使用者發言
+      chatMessages.push({
+        id: Date.now(),
+        sender: 'user',
+        text: val,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+      renderChatMessages();
+
+      showToast('AI 助手正在依據您的描述分析專屬理賠文件...');
+
+      setTimeout(() => {
+        analyzeAndGenerateAiResponse(val);
+      }, 600);
+    }
+
+    function analyzeAndGenerateAiResponse(desc) {
+      const isSurgery = /手術|開刀|切除|縫合|內固定/i.test(desc);
+      const isHospital = /住院|病房|留院|住出院/i.test(desc);
+      const isAccident = /意外|車禍|摔倒|跌倒|骨折|碰撞|受傷/i.test(desc);
+
+      const recommendedDocs = [
+        {
+          title: '理賠申請書',
+          hasOfficialDoc: true,
+          hasDownload: true,
+          aiReason: '⚠️ 依據您的申請需求，此為必備之理賠基本申請表單。'
+        },
+        {
+          title: '診斷證明書（正本）',
+          hasOfficialDoc: true,
+          hasDownload: true,
+          aiReason: '⚠️ 醫師診斷證明為確認事故原因及核定理賠之核心證明依據。'
+        },
+        {
+          title: '醫療費用收據與明細',
+          hasOfficialDoc: true,
+          hasDownload: true,
+          aiReason: '⚠️ 實支實付型理賠必備文件，請備齊收據正本與自費明細清單。'
+        }
+      ];
+
+      if (isSurgery) {
+        recommendedDocs.push({
+          title: '手術紀錄說明書',
+          hasOfficialDoc: true,
+          hasDownload: true,
+          aiReason: '⚠️ 因為你補充有接受手術，請進一步確認手術相關文件。'
+        });
+      }
+      if (isHospital) {
+        recommendedDocs.push({
+          title: '出院病歷摘要紀錄',
+          hasOfficialDoc: true,
+          hasDownload: true,
+          aiReason: '⚠️ 因為你補充有住院治療，請進一步確認出院病歷相關文件。'
+        });
+      }
+      if (isAccident) {
+        recommendedDocs.push({
+          title: '交通事故證明 / 意外說明書',
+          hasOfficialDoc: true,
+          hasDownload: true,
+          aiReason: '⚠️ 因為你補充涉及交通事故或意外，請進一步確認相關事故證明文件。'
+        });
+      }
+
+      // 自動同步新增至待辦清單
+      let addedCount = 0;
+      recommendedDocs.forEach((doc, idx) => {
+        const existing = todoItems.find(t => t.title === doc.title);
+        if (!existing) {
+          todoItems.push({
+            id: Date.now() + idx,
+            title: doc.title,
+            completed: false,
+            isCustom: false,
+            hasDownload: doc.hasDownload,
+            hasOfficialDoc: doc.hasOfficialDoc,
+            aiReason: doc.aiReason
+          });
+          addedCount++;
+        } else if (!existing.aiReason && doc.aiReason) {
+          existing.aiReason = doc.aiReason;
+        }
+      });
+
+      // AI 回覆訊息
+      chatMessages.push({
+        id: Date.now() + 100,
+        sender: 'ai',
+        text: '您好！AI 助手已為您分析理賠情境。依據您的描述，已為您於左側待辦清單中規劃必備理賠文件與注意事項：',
+        docs: recommendedDocs,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+
+      syncAllTodoLists();
+      renderChatMessages();
+      saveAppState();
+      showToast('✨ AI 助手已為您規劃 ' + recommendedDocs.length + ' 項文件，並標註專屬注意事項！');
+    }
+
+    function renderChatMessages() {
+      const welcomeSection = document.getElementById('asstWelcomeSection');
+      const chatContainer = document.getElementById('asstChatContainer');
+      if (!chatContainer) return;
+
+      if (chatMessages.length === 0) {
+        if (welcomeSection) {
+          welcomeSection.classList.remove('hidden');
+          welcomeSection.classList.add('flex');
+        }
+        chatContainer.classList.add('hidden');
+        chatContainer.classList.remove('flex');
+        return;
+      }
+
+      if (welcomeSection) {
+        welcomeSection.classList.add('hidden');
+        welcomeSection.classList.remove('flex');
+      }
+      chatContainer.classList.remove('hidden');
+      chatContainer.classList.add('flex');
+      chatContainer.innerHTML = '';
+
+      chatMessages.forEach(msg => {
+        if (msg.sender === 'user') {
+          const userBubble = document.createElement('div');
+          userBubble.className = 'w-full flex justify-end';
+          userBubble.innerHTML = `
+            <div class="max-w-xl bg-[#00875A] text-white rounded-2xl rounded-br-sm px-4 sm:px-5 py-3 shadow-[0_4px_16px_rgba(0,135,90,0.18)]">
+              <p class="text-sm sm:text-[15px] leading-relaxed">${escapeHtml(msg.text)}</p>
+              <div class="text-[10px] text-white/70 text-right mt-1">${msg.time || ''}</div>
+            </div>
+          `;
+          chatContainer.appendChild(userBubble);
+        } else {
+          const aiBubble = document.createElement('div');
+          aiBubble.className = 'w-full flex items-start gap-3';
+          
+          let docsHtml = '';
+          if (msg.docs && msg.docs.length > 0) {
+            docsHtml = `
+              <div class="mt-3.5 flex flex-col gap-2.5">
+                ${msg.docs.map(doc => {
+                  return `
+                    <div class="p-3 sm:p-3.5 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col gap-2">
+                      <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-2">
+                          <div class="w-6 h-6 rounded-lg bg-[#E8F6EF] text-brand flex items-center justify-center flex-shrink-0">
+                            <svg class="w-3.5 h-3.5 stroke-[2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                          </div>
+                          <span class="font-bold text-gray-900 text-[13.5px]">${escapeHtml(doc.title)}</span>
+                        </div>
+                        <span class="text-[11px] font-semibold text-brand bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">已列入清單</span>
+                      </div>
+
+                      ${doc.aiReason ? `
+                        <!-- AI 判定註解 (例如：⚠️ 因為你補充有接受手術，請進一步確認手術相關文件。) -->
+                        <div class="text-xs text-amber-800 bg-amber-50/90 border border-amber-200/80 rounded-lg px-2.5 py-1.5 flex items-start gap-1.5 leading-relaxed">
+                          <span class="flex-shrink-0 text-amber-500 font-bold">⚠️</span>
+                          <span class="font-medium">${escapeHtml(doc.aiReason.replace(/^⚠️\s*/, ''))}</span>
+                        </div>
+                      ` : ''}
+
+                      <div class="pt-2 border-t border-gray-100 flex items-center justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                          <button type="button" onclick="triggerAction('viewDoc', '${escapeHtml(doc.title)}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:bg-[#F0FAF5] text-brand border border-[#8EE0BA] text-[11px] font-medium shadow-sm active:scale-95 transition-all">
+                            <svg class="w-3.5 h-3.5 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                            <span>查看檔案</span>
+                          </button>
+                          <button type="button" onclick="triggerAction('download', '${escapeHtml(doc.title)}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#00875A] hover:bg-brand-dark text-white text-[11px] font-medium shadow-sm active:scale-95 transition-all">
+                            <svg class="w-3.5 h-3.5 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                            <span>下載檔案</span>
+                          </button>
+                          <!-- 查看填寫範例按鈕 -->
+                          <button type="button" onclick="triggerAction('viewExample', '${escapeHtml(doc.title)}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#FFF9EB] hover:bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A] hover:border-amber-400 text-[11px] font-medium shadow-sm active:scale-95 transition-all">
+                            <svg class="w-3.5 h-3.5 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg>
+                            <span>查看填寫範例</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `;
+          }
+
+          aiBubble.innerHTML = `
+            <div class="w-8 h-8 rounded-full bg-[#E8F6EF] text-[#00875A] flex items-center justify-center flex-shrink-0 shadow-sm mt-1">
+              <svg width="22" height="22" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M30 48C40.4934 48 49 39.7173 49 29.5C49 19.2827 40.4934 11 30 11C19.5066 11 11 19.2827 11 29.5C11 33.7225 12.4418 37.6163 14.887 40.6725L12.5 48.5L20.8988 46.2872C23.6335 47.3828 26.7169 48 30 48Z" stroke="#00875A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                <text x="30" y="35" text-anchor="middle" font-family="'Noto Sans TC', sans-serif" font-size="16" font-weight="700" fill="#00875A" letter-spacing="0.5">AI</text>
+              </svg>
+            </div>
+            <div class="max-w-2xl bg-white border border-[#E1F3EA] rounded-2xl rounded-tl-sm p-4 sm:p-5 shadow-[0_4px_20px_rgba(0,135,90,0.06)] flex flex-col gap-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-bold text-[#00875A]">理賠 AI 智慧助手</span>
+                <span class="text-[10px] text-gray-400">${msg.time || ''}</span>
+              </div>
+              <p class="text-sm text-gray-700 leading-relaxed">${escapeHtml(msg.text)}</p>
+              ${docsHtml}
+            </div>
+          `;
+          chatContainer.appendChild(aiBubble);
+        }
+      });
+
+      // Auto scroll to latest
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    
+
+
+    // ================= 側邊欄：待辦清單邏輯 (兩頁通用共享) =================
+    function assistantRenderTodoList() {
+      const container = document.getElementById('asstTodoItemsContainer');
+      const badge = document.getElementById('asstTodoBadge');
+      const pendingCount = todoItems.filter(t => !t.completed).length;
+      if (badge) badge.textContent = pendingCount;
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (todoItems.length === 0) {
+        container.innerHTML = `
+          <div class="py-12 px-4 flex flex-col items-center justify-center text-center gap-2.5 select-none">
+            <div class="w-12 h-12 rounded-full bg-[#EBF7F0] text-brand/75 flex items-center justify-center">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            </div>
+            <span class="text-sm text-gray-600 font-semibold">目前暫無待辦事項</span>
+            <span class="text-xs text-gray-400 leading-relaxed">請在下方描述就醫情況規劃清單，<br>亦可點擊下方按鈕手動新增</span>
+          </div>
+        `;
+      } else {
+        todoItems.forEach((t) => {
+          const card = document.createElement('div');
+          card.className = `p-3 rounded-xl border transition-all ${t.completed ? 'bg-[#F9FAFA] border-gray-200' : 'bg-white hover:bg-[#F8FCFA] border-gray-100 hover:border-[#CFEFE0] shadow-[0_1px_4px_rgba(0,135,90,0.03)]'}`;
+          const circleIcon = t.completed
+            ? `<button type="button" onclick="event.stopPropagation(); toggleTodoItem(${t.id})" class="w-4 h-4 rounded-full bg-[#00875A] border-2 border-[#00875A] flex items-center justify-center text-white flex-shrink-0 cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-sm" title="點擊取消完成"><svg class="w-2.5 h-2.5 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></button>`
+            : `<button type="button" onclick="event.stopPropagation(); toggleTodoItem(${t.id})" class="w-4 h-4 rounded-full border-2 border-brand/70 hover:border-brand hover:scale-110 active:scale-95 flex-shrink-0 cursor-pointer transition-all" title="點擊標記為完成"></button>`;
+          
+          const actionButtons = (!t.isCustom && (t.hasDownload || t.hasOfficialDoc))
+            ? `<div class="mt-2.5 pt-2 border-t border-gray-100 flex items-center flex-wrap gap-1.5">
+                 ${t.hasOfficialDoc ? `<button type="button" onclick="triggerAction('viewDoc', '${escapeHtml(t.title)}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:bg-[#F0FAF5] text-brand border border-[#8EE0BA] hover:border-brand text-[11px] font-medium shadow-sm transition-all active:scale-95"><svg class="w-3.5 h-3.5 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg><span>查看檔案</span></button>` : ''}
+                 ${t.hasDownload ? `<button type="button" onclick="triggerAction('download', '${escapeHtml(t.title)}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#00875A] hover:bg-brand-dark text-white text-[11px] font-medium shadow-sm transition-all active:scale-95"><svg class="w-3.5 h-3.5 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg><span>下載檔案</span></button>` : ''}
+                 <!-- 查看填寫範例 -->
+                 <button type="button" onclick="triggerAction('viewExample', '${escapeHtml(t.title)}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#FFF9EB] hover:bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A] hover:border-amber-400 text-[11px] font-medium shadow-sm transition-all active:scale-95"><svg class="w-3.5 h-3.5 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg><span>查看填寫範例</span></button>
+               </div>` : '';
+
+          card.innerHTML = `
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5 flex-1 min-w-0">
+                ${circleIcon}
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-bold text-[13.5px] ${t.completed ? 'text-gray-400 line-through' : 'text-gray-900'} cursor-default select-none">${escapeHtml(t.title)}</span>
+                  ${t.isCustom ? `<span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-brand border border-emerald-200">自訂</span>` : ''}
+                </div>
+              </div>
+              <button type="button" onclick="deleteTodoItem(${t.id})" class="text-gray-300 hover:text-red-500 p-1 transition-colors" title="刪除此項目">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            ${t.aiReason ? `
+              <!-- AI 判定註解 (例如：⚠️ 因為你補充有接受手術，請進一步確認手術相關文件。) -->
+              <div class="mt-2 text-xs text-amber-800 bg-amber-50/90 border border-amber-200/80 rounded-lg px-2.5 py-1.5 flex items-start gap-1.5 leading-relaxed">
+                <span class="flex-shrink-0 text-amber-500 font-bold">⚠️</span>
+                <span class="font-medium">${escapeHtml(t.aiReason.replace(/^⚠️\s*/, ''))}</span>
+              </div>
+            ` : ''}
+
+            ${actionButtons}
+          `;
+          container.appendChild(card);
+        });
+      }
+      asstUpdateToggleBtnPos();
+    }
+
+    function asstToggleAddTodoForm(show) {
+      const form = document.getElementById('asstAddTodoForm');
+      if (show !== undefined) form.classList.toggle('hidden', !show);
+      else form.classList.toggle('hidden');
+      if (!form.classList.contains('hidden')) document.getElementById('asstNewTodoTitle').focus();
+    }
+
+    function asstSubmitAddTodo() {
+      const input = document.getElementById('asstNewTodoTitle');
+      const title = input.value.trim();
+      if (!title) { alert('請輸入待辦事項名稱！'); return; }
+      todoItems.unshift({ id: Date.now(), title: title, completed: false, isCustom: true, hasDownload: false, hasOfficialDoc: false });
+      input.value = '';
+      asstToggleAddTodoForm(false);
+      syncAllTodoLists();
+      saveAppState();
+      showToast(`已新增自訂待辦事項「${title}」`);
+    }
+
+    function asstUpdateToggleBtnPos() {
+      const panel = document.getElementById('asstSidebarPanel');
+      const btn = document.getElementById('asstSidebarToggleBtn');
+      if (panel && btn) btn.style.top = `${panel.offsetHeight / 2}px`;
+    }
+
+    function asstToggleSidebar() {
+      const panel = document.getElementById('asstSidebarPanel');
+      const toggleIcon = document.getElementById('asstToggleIcon');
+      const btn = document.getElementById('asstSidebarToggleBtn');
+      const container = document.getElementById('asstSidebarContainer');
+      isAsstSidebarCollapsed = !isAsstSidebarCollapsed;
+
+      if (isAsstSidebarCollapsed) {
+        panel.style.transform = 'translateX(-110%)';
+        panel.style.opacity = '0';
+        panel.style.pointerEvents = 'none';
+        container.style.width = '0px';
+        btn.style.right = '-20px';
+        btn.title = '展開側邊欄';
+        toggleIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="m6 17 5-5-5-5m7 10 5-5-5-5" />';
+      } else {
+        panel.style.transform = 'translateX(0)';
+        panel.style.opacity = '1';
+        panel.style.pointerEvents = 'auto';
+        container.style.width = '';
+        btn.style.right = '-16px';
+        btn.title = '收合側邊欄';
+        toggleIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="m11 17-5-5 5-5m7 10-5-5 5-5" />';
+        setTimeout(asstUpdateToggleBtnPos, 50);
+      }
+    }
+
+    // 十字架下拉選單
+    function asstTogglePlusMenu(event) {
+      if (event) event.stopPropagation();
+      const menu = document.getElementById('asstPlusDropdownMenu');
+      const icon = document.getElementById('asstPlusIcon');
+      if (!menu) return;
+      const isOpen = !menu.classList.contains('hidden');
+      if (isOpen) {
+        menu.classList.add('hidden');
+        menu.classList.remove('flex');
+        if (icon) icon.style.transform = 'rotate(0deg)';
+      } else {
+        menu.classList.remove('hidden');
+        menu.classList.add('flex');
+        if (icon) icon.style.transform = 'rotate(45deg)';
+      }
+    }
+
+    function asstClosePlusMenu() {
+      const menu = document.getElementById('asstPlusDropdownMenu');
+      const icon = document.getElementById('asstPlusIcon');
+      if (menu && !menu.classList.contains('hidden')) {
+        menu.classList.add('hidden');
+        menu.classList.remove('flex');
+        if (icon) icon.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      const container = document.getElementById('asstPlusMenuContainer');
+      if (container && !container.contains(e.target)) asstClosePlusMenu();
+    });
+
+    function asstTriggerUploadFile(event) {
+      if (event) event.stopPropagation();
+      asstClosePlusMenu();
+      const fileInput = document.getElementById('asstLocalFileInput');
+      if (fileInput) fileInput.click();
+    }
+
+    function asstTriggerCloudImport(event) {
+      if (event) event.stopPropagation();
+      asstClosePlusMenu();
+      showToast('☁️ 雲端硬碟匯入模組已就緒（格式已保留）');
+    }
+
+    function asstHandleFileSelected(event) {
+      const files = event.target.files;
+      if (files && files.length > 0) showToast(`📁 已選取檔案：「${files[0].name}」`);
+    }
+
+    // ================= 文件快速搜尋：待辦清單與搜尋邏輯 =================
+    function searchRenderTodoList() {
+      const container = document.getElementById('searchTodoItemsContainer');
+      const badge = document.getElementById('searchTodoBadge');
+      const pendingCount = todoItems.filter(t => !t.completed).length;
+      if (badge) badge.textContent = pendingCount;
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (todoItems.length === 0) {
+        container.innerHTML = `
+          <div class="py-12 px-4 flex flex-col items-center justify-center text-center gap-2.5 select-none">
+            <div class="w-12 h-12 rounded-full bg-[#EBF7F0] text-brand/75 flex items-center justify-center">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            </div>
+            <span class="text-sm text-gray-600 font-semibold">目前暫無待辦事項</span>
+            <span class="text-xs text-gray-400 leading-relaxed">請在中央搜尋文件加入清單，<br>亦可點擊下方按鈕手動新增</span>
+          </div>
+        `;
+      } else {
+        todoItems.forEach((t) => {
+          const card = document.createElement('div');
+          card.className = `p-3 rounded-xl border transition-all ${t.completed ? 'bg-[#F9FAFA] border-gray-200' : 'bg-white hover:bg-[#F8FCFA] border-gray-100 hover:border-[#CFEFE0] shadow-[0_1px_4px_rgba(0,135,90,0.03)]'}`;
+          const circleIcon = t.completed
+            ? `<button type="button" onclick="event.stopPropagation(); toggleTodoItem(${t.id})" class="w-4 h-4 rounded-full bg-[#00875A] border-2 border-[#00875A] flex items-center justify-center text-white flex-shrink-0 cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-sm" title="點擊取消完成"><svg class="w-2.5 h-2.5 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></button>`
+            : `<button type="button" onclick="event.stopPropagation(); toggleTodoItem(${t.id})" class="w-4 h-4 rounded-full border-2 border-brand/70 hover:border-brand hover:scale-110 active:scale-95 flex-shrink-0 cursor-pointer transition-all" title="點擊標記為完成"></button>`;
+          
+          const actionButtons = (!t.isCustom && (t.hasDownload || t.hasOfficialDoc))
+            ? `<div class="mt-2.5 pt-2 border-t border-gray-100 flex items-center flex-wrap gap-1.5">
+                 ${t.hasOfficialDoc ? `<button type="button" onclick="triggerAction('viewDoc', '${escapeHtml(t.title)}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:bg-[#F0FAF5] text-brand border border-[#8EE0BA] hover:border-brand text-[11px] font-medium shadow-sm transition-all active:scale-95"><svg class="w-3.5 h-3.5 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg><span>查看檔案</span></button>` : ''}
+                 ${t.hasDownload ? `<button type="button" onclick="triggerAction('download', '${escapeHtml(t.title)}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#00875A] hover:bg-brand-dark text-white text-[11px] font-medium shadow-sm transition-all active:scale-95"><svg class="w-3.5 h-3.5 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg><span>下載檔案</span></button>` : ''}
+                 <!-- 查看填寫範例 -->
+                 <button type="button" onclick="triggerAction('viewExample', '${escapeHtml(t.title)}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#FFF9EB] hover:bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A] hover:border-amber-400 text-[11px] font-medium shadow-sm transition-all active:scale-95"><svg class="w-3.5 h-3.5 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg><span>查看填寫範例</span></button>
+               </div>` : '';
+
+          card.innerHTML = `
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5 flex-1 min-w-0">
+                ${circleIcon}
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-bold text-[13.5px] ${t.completed ? 'text-gray-400 line-through' : 'text-gray-900'} cursor-default select-none">${escapeHtml(t.title)}</span>
+                  ${t.isCustom ? `<span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-brand border border-emerald-200">自訂</span>` : ''}
+                </div>
+              </div>
+              <button type="button" onclick="deleteTodoItem(${t.id})" class="text-gray-300 hover:text-red-500 p-1 transition-colors" title="刪除此項目">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            ${t.aiReason ? `
+              <!-- AI 判定註解 (例如：⚠️ 因為你補充有接受手術，請進一步確認手術相關文件。) -->
+              <div class="mt-2 text-xs text-amber-800 bg-amber-50/90 border border-amber-200/80 rounded-lg px-2.5 py-1.5 flex items-start gap-1.5 leading-relaxed">
+                <span class="flex-shrink-0 text-amber-500 font-bold">⚠️</span>
+                <span class="font-medium">${escapeHtml(t.aiReason.replace(/^⚠️\s*/, ''))}</span>
+              </div>
+            ` : ''}
+
+            ${actionButtons}
+          `;
+          container.appendChild(card);
+        });
+      }
+      searchUpdateToggleBtnPos();
+    }
+
+    function searchToggleAddTodoForm(show) {
+      const form = document.getElementById('searchAddTodoForm');
+      if (show !== undefined) form.classList.toggle('hidden', !show);
+      else form.classList.toggle('hidden');
+      if (!form.classList.contains('hidden')) document.getElementById('searchNewTodoTitle').focus();
+    }
+
+    function searchSubmitAddTodo() {
+      const input = document.getElementById('searchNewTodoTitle');
+      const title = input.value.trim();
+      if (!title) { alert('請輸入待辦事項名稱！'); return; }
+      todoItems.unshift({ id: Date.now(), title: title, completed: false, isCustom: true, hasDownload: false, hasOfficialDoc: false });
+      input.value = '';
+      searchToggleAddTodoForm(false);
+      syncAllTodoLists();
+      saveAppState();
+      showToast(`已新增自訂待辦事項「${title}」`);
+    }
+
+    function searchUpdateToggleBtnPos() {
+      const panel = document.getElementById('searchSidebarPanel');
+      const btn = document.getElementById('searchSidebarToggleBtn');
+      if (panel && btn) btn.style.top = `${panel.offsetHeight / 2}px`;
+    }
+
+    function searchToggleSidebar() {
+      const panel = document.getElementById('searchSidebarPanel');
+      const toggleIcon = document.getElementById('searchToggleIcon');
+      const btn = document.getElementById('searchSidebarToggleBtn');
+      const container = document.getElementById('searchSidebarContainer');
+      isSearchSidebarCollapsed = !isSearchSidebarCollapsed;
+
+      if (isSearchSidebarCollapsed) {
+        panel.style.transform = 'translateX(-110%)';
+        panel.style.opacity = '0';
+        panel.style.pointerEvents = 'none';
+        container.style.width = '0px';
+        btn.style.right = '-20px';
+        btn.title = '展開側邊欄';
+        toggleIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="m6 17 5-5-5-5m7 10 5-5-5-5" />';
+      } else {
+        panel.style.transform = 'translateX(0)';
+        panel.style.opacity = '1';
+        panel.style.pointerEvents = 'auto';
+        container.style.width = '';
+        btn.style.right = '-16px';
+        btn.title = '收合側邊欄';
+        toggleIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="m11 17-5-5 5-5m7 10-5-5 5-5" />';
+        setTimeout(searchUpdateToggleBtnPos, 50);
+      }
+    }
+
+    // ================= 文件庫檢索渲染 =================
+    function renderDocLibrary() {
+      const grid = document.getElementById('searchDocGrid');
+      if (!grid) return;
+
+      const filtered = officialDocs.filter(doc => {
+        if (!currentSearchFilter) return true;
+        const q = currentSearchFilter.toLowerCase();
+        return doc.title.toLowerCase().includes(q) || doc.desc.toLowerCase().includes(q);
+      });
+
+      grid.innerHTML = '';
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-12 px-4 bg-white rounded-2xl border border-gray-100 flex flex-col items-center justify-center text-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700">找不到符合「${escapeHtml(currentSearchFilter)}」的文件</span>
+            <span class="text-xs text-gray-400">您可以嘗試不同關鍵字，或使用左側「手動添加待辦事項」</span>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(doc => {
+        const isInTodo = todoItems.some(t => t.title === doc.title);
+        const todoItemObj = todoItems.find(t => t.title === doc.title);
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-2xl p-5 border border-[#E5EAE7] hover:border-[#CFEFE0] shadow-[0_2px_12px_rgba(0,135,90,0.03)] hover:shadow-[0_6px_20px_rgba(0,135,90,0.08)] transition-all flex flex-col justify-between gap-4 group';
+
+        const aiReasonHtml = (todoItemObj && todoItemObj.aiReason) ? `
+          <div class="mt-2 text-xs text-amber-800 bg-amber-50/90 border border-amber-200/80 rounded-lg px-2.5 py-1.5 flex items-start gap-1.5 leading-relaxed">
+            <span class="flex-shrink-0 text-amber-500 font-bold">⚠️</span>
+            <span class="font-medium">${escapeHtml(todoItemObj.aiReason.replace(/^⚠️\s*/, ''))}</span>
+          </div>
+        ` : '';
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-8 h-8 rounded-xl bg-[#E8F6EF] text-brand flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                <svg class="w-4 h-4 stroke-[2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+              </div>
+              <h3 class="text-base font-bold text-gray-900 group-hover:text-brand transition-colors">${escapeHtml(doc.title)}</h3>
+            </div>
+            <p class="text-xs text-gray-500 leading-relaxed pl-10">${escapeHtml(doc.desc)}</p>
+            ${aiReasonHtml}
+          </div>
+
+          <div class="pt-3 border-t border-gray-100 flex items-center justify-between gap-2 flex-wrap">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <button type="button" onclick="triggerAction('viewDoc', '${escapeHtml(doc.title)}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:bg-[#F0FAF5] text-brand border border-[#8EE0BA] hover:border-brand text-xs font-medium shadow-sm transition-all active:scale-95">
+                <svg class="w-3.5 h-3.5 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                <span>查看檔案</span>
+              </button>
+              <button type="button" onclick="triggerAction('download', '${escapeHtml(doc.title)}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:bg-[#F0FAF5] text-gray-700 hover:text-brand border border-gray-200 hover:border-brand text-xs font-medium shadow-sm transition-all active:scale-95">
+                <svg class="w-3.5 h-3.5 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                <span>下載檔案</span>
+              </button>
+              <!-- 查看填寫範例 -->
+              <button type="button" onclick="triggerAction('viewExample', '${escapeHtml(doc.title)}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#FFF9EB] hover:bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A] hover:border-amber-400 text-xs font-medium shadow-sm transition-all active:scale-95">
+                <svg class="w-3.5 h-3.5 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg>
+                <span>查看填寫範例</span>
+              </button>
+            </div>
+
+            <!-- 加入待辦清單 (單一大加號，不重複) -->
+            <button 
+              type="button" 
+              onclick="toggleDocInTodo('${escapeHtml(doc.title)}')" 
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95 shadow-sm ${isInTodo ? 'bg-[#EBF7F0] text-brand border border-[#8EE0BA] hover:bg-emerald-100' : 'bg-[#00875A] text-white hover:bg-brand-dark'}"
+            >
+              ${isInTodo ? `
+                <svg class="w-3.5 h-3.5 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                <span>已在待辦清單</span>
+              ` : `
+                <svg class="w-3.5 h-3.5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                <span>加入待辦清單</span>
+              `}
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleDocInTodo(title) {
+      const existingIdx = todoItems.findIndex(t => t.title === title);
+      if (existingIdx !== -1) {
+        todoItems.splice(existingIdx, 1);
+        syncAllTodoLists();
+        saveAppState();
+        showToast(`已從待辦清單移除「${title}」`);
+      } else {
+        const doc = officialDocs.find(d => d.title === title);
+        todoItems.push({
+          id: Date.now(),
+          title: title,
+          completed: false,
+          isCustom: false,
+          hasDownload: doc ? doc.hasDownload : true,
+          hasOfficialDoc: doc ? doc.hasOfficialDoc : true
+        });
+        syncAllTodoLists();
+        saveAppState();
+        showToast(`✨ 已將「${title}」加入待辦清單！`);
+      }
+    }
+
+    function selectTag(title) {
+      const input = document.getElementById('searchUserInput');
+      if (input) input.value = title;
+      currentSearchFilter = title;
+      renderDocLibrary();
+      saveAppState();
+      showToast(title ? `已篩選「${title}」相關文件` : '已顯示所有官方文件');
+    }
+
+    function handleSearchInput(val) {
+      currentSearchFilter = val.trim();
+      renderDocLibrary();
+      saveAppState();
+    }
+
+    function handleSearchSubmit() {
+      const input = document.getElementById('searchUserInput');
+      if (input) {
+        currentSearchFilter = input.value.trim();
+        renderDocLibrary();
+        saveAppState();
+        if (currentSearchFilter) showToast(`已篩選符合「${currentSearchFilter}」的文件`);
+      }
+    }
+
+    // ================= 待辦事項操作 (兩頁同步) =================
+    function toggleTodoItem(id) {
+      const item = todoItems.find(t => t.id === id);
+      if (item) {
+        item.completed = !item.completed;
+        syncAllTodoLists();
+        saveAppState();
+        showToast(item.completed ? `已標記完成「${item.title}」` : `已恢復未完成「${item.title}」`);
+      }
+    }
+
+    function deleteTodoItem(id) {
+      const idx = todoItems.findIndex(t => t.id === id);
+      if (idx !== -1) {
+        const title = todoItems[idx].title;
+        todoItems.splice(idx, 1);
+        syncAllTodoLists();
+        saveAppState();
+        showToast(`已刪除「${title}」`);
+      }
+    }
+
+    function syncAllTodoLists() {
+      assistantRenderTodoList();
+      searchRenderTodoList();
+      renderDocLibrary();
+    }
+
+    // ================= 查看填寫範例互動 MODAL =================
+    function openExampleModal(docTitle) {
+      currentViewingExampleDoc = docTitle;
+      const modal = document.getElementById('exampleModal');
+      const titleEl = document.getElementById('exampleModalTitle');
+      const bodyEl = document.getElementById('exampleModalBody');
+
+      if (!modal || !bodyEl) return;
+
+      const guide = sampleGuideData[docTitle] || {
+        title: `${docTitle} - 填寫指引與範例`,
+        tips: [
+          { label: '基本填寫原則', desc: '請以藍色或黑色原子筆正楷填寫，字跡務必工整清晰。' },
+          { label: '重要欄位確認', desc: '核對身分證字號、聯絡電話及銀行帳戶無誤。' },
+          { label: '親筆簽名處', desc: '要保人、被保險人或法定代理人須親自簽章。' }
+        ]
+      };
+
+      if (titleEl) titleEl.textContent = `【填寫範例】${guide.title}`;
+
+      let annotationBox = '';
+      if (guide.annotation) {
+        annotationBox = `
+          <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-2 text-xs text-amber-900 leading-relaxed shadow-sm">
+            <span class="text-base flex-shrink-0">⚠️</span>
+            <div>
+              <span class="font-bold">AI 智慧提示：</span>
+              <span>${guide.annotation.replace(/^⚠️\s*/, '')}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      const tipsList = guide.tips.map((t, i) => `
+        <div class="p-3.5 bg-gray-50 hover:bg-[#F2FAF5] rounded-2xl border border-gray-100 transition-colors flex items-start gap-3">
+          <div class="w-6 h-6 rounded-full bg-[#00875A] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+            ${i + 1}
+          </div>
+          <div class="flex-1">
+            <h4 class="text-xs font-bold text-gray-900 mb-0.5">${t.label}</h4>
+            <p class="text-xs text-gray-600 leading-relaxed">${t.desc}</p>
+          </div>
+        </div>
+      `).join('');
+
+      bodyEl.innerHTML = `
+        ${annotationBox}
+        <div class="flex flex-col gap-2.5">
+          <div class="text-xs font-bold text-gray-700 px-1">重要填寫欄位與審查注意事項：</div>
+          ${tipsList}
+        </div>
+        <div class="p-3.5 bg-emerald-50/60 border border-[#CFEFE0] rounded-2xl flex items-center justify-between text-xs text-[#00875A]">
+          <span class="font-medium">💡 提示：您可下載空白檔案直接列印填寫，或透過線上辦理送件。</span>
+        </div>
+      `;
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeExampleModal() {
+      const modal = document.getElementById('exampleModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    // ================= 通用按鈕觸發回饋 =================
+    function triggerAction(action, title) {
+      if (action === 'viewExample') {
+        openExampleModal(title);
+        showToast(`📑 已開啟「${title}」填寫範例與指引`);
+      } else if (action === 'download') {
+        showToast(`📥 正在下載「${title}」空白表單範本 (PDF)...`);
+      } else if (action === 'viewDoc') {
+        showToast(`📄 正在開啟「${title}」官方樣張預覽...`);
+      }
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const toast = document.getElementById('toastNotification');
+      if (!toast) return;
+      toast.innerHTML = `
+        <svg class="w-4 h-4 text-[#8FE0BA] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <span>${msg}</span>
+      `;
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-3');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-3');
+      }, 3000);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // ================= 初始化與恢復紀錄 (F5 REFRESH RESTORATION) =================
+    window.addEventListener('DOMContentLoaded', () => {
+      
+
+      // 讀取持久化資料
+      const saved = loadAppState();
+      if (saved) {
+        if (Array.isArray(saved.todoItems)) {
+          todoItems = saved.todoItems;
+        }
+        if (Array.isArray(saved.chatMessages)) {
+          chatMessages = saved.chatMessages;
+        }
+        if (saved.asstDraftInput) {
+          const input = document.getElementById('asstUserInput');
+          if (input) input.value = saved.asstDraftInput;
+        }
+        if (saved.searchFilter) {
+          currentSearchFilter = saved.searchFilter;
+          const sInput = document.getElementById('searchUserInput');
+          if (sInput) sInput.value = saved.searchFilter;
+        }
+      }
+
+      // 檢查 URL Hash 或預設 View (F5 重新整理會保留目前的 #hash)
+      let targetView = currentView || 'triage';
+      if (window.location.hash) {
+        const hash = window.location.hash.replace('#', '');
+        if (['triage', 'assistant', 'search'].includes(hash)) targetView = hash;
+      }
+
+      switchView(targetView);
+      syncAllTodoLists();
+      renderChatMessages();
+
+      window.addEventListener('resize', () => {
+        asstUpdateToggleBtnPos();
+        searchUpdateToggleBtnPos();
+      });
+    });
+
+    window.addEventListener('hashchange', () => {
+      const hash = window.location.hash.replace('#', '');
+      if (['triage', 'assistant', 'search'].includes(hash) && hash !== currentView) {
+        switchView(hash);
+      }
+    });
+  </script>
+</body>
+</html>
