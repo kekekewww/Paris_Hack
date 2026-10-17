@@ -1,0 +1,1 @@
+module.exports={content:['./index.html','./src/**/*.js'],theme:{extend:{fontFamily:{sans:['Noto Sans TC','Microsoft JhengHei','sans-serif']},colors:{brand:{DEFAULT:'#00875A',light:'#E8F6EF',dark:'#006B46',accent:'#8FE0BA'}},spacing:{88:'22rem'}}},plugins:[]};

@@ -1,0 +1,827 @@
+{
+  "schema_version": "1.0.0",
+  "checked_at": "2026-10-17",
+  "language": "zh-TW",
+  "purpose": "官方公開來源研究與準備規則；非給付或資格判定",
+  "source_policy": {
+    "allowed_hosts": [
+      "life.cardif.com.tw"
+    ],
+    "discovery_page": "https://life.cardif.com.tw/zh/a314",
+    "page_numbers_are_one_based": true,
+    "missing_version_is_null": true,
+    "query_timestamp_is_not_version": true,
+    "not_a_live_link_monitor": true
+  },
+  "claim_types": [
+    {
+      "claim_type_id": "inpatient",
+      "label": "住院醫療",
+      "guide_source_id": "cardif-inpatient-guide"
+    },
+    {
+      "claim_type_id": "outpatient",
+      "label": "醫療門診",
+      "guide_source_id": "cardif-outpatient-guide"
+    },
+    {
+      "claim_type_id": "critical_illness",
+      "label": "防癌或重大疾病",
+      "guide_source_id": "cardif-critical-guide"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "cardif-claims",
+      "title": "理賠程序介紹",
+      "official_url": "https://life.cardif.com.tw/zh/a314",
+      "document_type": "html",
+      "related_claim_types": [
+        "inpatient",
+        "outpatient",
+        "critical_illness"
+      ],
+      "page_number": null,
+      "version_or_updated_at": null,
+      "checked_at": "2026-10-17",
+      "verification_status": "verified",
+      "verification_method": "由官方 a314 頁面取得連結，使用 web.open/click 成功讀取內容",
+      "content_type": "text/html",
+      "page_count": null
+    },
+    {
+      "source_id": "cardif-application",
+      "title": "保險金申請書",
+      "official_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-1.1.1.pdf/550abb13-7752-46bb-9463-24669b6fec0e?t=1704248030890",
+      "document_type": "pdf_form",
+      "related_claim_types": [
+        "inpatient",
+        "outpatient",
+        "critical_illness"
+      ],
+      "page_number": null,
+      "version_or_updated_at": "VIE_Claim.2024.01",
+      "checked_at": "2026-10-17",
+      "verification_status": "verified",
+      "verification_method": "由官方 a314 頁面取得連結，使用 web.open/click 成功讀取內容",
+      "content_type": "application/pdf",
+      "page_count": 4
+    },
+    {
+      "source_id": "cardif-general-documents",
+      "title": "申請一般理賠應檢附文件",
+      "official_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-1.1.3.pdf/0d5f2ed7-bb48-4dd6-a026-b645bcac9942?t=1528974663896",
+      "document_type": "pdf_requirements",
+      "related_claim_types": [
+        "inpatient",
+        "outpatient",
+        "critical_illness"
+      ],
+      "page_number": null,
+      "version_or_updated_at": null,
+      "checked_at": "2026-10-17",
+      "verification_status": "verified",
+      "verification_method": "由官方 a314 頁面取得連結，使用 web.open/click 成功讀取內容",
+      "content_type": "application/pdf",
+      "page_count": 1
+    },
+    {
+      "source_id": "cardif-outpatient-guide",
+      "title": "健康險門診保險金申請注意須知",
+      "official_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-3.4.pdf/10e161ca-d75d-46c0-b771-fd6e35b8d9ca?t=1762833872536",
+      "document_type": "pdf_guide",
+      "related_claim_types": [
+        "outpatient"
+      ],
+      "page_number": null,
+      "version_or_updated_at": null,
+      "checked_at": "2026-10-17",
+      "verification_status": "verified",
+      "verification_method": "由官方 a314 頁面取得連結，使用 web.open/click 成功讀取內容",
+      "content_type": "application/pdf",
+      "page_count": 1
+    },
+    {
+      "source_id": "cardif-inpatient-guide",
+      "title": "住院醫療日額申請注意須知",
+      "official_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-3.5.pdf/55bf978e-ba97-4707-b114-3343d6979c40?t=1762833879421",
+      "document_type": "pdf_guide",
+      "related_claim_types": [
+        "inpatient"
+      ],
+      "page_number": null,
+      "version_or_updated_at": null,
+      "checked_at": "2026-10-17",
+      "verification_status": "verified",
+      "verification_method": "由官方 a314 頁面取得連結，使用 web.open/click 成功讀取內容",
+      "content_type": "application/pdf",
+      "page_count": 3
+    },
+    {
+      "source_id": "cardif-critical-guide",
+      "title": "重大疾病或防癌險申請須知",
+      "official_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-3.6.pdf/8c75510e-8c21-4f18-a013-f3d38bed38cc?t=1762833885720",
+      "document_type": "pdf_guide",
+      "related_claim_types": [
+        "critical_illness"
+      ],
+      "page_number": null,
+      "version_or_updated_at": null,
+      "checked_at": "2026-10-17",
+      "verification_status": "verified",
+      "verification_method": "由官方 a314 頁面取得連結，使用 web.open/click 成功讀取內容",
+      "content_type": "application/pdf",
+      "page_count": 3
+    },
+    {
+      "source_id": "cardif-general-example",
+      "title": "保險金申請書（一般）填寫範例",
+      "official_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-2.1.2.pdf/ae0d8b89-4c59-452d-b973-31a82f9dfda8?t=1704247966933",
+      "document_type": "pdf_example",
+      "related_claim_types": [
+        "inpatient",
+        "critical_illness"
+      ],
+      "page_number": null,
+      "version_or_updated_at": "VIE_Claim.2024.01",
+      "checked_at": "2026-10-17",
+      "verification_status": "verified",
+      "verification_method": "由官方 a314 頁面取得連結，使用 web.open/click 成功讀取內容",
+      "content_type": "application/pdf",
+      "page_count": 1
+    },
+    {
+      "source_id": "cardif-outpatient-example",
+      "title": "保險金申請書（門診）填寫範例",
+      "official_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-2.1.3.pdf/b3daf10f-977e-426b-8b3b-95fe7dc05242?t=1704247988685",
+      "document_type": "pdf_example",
+      "related_claim_types": [
+        "outpatient"
+      ],
+      "page_number": null,
+      "version_or_updated_at": "VIE_Claim.2024.01",
+      "checked_at": "2026-10-17",
+      "verification_status": "verified",
+      "verification_method": "由官方 a314 頁面取得連結，使用 web.open/click 成功讀取內容",
+      "content_type": "application/pdf",
+      "page_count": 1
+    },
+    {
+      "source_id": "cardif-medical-authorization",
+      "title": "病歷資料調閱授權書",
+      "official_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-1.2.pdf/6ee6c77f-8fc7-4330-a0de-1458b0012b90?t=1509676532538",
+      "document_type": "pdf_form",
+      "related_claim_types": [
+        "inpatient",
+        "outpatient",
+        "critical_illness"
+      ],
+      "page_number": null,
+      "version_or_updated_at": "103.09（文件印載）",
+      "checked_at": "2026-10-17",
+      "verification_status": "verified",
+      "verification_method": "由官方 a314 頁面取得連結，使用 web.open/click 成功讀取內容",
+      "content_type": "application/pdf",
+      "page_count": 2
+    },
+    {
+      "source_id": "cardif-accident-consent",
+      "title": "調查同意書（意外事故填寫）",
+      "official_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-1.3.pdf/fac5596b-2002-4a40-a9d3-a68429b75b1c?t=1509676535867",
+      "document_type": "pdf_form",
+      "related_claim_types": [
+        "inpatient",
+        "outpatient",
+        "critical_illness"
+      ],
+      "page_number": null,
+      "version_or_updated_at": null,
+      "checked_at": "2026-10-17",
+      "verification_status": "verified",
+      "verification_method": "由官方 a314 頁面取得連結，使用 web.open/click 成功讀取內容",
+      "content_type": "application/pdf",
+      "page_count": 1
+    },
+    {
+      "source_id": "cardif-nhi-request",
+      "title": "全民健康保險保險人提供資料申請書",
+      "official_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-1.4.pdf/a8ffeac8-e25e-4b29-b8eb-2b280008a09f?t=1706146308458",
+      "document_type": "pdf_form",
+      "related_claim_types": [
+        "inpatient",
+        "outpatient",
+        "critical_illness"
+      ],
+      "page_number": null,
+      "version_or_updated_at": null,
+      "checked_at": "2026-10-17",
+      "verification_status": "verified",
+      "verification_method": "由官方 a314 頁面取得連結，使用 web.open/click 成功讀取內容",
+      "content_type": "application/pdf",
+      "page_count": 1
+    }
+  ],
+  "documents": [
+    {
+      "document_id": "application",
+      "title": "保險金申請書",
+      "source_id": "cardif-application",
+      "download_source_id": "cardif-application",
+      "example_source_ids": [
+        "cardif-general-example",
+        "cardif-outpatient-example"
+      ],
+      "description": "使用官方四頁申請書；依個別情況填寫與簽署。"
+    },
+    {
+      "document_id": "diagnosis",
+      "title": "診斷書或住院證明",
+      "source_id": "cardif-claims",
+      "download_source_id": null,
+      "example_source_ids": [],
+      "description": "向醫療院所申請；診斷書須為正本，或原醫療院所加蓋紅章之副本。"
+    },
+    {
+      "document_id": "receipt",
+      "title": "門診收據",
+      "source_id": "cardif-claims",
+      "download_source_id": null,
+      "example_source_ids": [],
+      "description": "向醫療院所取得。官網列正本；申請書另記原收據需作他用時可用副本，應向官方確認個案適用。"
+    },
+    {
+      "document_id": "pathology",
+      "title": "病理組織或相關檢驗報告",
+      "source_id": "cardif-general-documents",
+      "download_source_id": null,
+      "example_source_ids": [],
+      "description": "由醫療院所提供；依病況、首次申請與保單約定確認。"
+    },
+    {
+      "document_id": "surgery",
+      "title": "手術證明文件",
+      "source_id": "cardif-inpatient-guide",
+      "download_source_id": null,
+      "example_source_ids": [],
+      "description": "由醫療院所提供；已手術且診斷書未記載手術部位、方式時另附。"
+    },
+    {
+      "document_id": "passbook",
+      "title": "受款帳戶存摺影本",
+      "source_id": "cardif-claims",
+      "download_source_id": null,
+      "example_source_ids": [],
+      "description": "選擇匯款給付時準備。"
+    },
+    {
+      "document_id": "medical_authorization",
+      "title": "病歷資料調閱授權書",
+      "source_id": "cardif-medical-authorization",
+      "download_source_id": "cardif-medical-authorization",
+      "example_source_ids": [],
+      "description": "需要調閱病歷時依承辦人指示填寫；不能僅因指南有填寫教學即視為人人必備。"
+    },
+    {
+      "document_id": "accident_consent",
+      "title": "調查同意書（意外事故）",
+      "source_id": "cardif-accident-consent",
+      "download_source_id": "cardif-accident-consent",
+      "example_source_ids": [],
+      "description": "官方標示供意外事故填寫；個案適用與填寫範圍向承辦人確認。"
+    },
+    {
+      "document_id": "nhi_request",
+      "title": "全民健康保險保險人提供資料申請書",
+      "source_id": "cardif-nhi-request",
+      "download_source_id": "cardif-nhi-request",
+      "example_source_ids": [],
+      "description": "官方依病灶可能要求；接獲通知後依承辦人指定範圍填寫。"
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "inpatient-application",
+      "claim_type_id": "inpatient",
+      "document_id": "application",
+      "requirement_type": "required",
+      "condition": {
+        "op": "always"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": false,
+      "explanation": "該理賠類別之官網清單包含保險金申請書。",
+      "additional_source_ids": [
+        "cardif-application"
+      ]
+    },
+    {
+      "rule_id": "inpatient-diagnosis",
+      "claim_type_id": "inpatient",
+      "document_id": "diagnosis",
+      "requirement_type": "required",
+      "condition": {
+        "op": "always"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": false,
+      "explanation": "該理賠類別之官網清單包含診斷書或住院證明。",
+      "additional_source_ids": [
+        "cardif-general-documents"
+      ]
+    },
+    {
+      "rule_id": "inpatient-passbook",
+      "claim_type_id": "inpatient",
+      "document_id": "passbook",
+      "requirement_type": "conditional",
+      "condition": {
+        "field": "payment_method",
+        "equals": "remittance",
+        "unknown": "review"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": false,
+      "explanation": "選擇匯款時需提供存摺影本。",
+      "additional_source_ids": []
+    },
+    {
+      "rule_id": "inpatient-medical_authorization",
+      "claim_type_id": "inpatient",
+      "document_id": "medical_authorization",
+      "requirement_type": "conditional",
+      "condition": {
+        "field": "insurer_requested_medical_authorization",
+        "equals": true,
+        "unknown": "review"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": true,
+      "explanation": "可能依病灶或審核需要要求，不預設為所有案件必備。",
+      "additional_source_ids": [
+        "cardif-medical-authorization"
+      ]
+    },
+    {
+      "rule_id": "inpatient-nhi_request",
+      "claim_type_id": "inpatient",
+      "document_id": "nhi_request",
+      "requirement_type": "conditional",
+      "condition": {
+        "field": "insurer_requested_nhi_request",
+        "equals": true,
+        "unknown": "review"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": true,
+      "explanation": "收到官方通知時填寫；未通知時不能推定必須提供。",
+      "additional_source_ids": [
+        "cardif-nhi-request"
+      ]
+    },
+    {
+      "rule_id": "outpatient-application",
+      "claim_type_id": "outpatient",
+      "document_id": "application",
+      "requirement_type": "required",
+      "condition": {
+        "op": "always"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": false,
+      "explanation": "該理賠類別之官網清單包含保險金申請書。",
+      "additional_source_ids": [
+        "cardif-application"
+      ]
+    },
+    {
+      "rule_id": "outpatient-diagnosis",
+      "claim_type_id": "outpatient",
+      "document_id": "diagnosis",
+      "requirement_type": "required",
+      "condition": {
+        "op": "always"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": false,
+      "explanation": "該理賠類別之官網清單包含診斷書或住院證明。",
+      "additional_source_ids": [
+        "cardif-general-documents"
+      ]
+    },
+    {
+      "rule_id": "outpatient-passbook",
+      "claim_type_id": "outpatient",
+      "document_id": "passbook",
+      "requirement_type": "conditional",
+      "condition": {
+        "field": "payment_method",
+        "equals": "remittance",
+        "unknown": "review"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": false,
+      "explanation": "選擇匯款時需提供存摺影本。",
+      "additional_source_ids": []
+    },
+    {
+      "rule_id": "outpatient-medical_authorization",
+      "claim_type_id": "outpatient",
+      "document_id": "medical_authorization",
+      "requirement_type": "conditional",
+      "condition": {
+        "field": "insurer_requested_medical_authorization",
+        "equals": true,
+        "unknown": "review"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": true,
+      "explanation": "可能依病灶或審核需要要求，不預設為所有案件必備。",
+      "additional_source_ids": [
+        "cardif-medical-authorization"
+      ]
+    },
+    {
+      "rule_id": "outpatient-nhi_request",
+      "claim_type_id": "outpatient",
+      "document_id": "nhi_request",
+      "requirement_type": "conditional",
+      "condition": {
+        "field": "insurer_requested_nhi_request",
+        "equals": true,
+        "unknown": "review"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": true,
+      "explanation": "收到官方通知時填寫；未通知時不能推定必須提供。",
+      "additional_source_ids": [
+        "cardif-nhi-request"
+      ]
+    },
+    {
+      "rule_id": "critical_illness-application",
+      "claim_type_id": "critical_illness",
+      "document_id": "application",
+      "requirement_type": "required",
+      "condition": {
+        "op": "always"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": false,
+      "explanation": "該理賠類別之官網清單包含保險金申請書。",
+      "additional_source_ids": [
+        "cardif-application"
+      ]
+    },
+    {
+      "rule_id": "critical_illness-diagnosis",
+      "claim_type_id": "critical_illness",
+      "document_id": "diagnosis",
+      "requirement_type": "required",
+      "condition": {
+        "op": "always"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": false,
+      "explanation": "該理賠類別之官網清單包含診斷書或住院證明。",
+      "additional_source_ids": [
+        "cardif-general-documents"
+      ]
+    },
+    {
+      "rule_id": "critical_illness-passbook",
+      "claim_type_id": "critical_illness",
+      "document_id": "passbook",
+      "requirement_type": "conditional",
+      "condition": {
+        "field": "payment_method",
+        "equals": "remittance",
+        "unknown": "review"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": false,
+      "explanation": "選擇匯款時需提供存摺影本。",
+      "additional_source_ids": []
+    },
+    {
+      "rule_id": "critical_illness-medical_authorization",
+      "claim_type_id": "critical_illness",
+      "document_id": "medical_authorization",
+      "requirement_type": "conditional",
+      "condition": {
+        "field": "insurer_requested_medical_authorization",
+        "equals": true,
+        "unknown": "review"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": true,
+      "explanation": "可能依病灶或審核需要要求，不預設為所有案件必備。",
+      "additional_source_ids": [
+        "cardif-medical-authorization"
+      ]
+    },
+    {
+      "rule_id": "critical_illness-nhi_request",
+      "claim_type_id": "critical_illness",
+      "document_id": "nhi_request",
+      "requirement_type": "conditional",
+      "condition": {
+        "field": "insurer_requested_nhi_request",
+        "equals": true,
+        "unknown": "review"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": true,
+      "explanation": "收到官方通知時填寫；未通知時不能推定必須提供。",
+      "additional_source_ids": [
+        "cardif-nhi-request"
+      ]
+    },
+    {
+      "rule_id": "outpatient-receipt",
+      "claim_type_id": "outpatient",
+      "document_id": "receipt",
+      "requirement_type": "required",
+      "condition": {
+        "op": "always"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": true,
+      "explanation": "門診清單列收據正本；申請書有副本例外，須向官方確認。",
+      "additional_source_ids": [
+        "cardif-application"
+      ]
+    },
+    {
+      "rule_id": "inpatient-pathology",
+      "claim_type_id": "inpatient",
+      "document_id": "pathology",
+      "requirement_type": "conditional",
+      "condition": {
+        "field": "pathology_required_for_condition",
+        "equals": true,
+        "unknown": "review"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": true,
+      "explanation": "官網標為依病況提供，不能由是否住院推定一律必備。",
+      "additional_source_ids": [
+        "cardif-inpatient-guide"
+      ]
+    },
+    {
+      "rule_id": "critical_illness-pathology",
+      "claim_type_id": "critical_illness",
+      "document_id": "pathology",
+      "requirement_type": "conditional",
+      "condition": {
+        "field": "first_claim",
+        "equals": true,
+        "unknown": "review"
+      },
+      "source_id": "cardif-general-documents",
+      "page_number": 1,
+      "review_required": true,
+      "explanation": "一般文件注意事項明列首次癌症或重大疾病申請需病理或相關檢驗報告；非首次仍依病況、保單與承辦人確認。",
+      "additional_source_ids": [
+        "cardif-critical-guide"
+      ]
+    },
+    {
+      "rule_id": "inpatient-surgery",
+      "claim_type_id": "inpatient",
+      "document_id": "surgery",
+      "requirement_type": "conditional",
+      "condition": {
+        "all": [
+          {
+            "field": "had_surgery",
+            "equals": true
+          },
+          {
+            "field": "diagnosis_has_surgery_details",
+            "equals": false
+          }
+        ],
+        "unknown": "review"
+      },
+      "source_id": "cardif-inpatient-guide",
+      "page_number": 3,
+      "review_required": false,
+      "explanation": "有手術且診斷書未寫明手術部位、方式時另附；無手術或已記載者，依此指南不需另附。",
+      "additional_source_ids": [
+        "cardif-general-documents"
+      ]
+    },
+    {
+      "rule_id": "inpatient-accident_consent",
+      "claim_type_id": "inpatient",
+      "document_id": "accident_consent",
+      "requirement_type": "conditional",
+      "condition": {
+        "field": "cause",
+        "equals": "accident",
+        "unknown": "review"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": true,
+      "explanation": "官方下載列表標示意外事故填寫，仍須確認個案是否須附與承辦人指定欄位。",
+      "additional_source_ids": [
+        "cardif-accident-consent"
+      ]
+    },
+    {
+      "rule_id": "critical_illness-surgery",
+      "claim_type_id": "critical_illness",
+      "document_id": "surgery",
+      "requirement_type": "conditional",
+      "condition": {
+        "all": [
+          {
+            "field": "had_surgery",
+            "equals": true
+          },
+          {
+            "field": "diagnosis_has_surgery_details",
+            "equals": false
+          }
+        ],
+        "unknown": "review"
+      },
+      "source_id": "cardif-critical-guide",
+      "page_number": 3,
+      "review_required": false,
+      "explanation": "有手術且診斷書未寫明手術部位、方式時另附；無手術或已記載者，依此指南不需另附。",
+      "additional_source_ids": [
+        "cardif-general-documents"
+      ]
+    },
+    {
+      "rule_id": "critical_illness-accident_consent",
+      "claim_type_id": "critical_illness",
+      "document_id": "accident_consent",
+      "requirement_type": "conditional",
+      "condition": {
+        "field": "cause",
+        "equals": "accident",
+        "unknown": "review"
+      },
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "review_required": true,
+      "explanation": "官方下載列表標示意外事故填寫，仍須確認個案是否須附與承辦人指定欄位。",
+      "additional_source_ids": [
+        "cardif-accident-consent"
+      ]
+    }
+  ],
+  "knowledge": [
+    {
+      "knowledge_id": "scope",
+      "source_id": "cardif-claims",
+      "page_number": null,
+      "title": "文件與保單",
+      "text": "清單是準備資訊；實際文件細節及給付仍按個別保單，由保險公司審核，其他必要資料可能另行通知。"
+    },
+    {
+      "knowledge_id": "diagnosis-format",
+      "source_id": "cardif-inpatient-guide",
+      "page_number": 3,
+      "title": "診斷書格式",
+      "text": "診斷證明須用正本，或原醫療院所加蓋紅色印章的副本，普通影印本不符合指南要求。"
+    },
+    {
+      "knowledge_id": "inpatient-diagnosis",
+      "source_id": "cardif-general-documents",
+      "page_number": 1,
+      "title": "診斷資料",
+      "text": "住院申請應檢查入出院時間、病名、手術及相關門診紀錄。手術申請另涉及費用明細或手術紀錄，適用情況須確認。"
+    },
+    {
+      "knowledge_id": "surgery-condition",
+      "source_id": "cardif-inpatient-guide",
+      "page_number": 3,
+      "title": "何時另附手術文件",
+      "text": "有手術、而診斷書缺少部位或方式時，另備手術證明；診斷書已記載，或未手術，指南說明可免另外提供。"
+    },
+    {
+      "knowledge_id": "outpatient-signature",
+      "source_id": "cardif-outpatient-guide",
+      "page_number": 1,
+      "title": "門診填寫提醒",
+      "text": "勾選門診，填寫被保險人資料並由本人簽署；未成年者須依年齡與法定代理人規定辦理。送件單位欄由銀行或保代填寫。"
+    },
+    {
+      "knowledge_id": "application-precheck",
+      "source_id": "cardif-application",
+      "page_number": 1,
+      "title": "申請書欄位",
+      "text": "可初查姓名、保單號碼、身分證字號、聯絡方式、申請項目、付款方式、稅務聲明選項、申請人簽名與日期；不以辨識結果驗證法律真實性。"
+    },
+    {
+      "knowledge_id": "critical-uncertainty",
+      "source_id": "cardif-critical-guide",
+      "page_number": 3,
+      "title": "重大疾病文件確認",
+      "text": "指南列診斷與病理報告，並依手術及診斷書記載情形判斷是否另附手術證明；保單對疾病定義與給付條件仍待官方確認。"
+    },
+    {
+      "knowledge_id": "authorization-privacy",
+      "source_id": "cardif-medical-authorization",
+      "page_number": 1,
+      "title": "病歷授權範圍",
+      "text": "授權書包含用途、查閱範圍與期限，應按實際需求及承辦人指示填寫，不由助手代勾授權範圍。"
+    }
+  ],
+  "submission": {
+    "source_id": "cardif-claims",
+    "postal": {
+      "address": "台北市信義區信義路五段7號79樓",
+      "recipient": "法商法國巴黎人壽保險（股）台灣分公司 理賠部 收",
+      "steps": [
+        "確認投保險種及條款",
+        "備齊適用文件",
+        "列印填妥申請書，連同文件寄交官方理賠部"
+      ]
+    },
+    "official_online_entry": {
+      "url": "https://my.cardif.com.tw/",
+      "label": "巴黎線上 My Cardif",
+      "verification_status": "linked_from_official_page",
+      "details": "理賠聯盟鏈／保險理賠醫起通有本人身分、會員、險種及合作機構等限制，請由官網確認適用資格；助手不代送件。"
+    },
+    "support": {
+      "phone": "0800-012-899",
+      "hours": "09:00–18:00（官網列上班時間）"
+    }
+  },
+  "discrepancies": [
+    {
+      "id": "receipt-copy",
+      "source_ids": [
+        "cardif-claims",
+        "cardif-application"
+      ],
+      "description": "官網門診簡表寫收據正本，申請書第1頁載原收據有其他用途時可持副本申請。",
+      "resolution": "保留原則與例外並提示向官方確認，不直接判定副本無效。",
+      "requires_human_review": true
+    },
+    {
+      "id": "pathology-condition",
+      "source_ids": [
+        "cardif-claims",
+        "cardif-general-documents",
+        "cardif-inpatient-guide",
+        "cardif-critical-guide"
+      ],
+      "description": "官網住院簡表標病理依病況，癌症簡表列病理；一般文件注意事項另述首次癌症／重大疾病申請需病理或相關檢驗。",
+      "resolution": "依類別、首次申請與病況呈現條件式或待確認；不以粗略簡表認定每次皆相同。",
+      "requires_human_review": true
+    },
+    {
+      "id": "surgery-detail",
+      "source_ids": [
+        "cardif-claims",
+        "cardif-inpatient-guide",
+        "cardif-critical-guide"
+      ],
+      "description": "官網簡表較粗，兩份指南第3頁明述手術證明的免另附情況。",
+      "resolution": "使用指南的明確條件，保留保單與承辦人補件權限。",
+      "requires_human_review": false
+    },
+    {
+      "id": "consent-instructions",
+      "source_ids": [
+        "cardif-claims",
+        "cardif-accident-consent",
+        "cardif-inpatient-guide"
+      ],
+      "description": "官網／須知與同意書所列欄位、填寫範圍不盡一致。",
+      "resolution": "不自動替保戶填寫或認定無效，請依官方承辦人指示。",
+      "requires_human_review": true
+    }
+  ],
+  "verification_limits": [
+    "web 工具成功讀取官網及上述11項來源內容；下載檔保留官方 URL。",
+    "研究未登入巴黎線上，亦未測試或提交任何正式理賠。",
+    "本機直接下載因網路沙箱拒絕，PDF 視覺截圖工具亦未提供可見像素；表格以官網條列與 PDF 逐段文字交叉確認，未依失去欄位位置的表格文字推定未明條件。",
+    "未有明確版本號或更新日期的 PDF 保持 null，未使用 URL 的 t 參數推定日期。"
+  ]
+}
