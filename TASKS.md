@@ -1,6 +1,6 @@
 # 開發任務
 
-更新日期：2026-10-17（臺灣）。主要規範為 `AGENTS.md` 與 `PROJECT_PLAN.md`。**本機可展示版本的必要開發與驗收已完成；Phase 2／3 整體與整案仍因外部 LLM、公開 HTTPS 依賴維持 BLOCKED。** DONE 僅限表列範圍，不代表外部閘門已通過。
+更新日期：2026-10-17（臺灣）。主要規範為 `AGENTS.md` 與 `PROJECT_PLAN.md`。**本機及Cloudflare Quick Tunnel臨時HTTPS展示已驗證；Phase 2／3整體與整案仍因真外部LLM驗證維持BLOCKED。** DONE 僅限表列範圍，不代表外部閘門已通過。
 
 使用者已選擇「先完成其餘工作，金鑰稍後設定」。目前沒有待執行的必要本機測試；不再次索取金鑰，不以本機規則、Mock 或離線 transport 代替真實供應商驗證。
 
@@ -30,12 +30,12 @@
 | P3-02 | 3 | A–H合成展示與mixed情境 | P1 | DONE | P2-08 | 本機流程、缺漏／模糊／無來源／受控故障 | 9合成檔、原8檔hash未變；G1證明PDF受控失敗後案件摘要可用；不代表官方真故障 |
 | P3-03 | 3 | 本機安全與可靠性檢查 | P0 | DONE | P2本機核心 | 檔案、來源、注入、隔離及保守品質處理 | 全套與最終runtime已過；保留冷啟／單工／未明歷史例外限制，不宣稱正式安全認證 |
 | P3-03A | 3 | 依賴與源碼基本檢查 | P0 | DONE | 鎖定依賴 | 已知漏洞及依賴一致性有證據 | Python33/33、0known／0skip；npm88依賴0；pip check一致，源碼scan無token、原HTML hash一致；[證據](docs/DEPENDENCY_AUDIT.md) |
-| P3-04 | 3 | 部署整體驗收 | P1 | BLOCKED | P3-04C | 本機與公開HTTPS分開驗收 | 本機build／runtime DONE；公開主機、網域／DNS及正式授權未提供 |
+| P3-04 | 3 | 臨時HTTPS展示部署驗收 | P1 | DONE | P3-04A至C | 本機及公開HTTPS展示實測 | 使用者授權Quick Tunnel；HTTP23及公開瀏覽器3/3通過；臨時網址存活限制見[紀錄](docs/QUICK_TUNNEL.md) |
 | P3-04A | 3 | Docker設定與最終image build | P1 | DONE | P2本機核心 | 多階段建置、鎖定依賴與資產 | config exit0；a7e45621… build9.3秒、exit0；完整digest見[容器報告](docs/CONTAINER_ACCEPTANCE.md) |
 | P3-04B | 3 | 最終版本本機容器 | P0 | DONE | P3-04A | 真API／OCR、權限、volume及重啟 | HTTPready後首輪新版60checks PASS；UID10001／唯讀／capdrop／無私有檔／重啟同case／刪除404／worker JS再驗過；舊冷啟失敗保留 |
-| P3-04C | 3 | 公開HTTPS部署 | P1 | BLOCKED | 主機／網域／授權 | DNS／TLS／Secure cookie／公開E2E | 未正式外部署；本機60checks不代替外部證據 |
+| P3-04C | 3 | Quick Tunnel公開HTTPS展示 | P1 | DONE | P3-04B、使用者本輪授權 | TLS、Secure cookie、origin、隔離與公開流程 | 23checks、桌面3/3（39.2秒）、console0、真OCR及PDF通過；非固定網址或常駐部署 |
 | P3-05 | 3 | provider、品質與模擬標示 | P0 | DONE | P2-08 | 不冒充模型辨識或外部驗證 | allskip明示未OCR；mixed依實際provider且uncertain；頁2位置正確；標為初步檢查參考信心，非純平均／整檔準確率；llm_verified=false |
 | P3-06 | 3 | 文件、限制及驗收報告 | P0 | DONE | 已有本機證據與外部阻礙 | 重現方式、歷程與續作資訊完整 | README／架構／來源／LLM／展示／限制／容器／依賴與[最終報告](docs/FINAL_ACCEPTANCE.md)齊全，無待執行本機驗收 |
-| P3-GATE | 3 | Phase 3／整案最終gate | P0 | BLOCKED | P2-09、P3-04C | 全部必要外部閘門通過 | 真外部LLM與公開HTTPS仍缺依賴；不把本機DONE擴張為整案Completed |
+| P3-GATE | 3 | Phase 3／整案最終gate | P0 | BLOCKED | P2-09 | 包含真外部LLM的全部必要整體gate | 臨時HTTPS已驗證；真外部LLM仍待使用者稍後配置，整案不標Completed |
 
 後端185前輪、Mock58/63、API26/27、容器冷啟失敗及後續成功均保留於[最終報告](docs/FINAL_ACCEPTANCE.md)。26/27底層例外在18/18輪替HTTP未復現、原因仍未知；品質前檢並非證明上游cause已根治，列已知限制供後續監測，不再列為當前待跑本機bug。

@@ -15,6 +15,8 @@
 
 Phase 1 已通過，證據見 [前端驗收報告](docs/PHASE1_ACCEPTANCE.md)。Phase 2 整合驗證與後續交付仍以實際驗收紀錄為準；這份 README 不代表外部部署或所有階段已完成。
 
+2026-10-17 已依使用者要求啟動並驗證 [Quick Tunnel 臨時 HTTPS 展示](https://chevy-beach-pizza-triple.trycloudflare.com/?service=api)。電腦與隧道必須保持執行；公開 HTTP 23 項與瀏覽器 3 項通過，設定及限制見 [臨時展示紀錄](docs/QUICK_TUNNEL.md)。
+
 ## 本機啟動（PowerShell）
 
 需要 Node.js 22、Python 3.12，以及可用的桌面瀏覽器。先在專案根目錄執行：
@@ -82,7 +84,7 @@ npm run test:api
 
 ## 容器與文件
 
-Docker Compose 預設只將服務綁定到 `127.0.0.1:8000`，SQLite 使用具名 volume。建置／啟動與可選 HTTPS 步驟見 [部署說明](docs/DEPLOYMENT.md)；外部主機、DNS、帳號與部署授權仍須另行具備。
+Docker Compose 預設只將服務綁定到 `127.0.0.1:8000`，SQLite 使用具名 volume。建置／啟動與可選 Caddy HTTPS 步驟見 [部署說明](docs/DEPLOYMENT.md)；固定主機與自有網域的部署仍需相應主機、DNS 及授權。Quick Tunnel 臨時展示不需要自有網域。
 
 - [API 契約](docs/API_CONTRACT.md)：方法、欄位、來源及錯誤語意。
 - [架構](docs/ARCHITECTURE.md)、[官方來源查核](docs/OFFICIAL_SOURCES.md)。

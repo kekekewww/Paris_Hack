@@ -2,6 +2,8 @@
 
 本文件提供本機容器與可選 HTTPS 的可重現步驟。設定檔存在、`docker compose config` 成功、映像建置成功、端到端驗收通過及外部部署成功是不同結果；必須按實際輸出記錄，不能互相替代。外部主機、網域／DNS、平台帳號與部署授權尚未由本文件取得。
 
+2026-10-17 已依使用者明確要求另外建立 Cloudflare Quick Tunnel，完成臨時公開 HTTPS 的 HTTP 23 項及桌面瀏覽器 3 項實測。[Quick Tunnel 紀錄](QUICK_TUNNEL.md)包含網址、精確 origin、Secure cookie、獨立資料庫及存活限制；以下 Caddy 自有網域部署為另一種可選方式。
+
 ## 1. 本機容器
 
 需要支援 Linux 容器的 Docker Engine 與 Compose v2。根目錄的 `Dockerfile` 以 Node.js 22 執行 `npm ci`／`npm run build`，再以 Python 3.12 slim 安裝鎖定的 runtime requirements。OCR 使用 CPU，需保留記憶體給 PyMuPDF、Pillow、ONNX Runtime 與 RapidOCR；第一次辨識可能比後續慢。

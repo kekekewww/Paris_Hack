@@ -1,9 +1,9 @@
 # 續作狀態
 
-更新日期：2026-10-17（臺灣）。**本機可展示版本已通過必要驗收，本機工作DONE；真外部LLM、公開HTTPS及Phase 2／3整體gate仍BLOCKED，整案未標Completed。**
+更新日期：2026-10-17（臺灣）。**本機版本及使用者要求的Cloudflare Quick Tunnel臨時公開HTTPS展示已驗證；真外部LLM及Phase 2／3整體gate仍BLOCKED，整案未標Completed。**
 
 - current_phase：Phase 2整體gate因真LLM依賴BLOCKED；經使用者授權先完成其餘本機開發與Phase 3本機交付。沒有待執行的必要本機測試。
-- current_task：本機已收尾。後續只依外部安全key／模型配置、真provider驗證與公開部署授權續作，不再次要求使用者金鑰。
+- current_task：Quick Tunnel臨時展示已啟動並通過公開HTTPS 23 checks＋Playwright桌面3/3（39.2秒），console／pageerror0。保留隧道及專用8002服務執行；[公開展示](https://chevy-beach-pizza-triple.trycloudflare.com/?service=api)，[執行紀錄](docs/QUICK_TUNNEL.md)。
 - last_completed_task：P2-06／08、P3-01／02／03／04B／05／06本機範圍DONE；最終source freeze後Mock63/63通過，最終image及一般展示服務皆60checks PASS。
 - last_successful_test：後端190/190、31.90秒（core49＋AI113＋OCR28）；前端24/24；最新API27/27、exit0、1.9分鐘（各9/9、console0）；品質／mixed6/6、28秒；source freeze後Mock63/63、exit0、1.4分鐘（各21/21、axe0、console／pageerror0）；PDF2/2、11.3秒；G1/1、13.6秒。最後build1.76秒；image build9.3秒，exit0。
 - runtime_state：一般展示服務已恢復RATE_LIMIT_REQUESTS=120、LLM_PROVIDER=grounded_rules、1worker；[本機展示](http://127.0.0.1:8000/?service=api)可用，session35483／PID63012。完整新版smoke --include-ocr 60checks PASS、cleanup=true，模型已預熱。Vite5174／原型5173已停。續作時應再確認process存活，不假定跨工作階段永久存在。
@@ -13,8 +13,8 @@
 - historical_exception：原tablet blur的503 OCR_UNAVAILABLE不是timeout／busy，desktop／mobile同輪200；privacy-safe class／basename／function／line診斷後18/18輪替HTTP未復現，根因仍未知。品質前檢是保守輸入處理改進，不宣稱上游cause已根治；後續整套已過，列known limitation供監測，不是目前待跑本機bug。
 - fixtures：9份合成文件，新增application-mixed-quality.pdf（298861bytes），原8檔hash未變；官方來源索引及依賴版本未改，原HTML與備份SHA最終再次一致。
 - dependency_audit：Python runtime33/33、0known／0skipped；npm88依賴0已知漏洞；pip check一致；源碼credential掃描無token。僅為本輪版本及範圍，不代表全面正式安全認證；[掃描報告](docs/DEPENDENCY_AUDIT.md)。
-- current_blockers：只剩外部依賴。P2-04真LLM／P2-09整體gate BLOCKED；P3-04C公開HTTPS／P3-04整體部署／P3-GATE BLOCKED。使用者已選「先完成其餘工作，金鑰稍後設定」，不再詢問，不讀出或沿用未授權金鑰。
-- external_dependencies：稍後安全注入後端LLM_API_KEY、明確LLM_MODEL、受信LLM_BASE_URL並取得真請求授權；llm_configured僅配置齊備、llm_verified=false。公開部署仍需主機、網域／DNS及正式授權，沒有正式外部部署或真理賠送件。
+- current_blockers：P2-04真LLM、P2-09及P3-GATE因使用者金鑰稍後設定仍BLOCKED。P3-04／04C本輪臨時HTTPS展示範圍已DONE；固定網址與常駐主機不在此次Quick Tunnel範圍。
+- external_dependencies：稍後安全注入後端LLM_API_KEY、明確LLM_MODEL與受信LLM_BASE_URL，再驗證真請求；llm_configured不代表通過，llm_verified=false。使用者本輪已授權Quick Tunnel；固定網域／常駐部署如需另行安排。沒有真理賠送件。
 - operating_constraints：單worker／單app副本，程序內lock／rate擴充需DB CAS／協調。Health不是OCR模型readiness；清晰圖冷啟45秒timeout仍可能發生，展示先以合成smoke確認。原檔不持久保存，對話／結構化結果仍敏感；只用合成資料，OCR不是核准。
 - health_preflight：最後唯讀核對status=ok、service_mode=api、llm_provider=grounded_rules、llm_configured=false、llm_verified=false；image inspect為a7e45621…，專用驗收container／volume確認已移除。
 - acceptance_record：[FINAL_ACCEPTANCE.md](docs/FINAL_ACCEPTANCE.md)保存最終本機證據、全部失敗歷程與外部BLOCKED；[TASKS.md](TASKS.md)逐項狀態，本機項目均有最終結果。
@@ -23,4 +23,8 @@
 
 1. 使用者稍後安排後，安全配置後端供應商、模型及key，執行真provider request、引用與失敗恢復驗證，才解除P2-04；現在不反覆索取金鑰。
 2. 真provider驗證完成後，執行包含該provider的整合實測並通過P2整體gate；目前無key的本機範圍已全部驗收，不以其取代外部證據。
-3. 取得主機、網域／DNS及正式部署授權後，執行公開HTTPS／TLS／Secure cookie／origin／隔離／E2E，才解除公開部署與P3整體gate。
+3. Quick Tunnel臨時HTTPS已通過，本次保持運行；重啟時重新取得網址、更新精確origin並複驗。固定網址／常駐部署如需另行安排，P3整體gate仍依P2真LLM驗收。
+
+## 2026-10-17 Quick Tunnel續作
+
+使用者要求已完成。cloudflared PID74076，專用app launcher45436／listener75472，loopback8002、精確公開origin、Secure cookie、單worker、no-proxy-headers、獨立合成案件DB；原8000保留。HTTP23項及公開瀏覽器3項通過，測試案件已清除，證據在.local/quick-tunnel。臨時網址依賴電腦與程序存活；重新啟動會換網址，須更新origin再驗證。下一次先確認存活，勿依舊PID直接停止程序。

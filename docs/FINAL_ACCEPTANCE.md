@@ -1,6 +1,6 @@
 # 本機最終驗收與外部依賴
 
-更新日期：2026-10-17（臺灣）。**可展示的本機原型已通過必要本機驗收；目前沒有待執行的必要本機測試。Phase 2／3整體與整案仍因真外部LLM、公開HTTPS依賴維持BLOCKED，未宣稱全部完成。**
+更新日期：2026-10-17（臺灣）。**可展示的本機原型已通過必要本機驗收；目前沒有待執行的必要本機測試。本輪另已通過Quick Tunnel臨時公開HTTPS驗證；Phase 2／3整體與整案仍因真外部LLM依賴維持BLOCKED，未宣稱全部完成。**
 
 使用者已選擇「先完成其餘工作，金鑰稍後設定」。不再次要求金鑰，不建立或沿用未授權憑證，不以Mock、本機規則或離線transport當作真模型請求完成。
 
@@ -12,7 +12,7 @@
 | Phase 2本機核心／OCR／HTTP | DONE | 後端190/190、品質6/6、最新真API27/27；P2-06／08本機範圍結案 |
 | 真外部LLM與Phase 2整體 | BLOCKED | P2-04尚無真provider請求證據，P2-09不自動完成；llm_verified=false |
 | Phase 3本機交付 | DONE | P3-01／02／03／04B／05／06本機範圍完成；最終image及一般展示服務皆新版60checks PASS |
-| 公開HTTPS／Phase 3整體 | BLOCKED | P3-04C缺主機、網域／DNS及正式授權；P3-04與P3-GATE不標完成 |
+| 公開HTTPS／Phase 3整體 | 臨時展示DONE／整體BLOCKED | 使用者本輪授權Quick Tunnel，HTTP23＋桌面3/3通過；Phase3整體仍依真LLM gate |
 | 整案Completed | 未標記 | 本機DONE不擴張為外部gate已通過；不提供正式理賠送件或核准 |
 
 ## 最終本機實測
@@ -96,11 +96,15 @@ sha256:a7e45621b8284cebe41c57cd0b0cf99d5887d55e4f71dc364effd929be72b7cc
 | --- | --- | --- |
 | P2-04真外部LLM | BLOCKED | 使用者稍後安全配置後端key／模型／受信服務並授權真請求，完成來源及失敗恢復實測 |
 | P2-09整體gate | BLOCKED | 真provider通過後，包含該provider的整合實測與Phase2全部閘門 |
-| P3-04C公開HTTPS | BLOCKED | 主機、網域／DNS、正式授權，以及公開TLS／Secure cookie／origin／隔離／E2E證據 |
-| P3-04與P3-GATE | BLOCKED | 以上外部依賴及全部必要整體gate通過；不由本機DONE自動解除 |
+| P3-04C公開HTTPS | DONE（臨時展示） | 已透過Quick Tunnel驗證；固定網址／常駐部署不在本輪範圍 |
+| P3-04與P3-GATE | 部署DONE／整體BLOCKED | 臨時HTTPS部署已驗證，整案仍待真LLM及其整合閘門 |
 
 ## 後續三步
 
 1. 安全配置後端key與明確模型後，執行真provider request、引用與失敗恢復驗證；依使用者決定稍後安排，現在不反覆索取。
 2. 以真provider完成整合實測及P2整體gate；現有無key本機範圍已全部驗收，無待執行的本機測試。
-3. 取得主機、網域／DNS及正式部署授權後，執行公開HTTPS與端到端驗收，才解除公開部署與P3整體gate。
+3. 本輪Quick Tunnel臨時HTTPS已驗證並保持執行；重啟需新網址與origin複驗。P3整體gate仍等待P2真LLM及其整合驗收。
+
+## 後續：Quick Tunnel臨時公開HTTPS
+
+使用者於同日要求Quick Tunnel分享。實際公開HTTPS HTTP **23 checks PASS**、桌面Playwright **3/3 PASS（39.2秒）**，涵蓋兩入口、真RapidOCR、PDF／mixed頁2、人工確認與摘要；console／pageerror0，測試案件已清除。Secure／HttpOnly／Strict host-only cookie、origin403、owner隔離404、私有路徑404、實際worker／WASM MIME皆驗過。此結果解除臨時HTTPS展示範圍的部署阻礙，不代表外部LLM或固定常駐服務完成。網址、程序、隔離設定及第一輪驗證腳本路徑修正見[Quick Tunnel紀錄](QUICK_TUNNEL.md)。
