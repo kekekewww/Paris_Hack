@@ -1,5 +1,17 @@
 # Cloudflare Quick Tunnel 臨時展示
 
+## 2026-10-19 目前展示
+
+依使用者要求重啟後的新網址：[開啟理賠文件準備助手](https://retirement-trim-reported-jesus.trycloudflare.com/?service=api)。原專案8002與舊隧道已停止；本次重新啟動專用8002及Quick Tunnel，未操作其他服務。精確新origin、Secure cookie、單worker、no-proxy-headers及grounded_rules沿用；外部LLM仍未配置。
+
+本次公開HTTP **11項通過**：首頁、health、API模式／模型狀態、安全cookie、no-store、惡意來源403、案件建立／同cookie讀取／另一owner404／刪除／刪除後404。公開桌面門診流程 **1/1通過，18.1秒**：清晰PNG真RapidOCR、遮罩欄位、重新整理、具來源問答及摘要下載；console／pageerror0，測試案件已清除。產品程式未修改，歷史整套驗收沒有重跑。
+
+目前cloudflared PID36692、app launcher38128、8002 listener40288；PID與網址均可能在下次重啟改變，操作前需重新核對。日誌、URL、runtime JSON、HTTP與瀏覽器結果在`.local/quick-tunnel/2026-10-19/`，目前URL另存`.local/quick-tunnel/url.txt`。其他程序佔用8000與另一個3137隧道不在本次重啟範圍。
+
+這是臨時網址，電腦、應用與隧道需保持執行。下方10/17網址與程序均為歷史，請使用上方最新連結。
+
+## 2026-10-17 歷史紀錄
+
 日期：2026-10-17（臺灣）。使用者明確要求以 Cloudflare Quick Tunnel 提供公開連結；本輪已建立並實測 HTTPS 展示入口，沒有設定或使用外部 LLM 金鑰。
 
 展示網址：[理賠文件準備助手](https://chevy-beach-pizza-triple.trycloudflare.com/?service=api)。這是臨時網址，電腦、本機應用與隧道必須持續執行；停止後失效。網址與存活期間依 [Cloudflare 官方說明](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/)，不視為固定網址或常駐服務。

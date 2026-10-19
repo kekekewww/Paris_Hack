@@ -15,7 +15,7 @@
 
 Phase 1 已通過，證據見 [前端驗收報告](docs/PHASE1_ACCEPTANCE.md)。Phase 2 整合驗證與後續交付仍以實際驗收紀錄為準；這份 README 不代表外部部署或所有階段已完成。
 
-2026-10-17 已依使用者要求啟動並驗證 [Quick Tunnel 臨時 HTTPS 展示](https://chevy-beach-pizza-triple.trycloudflare.com/?service=api)。電腦與隧道必須保持執行；公開 HTTP 23 項與瀏覽器 3 項通過，設定及限制見 [臨時展示紀錄](docs/QUICK_TUNNEL.md)。
+2026-10-19 已依使用者要求重新啟動 [Quick Tunnel 臨時 HTTPS 展示](https://retirement-trim-reported-jesus.trycloudflare.com/?service=api)。本次公開 HTTP 11 項與門診瀏覽器流程 1 項通過，真實 OCR 已預熱。電腦與隧道必須保持執行；設定、歷史驗收及限制見 [臨時展示紀錄](docs/QUICK_TUNNEL.md)。
 
 ## 本機啟動（PowerShell）
 

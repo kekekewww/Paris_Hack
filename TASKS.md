@@ -1,6 +1,6 @@
 # 開發任務
 
-更新日期：2026-10-17（臺灣）。主要規範為 `AGENTS.md` 與 `PROJECT_PLAN.md`。**本機及Cloudflare Quick Tunnel臨時HTTPS展示已驗證；Phase 2／3整體與整案仍因真外部LLM驗證維持BLOCKED。** DONE 僅限表列範圍，不代表外部閘門已通過。
+更新日期：2026-10-19（臺灣）。主要規範為 `AGENTS.md` 與 `PROJECT_PLAN.md`。**本機及Cloudflare Quick Tunnel臨時HTTPS展示已驗證；Phase 2／3整體與整案仍因真外部LLM驗證維持BLOCKED。** DONE 僅限表列範圍，不代表外部閘門已通過。
 
 使用者已選擇「先完成其餘工作，金鑰稍後設定」。目前沒有待執行的必要本機測試；不再次索取金鑰，不以本機規則、Mock 或離線 transport 代替真實供應商驗證。
 
@@ -37,5 +37,6 @@
 | P3-05 | 3 | provider、品質與模擬標示 | P0 | DONE | P2-08 | 不冒充模型辨識或外部驗證 | allskip明示未OCR；mixed依實際provider且uncertain；頁2位置正確；標為初步檢查參考信心，非純平均／整檔準確率；llm_verified=false |
 | P3-06 | 3 | 文件、限制及驗收報告 | P0 | DONE | 已有本機證據與外部阻礙 | 重現方式、歷程與續作資訊完整 | README／架構／來源／LLM／展示／限制／容器／依賴與[最終報告](docs/FINAL_ACCEPTANCE.md)齊全，無待執行本機驗收 |
 | P3-GATE | 3 | Phase 3／整案最終gate | P0 | BLOCKED | P2-09 | 包含真外部LLM的全部必要整體gate | 臨時HTTPS已驗證；真外部LLM仍待使用者稍後配置，整案不標Completed |
+| OPS-20261019 | 3 | 重新啟動展示伺服器與Quick Tunnel | P0 | DONE | 使用者要求、現有建置 | 新HTTPS首頁／API、案件隔離及實際OCR流程 | HTTP11項＋公開桌面門診1/1（18.1秒）；console0，測試案件已清除；新網址與程序見[續作狀態](STATUS.md) |
 
 後端185前輪、Mock58/63、API26/27、容器冷啟失敗及後續成功均保留於[最終報告](docs/FINAL_ACCEPTANCE.md)。26/27底層例外在18/18輪替HTTP未復現、原因仍未知；品質前檢並非證明上游cause已根治，列已知限制供後續監測，不再列為當前待跑本機bug。
