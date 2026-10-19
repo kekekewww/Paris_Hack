@@ -1,0 +1,41 @@
+{
+  "scenario": "synthetic_greeting",
+  "requests": 1,
+  "status": "FAIL",
+  "finish_reason": "stop",
+  "upstream_usage": {
+    "model": "xingchen-agi/xing4.0-29b-a4b:free",
+    "cost": 0,
+    "prompt_tokens": 515,
+    "completion_tokens": 192,
+    "total_tokens": 707
+  },
+  "schema": {
+    "root_keys_expected": true,
+    "question": "describe_event",
+    "message_length": 76,
+    "fact_values": {
+      "cause": "unknown",
+      "inpatient": "unknown",
+      "outpatient": "unknown",
+      "emergency": "unknown",
+      "critical_diagnosis": "unknown",
+      "surgery": "unknown"
+    }
+  },
+  "error_code": "INVALID_LLM_RESPONSE",
+  "validation_site": [
+    {
+      "file": "openai_compatible.py",
+      "line": 214
+    },
+    {
+      "file": "semantic_dialogue.py",
+      "line": 119
+    },
+    {
+      "file": "openai_compatible.py",
+      "line": 140
+    }
+  ]
+}

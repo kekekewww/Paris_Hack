@@ -1,0 +1,28 @@
+{
+  "scenario": "synthetic_workspace",
+  "requests": 1,
+  "status": "FAIL",
+  "finish_reason": "length",
+  "upstream_usage": {
+    "model": "dots-studio/dots-3-note-preview:free",
+    "cost": 0,
+    "prompt_tokens": 499,
+    "completion_tokens": 1800,
+    "total_tokens": 2299
+  },
+  "error_code": "INVALID_LLM_RESPONSE",
+  "validation_site": [
+    {
+      "file": "openai_compatible.py",
+      "line": 213
+    },
+    {
+      "file": "openai_compatible.py",
+      "line": 190
+    },
+    {
+      "file": "openai_compatible.py",
+      "line": 140
+    }
+  ]
+}

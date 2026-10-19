@@ -226,11 +226,41 @@ test('each assistant reply identifies its own actual provider without inferring 
   assert.ok(!user.includes('message-provider'));
 });
 
-test('configured model disclosure distinguishes grounded document answers from rule based intake',()=>{
+test('configured model disclosure explains conversational understanding without claiming verified service or model-made document rules',()=>{
   for(const verified of [false,true]){
     const html=shell('',{mode:'api',health:{llm_provider:'openai_compatible',llm_configured:true,llm_verified:verified}});
-    assert.ok(html.includes('有依據的文件問答使用模型'));
-    assert.ok(html.includes('類型釐清與安全回覆採規則'));
+    assert.match(html,/招呼、情況描述與追問由模型理解/);
+    assert.match(html,/文件清單仍依官方規則/);
+    assert.ok(!html.includes('類型釐清與安全回覆採規則'));
     assert.ok(html.includes(verified?'已完成過往實際請求驗證':'尚未完成實際請求驗證'));
+    if(!verified)assert.ok(!html.includes('已完成過往實際請求驗證'));
+  }
+});
+
+test('model conversation forms disclose OpenRouter processing before submission without including uploads or OCR',()=>{
+  const health={llm_provider:'openai_compatible',llm_configured:true,llm_verified:false};
+  for(const [html,id,input] of [
+    [guided(null,'api',{health}),'guided-privacy','guided-input'],
+    [workspace(sampleCase(),true,'api','',health),'workspace-privacy','workspace-message'],
+  ]){
+    const notice=html.match(new RegExp(`<p[^>]*id="${id}"[^>]*>([^<]*)<\\/p>`))?.[1];
+    assert.ok(notice,'the active conversation has a visible privacy note');
+    assert.match(notice,/必要對話.*OpenRouter/);
+    assert.match(notice,/請勿.*個資/);
+    assert.match(notice,/上傳文件與 OCR.*不.*(?:外送|模型)/);
+    assert.match(html,new RegExp(`id="${input}"[^>]*aria-describedby="${id}"`));
+  }
+});
+
+test('offline rules and mock conversation notices do not pretend to send chat to OpenRouter',()=>{
+  for(const [mode,health,expected] of [
+    ['mock',{llm_provider:'mock',llm_configured:false},'模擬對話'],
+    ['api',{llm_provider:'grounded_rules',llm_configured:false},'離線規則引導'],
+  ]){
+    for(const html of [guided(null,mode,{health}),workspace(sampleCase(),true,mode,'',health)]){
+      assert.ok(html.includes(expected));
+      assert.match(html,/不(?:會)?外送對話|不會呼叫模型/);
+      assert.ok(!html.includes('必要對話會送至 OpenRouter'));
+    }
   }
 });

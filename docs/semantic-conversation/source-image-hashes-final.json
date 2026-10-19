@@ -1,0 +1,22 @@
+[
+  {
+    "path": "backend/app/ai/openai_compatible.py",
+    "matches_image": true,
+    "sha256": "7525a8faa507e66f92a2e773c5777dc2049ec4b36e92cc8e26d50add3f15376d"
+  },
+  {
+    "path": "backend/app/ai/semantic_dialogue.py",
+    "matches_image": true,
+    "sha256": "9b5bdf2c880734af9b7903ea9e02989e7c29dcc2a76221dad25e5b243a6d52d6"
+  },
+  {
+    "path": "backend/app/ai/dialogue_privacy.py",
+    "matches_image": true,
+    "sha256": "7c1d99a0885c4fefe1b74208e98b65ae224bab0f25f9a415b4e0b345ed8d8a9f"
+  },
+  {
+    "path": "dist/index.html",
+    "matches_image": true,
+    "sha256": "9aa149dc71fa1b21e30635b168111d92626d7b431fc03cb4276aa7c95b5c185e"
+  }
+]

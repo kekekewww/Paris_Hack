@@ -1,0 +1,42 @@
+{
+  "scenario": "synthetic_workspace",
+  "requests": 1,
+  "status": "FAIL",
+  "completion_limit": 4096,
+  "finish_reason": "stop",
+  "upstream_usage": {
+    "model": "xingchen-agi/xing4.0-29b-a4b:free",
+    "cost": 0,
+    "prompt_tokens": 532,
+    "completion_tokens": 230,
+    "total_tokens": 762
+  },
+  "schema": {
+    "root_keys_expected": true,
+    "question": "outpatient_or_emergency",
+    "message_length": 49,
+    "fact_values": {
+      "cause": "accident",
+      "inpatient": "unknown",
+      "outpatient": "yes",
+      "emergency": "yes",
+      "critical_diagnosis": "unknown",
+      "surgery": "unknown"
+    }
+  },
+  "error_code": "INVALID_LLM_RESPONSE",
+  "validation_site": [
+    {
+      "file": "openai_compatible.py",
+      "line": 214
+    },
+    {
+      "file": "semantic_dialogue.py",
+      "line": 71
+    },
+    {
+      "file": "openai_compatible.py",
+      "line": 140
+    }
+  ]
+}

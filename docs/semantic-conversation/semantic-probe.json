@@ -1,0 +1,6 @@
+{
+  "scenario": "synthetic_paraphrased_accident_admission",
+  "requests": 1,
+  "status": "FAIL",
+  "error_code": "INVALID_LLM_RESPONSE"
+}

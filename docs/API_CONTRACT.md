@@ -1,5 +1,7 @@
 # 理賠準備服務 API 契約 v1
 
+> 本輪（2026-10-20）已獲授權加入真實 OpenRouter 語意對話，必要的當前訊息與有限歷史會送交模型；原始上傳檔與 OCR 資料不送。語意4096版本已部署，最終公開live首輪真AI通過、第二輪限流，完整流程gate仍BLOCKED。本輪實作、真實請求、公開檢查及同程序verified的最終狀態以 [語意對話紀錄](SEMANTIC_CONVERSATION.md) 為準，不能沿用舊程序結果。
+
 本契約自 Phase 1 起固定前端與後端的資料語意。前端僅呼叫 `src/services/index.js` 匯出的服務；`MockClaimService` 與 `ApiClaimService` 使用相同的方法及回傳資料形狀。官方規則與下載網址來自 `data/official-sources.json`，不是由 UI 或 AI 自行拼接。
 
 ## 服務選擇與展示邊界
@@ -38,7 +40,7 @@ API 建構參數為 `{ baseUrl = '/api/v1', timeout = 15000, messageTimeout = 50
 
 真實後端會以 `claim_session` 的 HttpOnly、SameSite=Strict cookie 識別匿名 owner；adapter 使用同源 cookie，不在 JSON 或 JavaScript 暴露 token。HTTPS 須配置 Secure cookie。不同 owner、已刪除或到期案件均回 `404 CASE_NOT_FOUND`。案件自建立起固定保留 24 小時，每 owner 最多 20 件，每案最多 100 回成功對話。API 回應 `Cache-Control: no-store`；跨來源需符合明確 allowlist，不能只更改前端 `baseUrl` 連外。
 
-真實 health 的 `llm_configured` 只代表外部模式必填設定齊備；health 本身不發送模型請求。OpenRouter免費路由只有在本後端程序、同一配置使用真實預設transport，且模型、明確零費用、token、逐字證據及引用全部驗證成功後，`llm_verified` 才為 true。重新啟動、停用或觀察到配置變更會清除，不靠環境旗標或離線fixture設為 true；它表示本程序曾驗證成功，不保證目前容量或持續可用。其他尚未實測的相容服務保持未驗證。預設 `grounded_rules` 不使用生成式模型，兩個旗標均為 false。對話與分析仍以每次回應的 `provider`／`is_simulated` 為準。
+真實 health 的 `llm_configured` 只代表外部模式必填設定齊備；health 本身不發送模型請求。OpenRouter免費路由只有在本後端程序、同一配置使用真實預設transport，且實際模型、明確零費用、token一致性及當次cap（語意4096／證據1800）、`finish_reason=stop`、語意結構／事實引文或官方證據、最終回覆與引用全部驗證成功後，`llm_verified` 才為 true。重新啟動、停用或觀察到配置變更會清除，不靠環境旗標或離線fixture設為 true；它表示本程序曾驗證成功，不保證目前容量或持續可用。其他尚未實測的相容服務保持未驗證。預設 `grounded_rules` 不使用生成式模型，兩個旗標均為 false。對話與分析仍以每次回應的 `provider`／`is_simulated` 為準。
 
 ## 案件與條件
 
@@ -132,7 +134,19 @@ type AssistantResponse = {
 };
 ```
 
-訊息長度為 1–4000 字。每次成功對話在 `case.messages` 保存一組 user 與 assistant 訊息。`document_id` 指定文件上下文；不存在的文件回 404。Mock 對「不知道是否住院」、「沒有住院」等描述不推定住院類別。給付金額、資格、正式核准或沒有官方依據的問題須回覆不確定與官方確認方式。上傳／對話中的指令不得覆寫規則或變更檢查結果。
+訊息長度為1–4000字。每次成功對話在 `case.messages` 保存一組user與assistant訊息；失敗不以規則／Mock代替模型成功，也不當作案件確認。`document_id` 指定文件上下文；不存在的文件回404。Mock仍清楚標示模擬來源，不能作為真實語意驗證。
+
+明確使用官方 `openrouter/free` 設定時，後端新增語意引導與一般補充分流；沒有新的環境開關。有依據的文件問答保留官方證據ID分流；安全、資格、給付金額與正式核准等限制可由規則處理。每次回覆依實際 `provider`／`is_simulated` 標示，不因health已驗證就一律標為AI。
+
+語意模式送出必要的當前訊息，加最多8則符合條件的歷史，合計最多9則／6000字；歷史只取role／content，再由伺服器加上本次dialogue的turn索引。當前訊息為1–4000字，超長拒絕，遮罩後完整保留。歷史user每則最多1000字、assistant最多600字，先遮罩再取完整句段後綴；無安全完整句段則排除。保留最後安全引導回覆，以及「有／沒有／是／不是」短答所需的前一個結構化 `clarification` 問句；必要問句須完整保留遮罩後內容；預算排掉或縮減問句時，短答也排除。帶 `document_id`、`answer`、`uncertain`及不明配對的輪次不納入，合格舊格式獨立user可保留。
+
+語意模型的內部user JSON固定為 `{dialogue:[{turn,role,content}],confirmed_case:{claim_type_id,conditions:{cause,surgery}}}`；turn從1起算，confirmed_case只含伺服器已確認的最小狀態。此分支不帶官方evidence；文件問答另走既有證據ID分支。原始上傳檔、OCR／抽取全文、分析欄位、cookie、金鑰及完整案件物件不自動附加。對明顯識別資料的遮罩是盡力處理，不是全面去識別；使用者主動輸入的對話仍可能含未匹配個人與就醫資訊，這些必要文字屬本輪授權的外送範圍。
+
+內部模型輸出固定 `{facts,question,message}`。facts固定cause／inpatient／outpatient／emergency／critical_diagnosis／surgery六欄，每欄固定 `{value,turn,quote}`：cause為unknown／accident／illness，其餘為unknown／yes／no；unknown需turn=null且quote空字串，已知值需user turn逐字引文及來源語境／領域合理性／直接矛盾檢查。question採允許的追問enum，message為1–500字短對話，不得含URL、文件要求、金額、資格核准、處置指示或與facts矛盾。這是有限防護，不宣稱完整語意查核。
+
+模型請求的 `max_completion_tokens` 僅OpenRouter語意分支為4096；官方證據及一般相容profile維持1800。OpenRouter completion metadata不得超過當次明確cap；`finish_reason=length`即使cost0仍拒絕，不延長35秒deadline、不改JSON schema／1–500字message／6000字輸入，也不重試或切付費模型。
+
+公開 `AssistantResponse` 與sendMessage的request／response欄位不變，前端不傳內部facts、history或cap物件。伺服器對應registry候選與canonical引用；新案件有可支持候選才產生 `proposed_case_updates`，確認後由既有 `updateCase` 寫入。已選類型的案件只回 `clarification` 提醒確認後調整，更新提案為空。模型不能決定官方文件要求、建立清單或直接改案件；官方來源、完整段落、規則與清單由伺服器決定。上傳或對話中的指令不得覆寫規則。完整question enum與本輪驗收見 [LLM整合說明](LLM_INTEGRATION.md) 及 [語意對話紀錄](SEMANTIC_CONVERSATION.md)。
 
 ## 上傳與初步分析
 
@@ -193,7 +207,8 @@ type Analysis = {
 | 409 | `CASE_EXISTS` | 案件 ID 衝突 |
 | 503 | `OCR_BUSY` / `OCR_TIMEOUT` / `OCR_UNAVAILABLE` | OCR 單工容量、處理預算或模型不可用 |
 | 503 | `LLM_NOT_CONFIGURED` / `INVALID_LLM_CONFIG` | 外部模型未配置或設定不合法 |
-| 503 | `LLM_TIMEOUT` / `LLM_PROVIDER_ERROR` / `INVALID_LLM_RESPONSE` | 真模型請求逾時、失敗或回覆不符證據邊界 |
+| 503 | `LLM_RATE_LIMITED` | 免費模型回429；明確顯示稍後重試，不自動重試或改用付費／Mock |
+| 503 | `LLM_TIMEOUT` / `LLM_PROVIDER_ERROR` / `INVALID_LLM_RESPONSE` | 真模型請求逾時、失敗或語意／事實引文／官方證據驗證不符 |
 | 502 / 503 | `INVALID_AI_RESPONSE` / `INVALID_PROVIDER_RESPONSE` | 結構、引用或非模擬檢查未通過 |
 | 503 | `PROVIDER_UNAVAILABLE` / `INVALID_REGISTRY` / `FRONTEND_UNAVAILABLE` | 服務、官方索引或前端產物不可用 |
 | 500 | `INTERNAL_ERROR` | 未預期服務錯誤，不回傳原始內容或堆疊 |

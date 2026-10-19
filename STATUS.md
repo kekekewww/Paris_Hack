@@ -1,25 +1,27 @@
 # 續作狀態
 
-更新日期：2026-10-19（臺灣）。**使用者回報的連續追問已修復、驗證及發布；當前真模型重驗受OpenRouter限流阻擋。前輪成功仍是歷史證據，不代表新程序已真驗通過。**
+更新：2026-10-20（臺灣）。**真實 OpenRouter 語意串接已部署並有成功證據；完整模型流程仍受免費限流與不合規輸出影響，整體 gate 保持 BLOCKED。**
 
-- current_phase：已交付後的對話回歸修復完成；當前P2／P3完整重驗BLOCKED。
-- current_task：ASSISTANT-LOOP-20261019 DONE；ASSISTANT-LIVE-20261019、P2-04／P2-09／P3-04C／P3-GATE BLOCKED，原因為真模型503 LLM_RATE_LIMITED；不放寬斷言。
-- last_completed_task：三句依已知資訊逐輪追問、保留否定／未知／更正、Mock一致、已建舊案重進intake無舊訊息，逐則規則引導／AI回覆／模擬短標及折疊範圍說明。
-- last_successful_test：後端347/347（38.07秒，既有warning1）、相關AI270；前端56/56（605.586ms）、最終Mock87（1.8分鐘）；API/OCR27（1.7分鐘，同backend/UI首映像、最後僅Mock未知詞guard另改）；最終容器followup12（36.5秒）、公開API三尺寸6（33.3秒）。三尺寸已目視，成功引導輪console／pageerror0。[本輪報告](docs/ASSISTANT_FOLLOWUP.md)。
-- failed_tests：舊公開browser2項預期RED；初輪Mock84pass／3fail只因舊固定文案，補clarification／空案／無提案／無更新斷言後最終87過；本輪真模型探測及公開live各一次503限流，後者1fail與network console1保留。原23套件未改，執行在模型已真驗證斷言FAIL，後續檢查未執行，不冒稱新版23過。
-- public_url：https://retirement-trim-reported-jesus.trycloudflare.com/?service=api 。同網址已更新修復，既有DB保留。
-- runtime_state：公開8002 parent65932／listener59552，cloudflared36692與Vite5174／27888保留。專用paris-claim-followup-20261019容器／volume已核對清除，未動無關8000／3137；操作前重新核對PID。[清理](docs/assistant-followup/cleanup.json)。
-- public_settings：單worker／單副本、精確HTTPS origin、Secure／HttpOnly／Strict host-only cookie設定、no-access-log／no-proxy-headers、rate120、專用.local/quick-tunnel/cases.sqlite3。這些配置保留，完整公開腳本本輪未過，不混稱全項fresh驗證。
-- provider_state：openai_compatible／openrouter/free／原免費護欄未變。新程序configured=true，模型真請求尚無成功所以verified=false；health只是狀態，不探測可用性。引導分類與安全回覆依設計為grounded_rules；只有有依據文件問答呼叫模型。
-- secret_state：沿用.local/secrets/.env.openrouter與目前使用者ACL，Git／Docker排除，沒有重述key。最後實GET驗證key有效、usage=0、remaining0.1，Vite一般／@fs403與native私有路徑404均未洩漏。這不是新模型成功證據。
-- docker_status：cardif-claim-preparation:followup-20261019，sha256:6e858e7909ded431ab4bfe41911c93c15054942a5ce6bb3d009d0e104d7a57ef；實際build與同份dist已發布，UID10001／唯讀／capdropALL／no-new-privileges；測試資源已清、image保留。API27所用首映像6e6b9ebe…與最終backend/UI相同，差異僅最後Mock未知詞guard。
-- external_dependencies：免費路由容量／限流是目前必要重驗阻礙；OpenAI／Gemini仍為使用者暫緩的可選項，不建立或使用。沒有其他待實作的本輪前端／後端修復。
-- approval_review：自動審核拒絕將公開模型斷言降為boolean型別檢查；拒絕命令未執行，沒有改腳本或以替代弱化斷言繞過。改為執行原完整腳本並保留FAIL，不向使用者索取降低驗收標準的批准。
-- known_limits：有限規則引導仍不是通用生成式聊天；不把用戶問題、病歷或raw檔案送雲端。歷史OCR冷啟／未明OCR_UNAVAILABLE／bad allocation保留；本輪347及API27無OCR失敗，不宣稱歷史根因已修。臨時網址依賴本機與隧道運行，24h展示TTL／人工核對／非核准邊界保留。
-- saved_evidence：docs/assistant-followup含去敏感JSON與三尺寸圖片；完整RED/GREEN在.local/assistant-loop-20261019。新followup與live關閉trace／cookie快照；未提交金鑰或案件庫。原HTML／備份hash沿用且本輪未修改。
+- current_phase：Phase 2／3，語意對話實作完成，完整真模型驗收受阻。
+- current_task：SEMANTIC-IMPL DONE；SEMANTIC-LIVE／SEMANTIC-20261020 BLOCKED。P2-04／P2-09／P3-04／P3-04C／P3-GATE 仍 BLOCKED。
+- last_completed_task：真模型招呼、描述、追問與工作區一般補充分流；有界對話及明顯個資遮罩；事實引文／否定／未知檢查；確認才改案；官方需求仍由規則決定；介面隱私告知；部署與紀錄。
+- last_successful_test：最終後端477/477（108.76秒，既有Starlette warning1），前端58/58，Mock87/87（3.9分鐘），最終容器雙模式追問12/12（3分鐘），最終公開HTTPS原23/23；三尺寸兩模式目視12圖／6context，console與pageerror0。
+- api_ocr_evidence：API/OCR27/27（4.1分鐘）在前映像2fa10dde通過；與最終映像前端、規則及OCR相同，只有外部語意cap不同，沒有宣稱27在最終映像再跑。完整版本差異與證據見[報告](docs/SEMANTIC_CONVERSATION.md)。
+- real_llm_evidence：提高預算前公開「你好→我出車禍了→沒有住院」三輪真200、非模擬及AI標示通過；改寫「摔車／留院三晚／沒有動刀」真模型成功、候選住院／無手術且不改案。最終新程序招呼也真成功，建立本程序verified；每次成功均有嚴格零費用與用量驗證。
+- failed_tests：完整公開live四次分別第4句限流（54.7秒）、第1句INVALID（19秒）、第1句限流（6.1秒）、最終第2句限流（39.5秒），每輪1 fail及network console1，未改200/provider/引用等斷言。早期私有probe有INVALID／35秒timeout；工作區probe有1800截斷，4096重驗仍因事實引文不合被拒。不是整輪成功，也未證明所有INVALID根因修復。
+- current_blockers：指定free路由的容量與輸出品質使完整新模型旅程尚無全程PASS；不改用付費模型、不靜默退Mock／本機，不削弱事實或來源驗證。有限防護不保證所有語意正確，仍須使用者確認類型與條件。
+- provider_state：openai_compatible／openrouter/free；語意cap4096，文件／generic cap1800，metadata依當次cap驗證；35秒、免費零價格、無重試／付費fallback均保持。當前程序configured=true／verified=true；verified源自本輪真招呼，只是同程序歷史成功，不是即時容量保證，重啟會清除。
+- public_url：https://boots-deaf-found-arrange.trycloudflare.com/?service=api 。前輪retirement-trim網址已停止，勿當作仍可用。
+- runtime_state：公開8002 parent9252／listener52212；cloudflared53936指向8002。Vite5174保留。操作前重新核對CIM與埠，不憑舊PID停止；無關8000／3137服務未操作。
+- public_settings：沿用.local/quick-tunnel/cases.sqlite3、單worker／單副本、精確新HTTPS origin、Secure／HttpOnly／Strict host-only cookie、no-access-log／no-proxy-headers、rate120；最終原23項已實驗通過。
+- docker_status：最終cardif-claim-preparation:semantic-20261020，image sha256:7c6afbc949395337cd7ead9bb082b7d6e470a8c31c22878d747a7b1bf32dca12；UID10001、唯讀、capdropALL及no-new-privileges。adapter／語意／隱私／正式dist已逐檔比對一致。專用paris-semantic-20261020容器與volume已核對清理，image保留，[清理證據](docs/semantic-conversation/cleanup.json)。
+- secret_state：沿用私有.local/secrets/.env.openrouter、目前使用者ACL、Git／Docker排除；Vite一般／@fs403、後端404。最終只讀key GET顯示usage0、剩餘限制0.1、當日免費請求27/1000；這不代替模型驗收。最終384檔實際key掃描零洩漏；沒有重述key、建立其他provider或提交真理賠。
+- external_dependencies：OpenRouter免費容量；OpenAI／Google AI Studio／Gemini仍依使用者決定暫緩，不再索取或建立。
+- data_scope：最新授權允許必要當前描述與最多8則有限同案歷史、最多9則／6000字送OpenRouter；明顯個資盡力遮罩，非全面去識別。原始上傳檔、OCR／擷取全文、分析欄位、cookie、憑證與整案不自動附加。
+- saved_evidence：[完整報告](docs/SEMANTIC_CONVERSATION.md)、docs/semantic-conversation去敏感JSON及6張API視覺圖；原始合成測試日誌／RED-GREEN保存在.local/openrouter-conversation-20261020與.local/semantic-20261020（不入Git）。原HTML／備份SHA256仍相同。
 
 ## 下一個工作階段的三步
 
-1. 讀規範與本紀錄，核對公開程序及新引導結果；不重做已完成修復、不重複索取金鑰。
-2. 免費容量恢復後，用原OpenRouter live與原公開完整腳本重驗，保持200／provider／引用／AI短標／verified斷言；新成功才恢復當前P2／P3gate。
-3. 若仍429，保留失敗與案件、記外部BLOCKED；維持openrouter/free與零價格護欄，不以規則或Mock冒充模型完成，不建立未要求的付費／其他provider或排程。
+1. 讀規範、TASKS與此狀態；核對程序／source hash／health，保留已部署語意功能與官方規則隔離，不重做已過且未變更的UI／OCR。
+2. 免費容量恢復後，以原opt-in live spec重驗完整對話與文件流程。明確設定LIVE_OPENROUTER=1、CLAIM_API_BASE_URL及已安裝Chrome路徑；先跑desktop／單worker，保持真200、provider、引用、確認、費用等斷言，失敗保留，禁止把設定或歷史verified當全程成功。
+3. 若INVALID重現，用合成情境記錄安全的schema flags／驗證位置，區分截斷、來源語境與自然措辭；不記原始敏感prompt、不盲改護欄。只有新完整成功後才更新SEMANTIC-LIVE與P2／P3整體gate；不要建立未要求的排程、其他模型或付費路由。

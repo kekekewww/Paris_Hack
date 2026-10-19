@@ -1,8 +1,10 @@
 # 已知限制
 
-> 最新連續追問修復已發布（2026-10-19），後端347／前端56、Mock87／API27、最終容器追問12／公開6通過。但本輪真模型回503限流，原公開完整腳本在模型verified斷言失敗；當前整體gate保持BLOCKED。以下OpenRouter成功與程序為前輪歷史，最新以[追問修復報告](ASSISTANT_FOLLOWUP.md)為準。
+> 本輪（2026-10-20）已獲授權加入真實 OpenRouter 語意對話，必要的當前訊息與有限歷史會送交模型；原始上傳檔與 OCR 資料不送。語意4096版本已部署，最終公開live首輪真AI通過、第二輪限流，完整流程gate仍BLOCKED。本輪實作、真實請求、公開檢查及同程序verified的最終狀態以 [語意對話紀錄](SEMANTIC_CONVERSATION.md) 為準，不能沿用舊程序結果。
 
-更新日期：2026-10-19（臺灣）。本文記錄目前功能邊界；Phase 2、Phase 3 與部署驗收狀態請以 [STATUS.md](../STATUS.md) 及實際測試報告為準。使用者本次已授權 OpenRouter，僅允許 `openrouter/free`；OpenAI／Gemini 仍暫緩。前輪 OpenRouter 實際串接曾完成 Phase 2／3 原型範圍整體驗收；當前重驗因限流BLOCKED，結果見 [OpenRouter 紀錄](OPENROUTER_ACCEPTANCE.md) 及 [供應商設定](PROVIDER_SETUP.md)；這不代表固定部署或商業級服務已驗收。
+前輪連續追問修復已發布（2026-10-19），後端347／前端56、Mock87／API27、容器追問12／公開6通過；該輪真模型回503限流，原公開完整腳本在模型verified斷言失敗，沒有以規則成功代替模型成功。[歷史追問修復報告](ASSISTANT_FOLLOWUP.md)
+
+更新日期：2026-10-20（臺灣）。本文記錄目前功能邊界；Phase 2、Phase 3 與部署驗收狀態請以 [STATUS.md](../STATUS.md) 及實際測試報告為準。使用者已授權 OpenRouter 語意對話與必要的當前訊息／有限歷史，僅允許 `openrouter/free`；OpenAI／Gemini 仍暫緩。前輪 OpenRouter 實際串接曾完成 Phase 2／3 原型範圍整體驗收；先前重驗因限流BLOCKED；調整前程序的前三輪引導及獨立探測已有成功，三次完整live與新4096工作區探測仍失敗，當前gate BLOCKED；歷史結果見 [OpenRouter 紀錄](OPENROUTER_ACCEPTANCE.md) 及 [供應商設定](PROVIDER_SETUP.md)；這不代表固定部署或商業級服務已驗收。
 
 ## 服務與 AI
 
@@ -11,18 +13,18 @@
 | Mock | 可完整操作前端；對話、分析與框線為固定模擬情境，不能證明真實 AI 或 OCR 已完成 |
 | API | 使用 FastAPI、SQLite、本機官方資料及實際文件分析；失敗會顯示錯誤，不回退 Mock |
 | `grounded_rules` | 實際執行中文詞彙檢索與規則，`is_simulated=false`；不是生成式 LLM，`llm_configured=false` |
-| 外部 LLM | OpenRouter 已透過 `openai_compatible` Adapter 完成多次真實零費用請求；本機、容器及公開版本已完成原型範圍驗收；OpenAI／Gemini 未驗證，屬可選後續項目 |
-| 免費容量 | 免費 router 不保證固定模型、穩定容量或回應時間；實測有 429、503 與逾時，不能保證一直可用 |
-| 語言理解 | 以保守規則辨識三類就醫描述、否定與不確定詞；複雜語意、混合事件或未涵蓋說法仍可能誤判，須由使用者確認類別 |
-| 檢索 | 小型本機中文詞彙索引，沒有向量資料庫；預設規則直接回覆，外部模式也只可整理既有證據。查無支持內容不代表官網不存在該資訊 |
+| 外部 LLM | OpenRouter 既有文件問答曾真實零費用接通；調整前程序的前三輪引導及獨立探測成功；三次完整live與新4096工作區探測仍失敗，不能挪用舊程序成功補足；OpenAI／Gemini 未驗證 |
+| 免費容量 | 免費router不保證固定模型、容量或延遲；三次完整live依序為第四輪限流、第一輪INVALID（未復現）、第一輪限流而失敗。提高語意token預算不等於消除限流或保證35秒內完成 |
+| 語言理解 | 本機模式使用規則；OpenRouter 語意模式可提供理解與追問提案，仍可能誤解否定、混合事件或上下文，事實引文、有限領域合理性與直接矛盾檢查不等於完整語意正確性證明，仍須由使用者確認類型與條件 |
+| 檢索 | 小型本機中文詞彙索引，沒有向量資料庫；官方文件需求仍由伺服器規則與來源決定，模型不能新增要求。查無支持內容不代表官網不存在該資訊 |
 
-本次外部模式明確設定 `LLM_PROVIDER=openai_compatible`，OpenRouter 僅允許 `https://openrouter.ai/api/v1` 與 `openrouter/free`。金鑰保存在後端私有 `.local/secrets/.env.openrouter`，啟動時明確映射至 canonical `LLM_API_KEY`；前端、建置及映像不得含秘密值，範本仍保留空白金鑰。缺設定回 `503 / LLM_NOT_CONFIGURED`，設定不合法、網路或輸出驗證失敗也回明確錯誤，不以本機／Mock 回覆掩蓋外部失敗。
+外部語意模式不另設環境開關，明確設定 `LLM_PROVIDER=openai_compatible`，OpenRouter 僅允許 `https://openrouter.ai/api/v1` 與 `openrouter/free`。金鑰保存在後端私有 `.local/secrets/.env.openrouter`，啟動時明確映射至 canonical `LLM_API_KEY`；前端、建置及映像不得含秘密值，範本仍保留空白金鑰。缺設定回 `503 / LLM_NOT_CONFIGURED`，設定不合法、網路或輸出驗證失敗也回明確錯誤，不以本機／Mock 回覆掩蓋外部失敗。
 
-請求固定 `provider.max_price` 的 prompt／completion／request／image 四項為0、`require_parameters=true`、`allow_fallbacks=false`、`reasoning.effort=minimal` 與 `max_completion_tokens=1800`。本次金鑰資訊 GET 顯示限制US$0.10、當時usage為0，多次推論的 `usage.cost` 為0；這些是實測結果，非未來可用性承諾。重大疾病額外 CLI 真模型探測兩輪遇429，保留為擴充覆蓋的外部限制，不宣稱三類模型探測全部通過。429 明確回 `503 / LLM_RATE_LIMITED`；不自動重試、不改付費模型、不切 Mock 或本機假成功。
+請求固定 `provider.max_price` 的 prompt／completion／request／image 四項為0、`require_parameters=true`、`allow_fallbacks=false`、`reasoning.effort=minimal`。`max_completion_tokens` 僅語意提高4096，官方證據與一般相容profile維持1800；仍按當次cap、`finish_reason=stop`及cost0驗證，35秒期限不變。前輪金鑰資訊 GET 顯示限制US$0.10、當時usage為0，多次推論的 `usage.cost` 為0；這些是實測結果，非未來可用性承諾。重大疾病額外 CLI 真模型探測兩輪遇429，保留為擴充覆蓋的外部限制，不宣稱三類模型探測全部通過。429 明確回 `503 / LLM_RATE_LIMITED`；不自動重試、不改付費模型、不切 Mock 或本機假成功。
 
 健康檢查的 `llm_configured=true` 只代表設定齊備；`llm_verified=true` 只表示同程序、同配置曾通過真實請求及完整驗證，重啟、停用或配置變更會使紀錄失效。Health 不送出模型請求，過往成功不能證明此刻有免費容量或保證即時 readiness，也不能單獨代表整體整合驗收完成。詳見 [LLM 整合紀錄](LLM_INTEGRATION.md)。
 
-OpenRouter 雲端只收到本次公開官方證據的 ID、標題與片段，不接收原始上傳文件、病歷、案件、使用者問題或對話歷史。只有有依據的準備回答走外部 Adapter，分類與條件提案等仍由規則處理。模型只能選回本次1至3個不重複證據 ID，伺服器重建完整 canonical 段落與來源／頁碼／URL；尚未提供自由改寫的語意事實查核。`store:false` 等請求參數也不代表供應商保留政策已查核。
+本輪語意模式會外送必要的當前訊息與最多8則歷史，合計最多9則／6000字；當前訊息須為1–4000字，遮罩後完整保留。歷史user每則最多1000字、assistant最多600字，超長只保留完整句段，無安全句段則排除。保留最後安全引導回覆與「有／沒有／是／不是」短答所需的前一個結構化追問；必要問句未能完整保留遮罩後內容（包含被上限縮減）時，短答一併排除。文件、answer、uncertain及不明配對不納入，所以不能保證模型記得所有舊內容。明顯識別資料先做盡力遮罩，不是全面去識別；使用者自行輸入的事故、就醫與個人文字可能仍含未匹配敏感資訊，不應誤稱為所有醫療資訊皆不外送。語意請求另只帶已確認類型與cause／surgery最小狀態；不帶官方evidence，也不自動附加原始上傳檔、OCR／抽取全文、分析欄位或完整案件物件。模型只提出語意提案；文件要求由伺服器決定，新案件由使用者確認後才寫入；已建案語意回覆只提醒確認，不直接提出條件更新。有依據的文件問答仍以官方證據原文重建，不讓模型生成規範或 URL。`store:false` 等參數不代表供應商保留政策已查核。
 
 ## 官方資料與文件要求
 
@@ -59,18 +61,20 @@ Mock 案件在分頁 `sessionStorage`，與 API 的保存機制不同。下載�
 
 HTTP adapter 一般操作預設 15 秒逾時，對話為 50 秒，文件分析另設 95 秒；後端對話／分析路由上限分別為 45／90 秒。網路中斷、逾時或首次 OCR 初始化等情況，不保證立即終止已開始的 CPU OCR；後端也可能已保存結果但回應未送達。請先等候並重新整理檢查已保存結果，確認狀態後再重試，避免重複處理。
 
-OpenRouter 外部請求使用 `LLM_TIMEOUT_SECONDS=35`，可設定但不得超過40秒，低於後端對話45秒上限。免費供應商的等待、推論與回覆可能超出這個預算；限流或逾時只明確顯示可重試錯誤，不增加自動重試、備援模型或費用。`llm_verified` 保留的是先前成功紀錄，不能當作重試必定成功的依據。
+OpenRouter外部請求使用 `LLM_TIMEOUT_SECONDS=35`，可設定但不得超過40秒，低於後端對話45秒上限。單次工作區「…」診斷曾出現cost0、completion1800、finishlength而被拒；語意cap改4096只針對這項上限，官方證據仍1800。另一次4096工作區探測雖stop／cost0，仍因事實來源驗證失敗被拒，不能推論所有INVALID、截斷或限流已修復。免費供應商的等待、推論與回覆可能超出這個預算；限流或逾時只明確顯示可重試錯誤，不增加自動重試、備援模型或費用。`llm_verified` 保留的是先前成功紀錄，不能當作重試必定成功的依據。
 
 最終容器實測首次圖片 OCR 曾超出內部 45 秒預算，明確回 `503 OCR_TIMEOUT`；模型載入後同一完整 smoke 重試 39 項通過。預算包含模型匯入、ONNX 初始化、圖最佳化與推論，但沒有分階段計時，不能斷定哪個步驟耗盡預算。Health 只確認 HTTP 與套件存在，不代表圖片 OCR 已暖機；展示前使用合成 smoke 驗證。尚未提供啟動預載／模型 readiness 或程序硬中止，這是目前可靠性邊界。
 
-本次完整後端測試亦曾出現 OCR `bad allocation`。該單項重驗與最終293項後端測試通過，但沒有根因已定位或修復的證據，不能宣稱記憶體配置問題已根治；保留為可靠性限制，展示前仍須以合成文件實際確認。
+前輪 OpenRouter 整合的完整後端測試亦曾出現 OCR `bad allocation`。該單項重驗與最終293項後端測試通過，但沒有根因已定位或修復的證據，不能宣稱記憶體配置問題已根治；保留為可靠性限制，展示前仍須以合成文件實際確認。
 
 官方文件在新分頁開啟；外部下載失敗時不能由本機確認官網故障原因，也不會自動更換未查核網址。應保留原有來源與準備狀態，回官方入口核對。受控故障的重現步驟見 [Demo 的 G、H 情境](DEMO.md)。
 
 ## 部署與驗收
 
+調整前程序的前三輪公開引導均為200、真provider、非模擬且AI標示正確，verified由該次真intake建立；獨立NVIDIA改述cost0及問候診斷也成功。三次完整live各自失敗，不合併通過。該程序公開HTTP23項未改斷言且通過，但新程序重啟後不能沿用其verified或公開結果。修正後AI離線400項、完整後端477項／1項既有Starlette警告（108.76秒）、新映像7c6afbc9…建置成功，也不能替代完整真模型流程；預算調整前471項、前端58／Mock87等歷史保留。語意4096版本已部署，新程序最終公開live首輪真AI通過、第二輪限流，整次1項失敗（39.5秒），完整gate仍BLOCKED。公開HTTP、同程序verified、容器與最終gate以 [本輪報告](SEMANTIC_CONVERSATION.md) 為準。
+
 Docker 設定準備、靜態解析、實際 image build、容器啟動及公開 HTTPS 是不同驗證項目，須分別留下結果。外部部署帳號、DNS、TLS 與授權尚未由文件本身證實；不得因設定存在便宣稱公開網站已部署。映像只包含執行需要的前端、後端與官方索引，合成展示文件保留在原始專案 `demo/documents/`。
 
-本次 OpenRouter 版本已完成使用者授權的 Quick Tunnel 臨時 HTTPS 驗收：公開 HTTP 23項、真模型瀏覽器1項通過；新版容器的真 OCR smoke 56項、重啟保存及真模型瀏覽器1項亦通過。本機真模型 UI 首輪2項通過、平板1項因429失敗，平板獨立重驗1項通過，不能合併宣稱單次3/3。Phase 2／3 原型範圍整體驗收結果見 [OpenRouter 驗收紀錄](OPENROUTER_ACCEPTANCE.md)。仍需電腦、本機應用與隧道持續執行；固定網址、常駐部署及商業級服務不在目前 MVP 範圍。未完成的擴充覆蓋不得以 Mock、攔截回覆或本機測試代替。
+前輪 OpenRouter 文件問答版本曾完成使用者授權的 Quick Tunnel 臨時 HTTPS 驗收：公開 HTTP 23項、真模型瀏覽器1項通過；新版容器的真 OCR smoke 56項、重啟保存及真模型瀏覽器1項亦通過。本機真模型 UI 首輪2項通過、平板1項因429失敗，平板獨立重驗1項通過，不能合併宣稱單次3/3。這些 Phase 2／3 原型範圍結果是 [OpenRouter 歷史驗收](OPENROUTER_ACCEPTANCE.md)，不能代替新語意模式的真實請求與公開驗證；本輪以 [語意對話紀錄](SEMANTIC_CONVERSATION.md) 為準。仍需電腦、本機應用與隧道持續執行；固定網址、常駐部署及商業級服務不在目前 MVP 範圍。未完成的擴充覆蓋不得以 Mock、攔截回覆或本機測試代替。
 
 先前 [無金鑰驗收](ACCEPTANCE_NO_KEYS_20261019.md) 的「暫不建立金鑰」是歷史決定，已由本次 OpenRouter 授權部分取代；OpenAI／Gemini 仍維持暫緩，屬可選後續項目、不阻擋本次 MVP；不因共用相容 Adapter 而宣稱已串接。

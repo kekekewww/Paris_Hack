@@ -1,6 +1,7 @@
 """Deterministic, synthetic guided conversations; no model or network calls."""
 import asyncio
 import copy
+import json
 import re
 
 import httpx
@@ -209,15 +210,27 @@ def test_uncertain_diagnosis_does_not_override_an_earlier_no_care_statement(mess
     assert_no_proposal(say(case("尚未就醫"), message))
 
 
-def test_guided_followups_do_not_send_history_or_facts_to_the_external_model():
-    def unexpected_network(request):
-        pytest.fail("Guided clarification and classification must not call the external model")
+def test_authorized_openrouter_guidance_sends_minimal_dialogue_and_keeps_case_unconfirmed():
+    calls = []
+    def model_response(request):
+        calls.append(request)
+        dialogue = json.loads(json.loads(request.content)["messages"][1]["content"])["dialogue"]
+        facts = {key: {"value": "unknown", "turn": None, "quote": ""}
+                 for key in ("cause", "inpatient", "outpatient", "emergency", "critical_diagnosis", "surgery")}
+        for field, value, quote in (("cause", "accident", "車禍"), ("inpatient", "no", "沒有住院")):
+            turn = next(item for item in dialogue if item["role"] == "user" and quote in item["content"])
+            facts[field] = {"value": value, "turn": turn["turn"], "quote": quote}
+        payload = {"facts": facts, "question": "outpatient_or_emergency", "message": "已了解沒有住院，請問曾看門診或去急診嗎？"}
+        return httpx.Response(200, json={"model": "synthetic/concrete:free", "usage": {"cost": 0, "prompt_tokens": 300, "completion_tokens": 150, "total_tokens": 450},
+            "choices": [{"finish_reason": "stop", "message": {"content": json.dumps(payload, ensure_ascii=False)}}]})
 
     provider = OpenAICompatibleProvider(OpenAICompatibleSettings(api_key="offline-synthetic-key", model="openrouter/free",
                                                                base_url="https://openrouter.ai/api/v1"),
-                                        transport=httpx.MockTransport(unexpected_network))
+                                        transport=httpx.MockTransport(model_response))
     item = case("你好", "我出車禍了")
+    before = copy.deepcopy(item)
     answer = asyncio.run(provider.respond(item, "沒有住院"))
-    assert_no_proposal(answer)
-    assert answer["provider"] == "grounded_rules"
+    assert len(calls) == 1 and item == before
+    assert answer["response_type"] == "clarification" and answer["proposed_case_updates"] == {}
+    assert answer["provider"] == "openai_compatible" and answer["is_simulated"] is False
     assert_does_not_reask_admission(answer)

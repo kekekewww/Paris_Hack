@@ -1,5 +1,7 @@
 # 本機容器驗收
 
+> 2026-10-20 最終映像為 `cardif-claim-preparation:semantic-20261020`，image `sha256:7c6afbc949395337cd7ead9bb082b7d6e470a8c31c22878d747a7b1bf32dca12`。非root／唯讀／capdropALL／no-new-privileges，最終雙模式三尺寸追問12通過；API/OCR27在相同前端／規則／OCR的前映像2fa10dde通過，差異僅外部語意生成cap。核心檔與正式dist已逐檔比對最終映像一致；完整LLM旅程仍受限流，詳見[本輪報告](SEMANTIC_CONVERSATION.md)。以下歷史數字不混稱本輪重跑。
+
 > 最新連續追問修復已發布（2026-10-19），後端347／前端56、Mock87／API27、最終容器追問12／公開6通過。但本輪真模型回503限流，原公開完整腳本在模型verified斷言失敗；當前整體gate保持BLOCKED。以下OpenRouter成功與程序為前輪歷史，最新以[追問修復報告](ASSISTANT_FOLLOWUP.md)為準。
 
 > 最新OpenRouter交付（2026-10-19）：真實免費路由已啟用，原訂MVP的P2／P3整體gate已通過。最終後端293、本機三尺寸成功證據（原2pass1fail＋平板重驗1pass）、容器56checks真OCR／live1／restart及公開live1／HTTP23均完成。免費限流與額外CLI未通過仍保留，完整結果以[OpenRouter驗收](OPENROUTER_ACCEPTANCE.md)為準。以下舊版「未驗證／BLOCKED」為當時歷史，已由新授權與實測取代。

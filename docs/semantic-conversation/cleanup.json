@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "tunnel_pid": 53936,
+  "image_retained": "sha256:7c6afbc949395337cd7ead9bb082b7d6e470a8c31c22878d747a7b1bf32dca12",
+  "test_volume_removed": true,
+  "public_port": 8002,
+  "test_container_removed": true,
+  "public_database_retained": true,
+  "volume": "paris-semantic-20261020",
+  "container": "paris-semantic-20261020"
+}

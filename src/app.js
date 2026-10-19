@@ -43,9 +43,9 @@ function render(route=location.hash.slice(1)||'triage'){
   if(skipLink)skipLink.href=route==='triage'?'#home-main-content':'#main-content';
   if(route==='triage'){document.title='理賠申請，需要什麼？｜法國巴黎人壽';window.scrollTo(0,0);return}
   let body='';
-  if(route==='assistant')body=guided(state.case?.entry_path==='guided'&&!state.case.claim_type_id?state.case:null,mode,{claimTypes:state.claimTypes,selectedType:currentGuidedChoice()?.type,busy:state.busy,pending:guidedResponsePending});
+  if(route==='assistant')body=guided(state.case?.entry_path==='guided'&&!state.case.claim_type_id?state.case:null,mode,{claimTypes:state.claimTypes,selectedType:currentGuidedChoice()?.type,busy:state.busy,pending:guidedResponsePending,health:state.health});
   if(route==='search')body=selection(state.claimTypes,state.selected,state.directConditions,mode);
-  if(route==='workspace')body=workspace(state.case,state.assistantOpen,mode);
+  if(route==='workspace')body=workspace(state.case,state.assistantOpen,mode,'',state.health);
   if(route==='summary')body=summary(state.case,state.source);
   app.innerHTML=shell(body,{mode,hasCase:!!state.case?.claim_type_id,route,health:state.health});
   syncGuidedPicker();

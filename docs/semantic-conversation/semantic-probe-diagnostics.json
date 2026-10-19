@@ -1,0 +1,16 @@
+{
+  "scenario": "synthetic_paraphrased_accident_admission",
+  "requests": 1,
+  "status": "FAIL",
+  "error_code": "LLM_TIMEOUT",
+  "validation_site": [
+    {
+      "file": "openai_compatible.py",
+      "line": 213
+    },
+    {
+      "file": "openai_compatible.py",
+      "line": 183
+    }
+  ]
+}

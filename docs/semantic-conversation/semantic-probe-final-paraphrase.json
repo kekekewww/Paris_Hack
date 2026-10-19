@@ -1,0 +1,37 @@
+{
+  "scenario": "synthetic_paraphrase",
+  "requests": 1,
+  "status": "PASS",
+  "finish_reason": "stop",
+  "upstream_usage": {
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "cost": 0,
+    "prompt_tokens": 657,
+    "completion_tokens": 950,
+    "total_tokens": 1607
+  },
+  "schema": {
+    "root_keys_expected": true,
+    "question": "confirm_claim",
+    "message_length": 34,
+    "fact_values": {
+      "cause": "accident",
+      "inpatient": "yes",
+      "outpatient": "unknown",
+      "emergency": "unknown",
+      "critical_diagnosis": "unknown",
+      "surgery": "no"
+    }
+  },
+  "response_type": "claim_suggestion",
+  "provider": "openai_compatible",
+  "is_simulated": false,
+  "case_unchanged": true,
+  "usage": {
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "cost": 0,
+    "prompt_tokens": 657,
+    "completion_tokens": 950,
+    "total_tokens": 1607
+  }
+}

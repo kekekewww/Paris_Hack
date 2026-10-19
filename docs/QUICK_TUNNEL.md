@@ -1,5 +1,7 @@
 # Cloudflare Quick Tunnel 臨時展示
 
+> 2026-10-20 目前網址：[理賠準備助手](https://boots-deaf-found-arrange.trycloudflare.com/?service=api)。真實語意模式已部署，最終新程序公開HTTP23原斷言通過，verified來自本輪真模型招呼；完整模型旅程仍受免費限流阻擋。477後端、最終容器追問12與三尺寸視覺通過，詳見[本輪報告](SEMANTIC_CONVERSATION.md)及[目前狀態](../STATUS.md)。以下為歷史網址與歷史驗收，不代表目前程序。
+
 > 最新連續追問修復已發布（2026-10-19），後端347／前端56、Mock87／API27、最終容器追問12／公開6通過。但本輪真模型回503限流，原公開完整腳本在模型verified斷言失敗；當前整體gate保持BLOCKED。以下OpenRouter成功與程序為前輪歷史，最新以[追問修復報告](ASSISTANT_FOLLOWUP.md)為準。
 
 > 最新OpenRouter交付（2026-10-19）：真實免費路由已啟用，原訂MVP的P2／P3整體gate已通過。最終後端293、本機三尺寸成功證據（原2pass1fail＋平板重驗1pass）、容器56checks真OCR／live1／restart及公開live1／HTTP23均完成。免費限流與額外CLI未通過仍保留，完整結果以[OpenRouter驗收](OPENROUTER_ACCEPTANCE.md)為準。以下舊版「未驗證／BLOCKED」為當時歷史，已由新授權與實測取代。

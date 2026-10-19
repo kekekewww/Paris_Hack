@@ -139,7 +139,7 @@ class OpenAICompatibleProvider:
     def _invalid():
         raise AIError("INVALID_LLM_RESPONSE", "外部模型回覆缺少可驗證的引用或超出允許範圍，請重新確認。", 503)
 
-    def _openrouter_metadata(self, envelope: dict) -> dict:
+    def _openrouter_metadata(self, envelope: dict, *, max_completion_tokens: int = 1800) -> dict:
         model = envelope.get("model")
         usage = envelope.get("usage")
         if (not isinstance(model, str) or not model.strip() or len(model) > 200
@@ -152,15 +152,68 @@ class OpenAICompatibleProvider:
             self._invalid()
         tokens = {name: usage.get(name) for name in ("prompt_tokens", "completion_tokens", "total_tokens")}
         if (any(type(value) is not int or not 0 < value <= 1_000_000_000 for value in tokens.values())
-                or tokens["completion_tokens"] > 1800
+                or tokens["completion_tokens"] > max_completion_tokens
                 or tokens["total_tokens"] != tokens["prompt_tokens"] + tokens["completion_tokens"]):
             self._invalid()
         return {"model": model, "cost": cost, **tokens}
 
+    async def _request_json(self, system_prompt: str, user_content: dict, *, max_completion_tokens: int = 1800):
+        payload = {"model": self.settings.model, "messages": [{"role": "system", "content": system_prompt},
+                   {"role": "user", "content": json.dumps(user_content, ensure_ascii=False)}],
+                   "response_format": {"type": "json_object"}, "stream": False, "store": False, "max_completion_tokens": max_completion_tokens}
+        if self.settings.is_openrouter:
+            payload["provider"] = {"max_price": {"prompt": 0, "completion": 0, "request": 0, "image": 0},
+                                   "require_parameters": True, "allow_fallbacks": False}
+            payload["reasoning"] = {"effort": "minimal"}
+        response_bytes = bytearray()
+        try:
+            async with asyncio.timeout(self.settings.timeout_seconds):
+                async with httpx.AsyncClient(transport=self.transport, timeout=httpx.Timeout(self.settings.timeout_seconds),
+                                             follow_redirects=False, trust_env=False) as client:
+                    async with client.stream("POST", self.settings.base_url + "/chat/completions",
+                                             headers={"Authorization": "Bearer " + self.settings.api_key, "Content-Type": "application/json"}, json=payload) as response:
+                        if response.status_code == 429 and self.settings.is_openrouter:
+                            raise AIError("LLM_RATE_LIMITED", "免費模型目前達到使用限制，請稍後重試。", 503)
+                        if response.status_code != 200:
+                            raise AIError("LLM_PROVIDER_ERROR", "外部模型服務暫時無法完成請求，請稍後重試。", 503)
+                        async for part in response.aiter_bytes():
+                            response_bytes.extend(part)
+                            if len(response_bytes) > MAX_RESPONSE_BYTES: self._invalid()
+        except (httpx.TimeoutException, TimeoutError):
+            raise AIError("LLM_TIMEOUT", "外部模型回覆逾時，請稍後重試。", 503) from None
+        except httpx.HTTPError:
+            raise AIError("LLM_PROVIDER_ERROR", "外部模型連線失敗，請稍後重試。", 503) from None
+        try:
+            envelope = json.loads(response_bytes)
+            metadata = self._openrouter_metadata(envelope, max_completion_tokens=max_completion_tokens) if self.settings.is_openrouter else None
+            choices = envelope["choices"]
+            if not isinstance(choices, list) or len(choices) != 1 or choices[0].get("finish_reason") != "stop": self._invalid()
+            model_message = choices[0]["message"]
+            if model_message.get("refusal") or model_message.get("tool_calls") or not isinstance(model_message.get("content"), str): self._invalid()
+            return json.loads(model_message["content"]), metadata
+        except (KeyError, IndexError, TypeError, ValueError, AttributeError):
+            self._invalid()
+
+    def _finish(self, answer: dict, metadata) -> dict:
+        validated = validate_assistant_response(answer, self.retriever)
+        if (metadata is not None and self.transport is None
+                and self._verification_epoch is _verification_epoch
+                and _settings_fingerprint(self.settings) == _verification_fingerprint):
+            global _verified_metadata
+            _verified_metadata = metadata
+        return validated
+
     async def respond(self, case: dict, message: str, document_id: str | None = None) -> dict:
         baseline = await GroundedRulesProvider(self.retriever).respond(case, message, document_id)
-        # Classification, safety refusals and no-evidence replies are always
-        # deterministic, by design. Failed external requests never enter here.
+        if self.settings.is_openrouter and baseline["response_type"] != "answer":
+            from .semantic_dialogue import SAFETY, SYSTEM_PROMPT as semantic_prompt, request_content, validate_semantics
+            if SAFETY.search(message):
+                return validate_assistant_response(baseline, self.retriever)
+            content = request_content(case, message)
+            generated, metadata = await self._request_json(semantic_prompt, content, max_completion_tokens=4096)
+            answer = validate_semantics(generated, content, self.retriever, self._invalid)
+            return self._finish(answer, metadata)
+        # Other compatible hosts retain their established grounded profile.
         if baseline["response_type"] != "answer":
             return validate_assistant_response(baseline, self.retriever)
         evidence = self.retriever.document_context(document_id, case.get("claim_type_id")) if document_id else []
@@ -182,43 +235,8 @@ class OpenAICompatibleProvider:
             system_prompt = OPENROUTER_SYSTEM_PROMPT
             user_content = {"evidence": [{"id": item["knowledge_id"], "title": item["title"], "text": item["text"]}
                                          for item in evidence]}
-        payload = {"model": self.settings.model, "messages": [{"role": "system", "content": system_prompt},
-                   {"role": "user", "content": json.dumps(user_content, ensure_ascii=False)}],
-                   "response_format": {"type": "json_object"}, "stream": False, "store": False,
-                   "max_completion_tokens": 1800}
-        if self.settings.is_openrouter:
-            payload["provider"] = {"max_price": {"prompt": 0, "completion": 0, "request": 0, "image": 0},
-                                   "require_parameters": True, "allow_fallbacks": False}
-            payload["reasoning"] = {"effort": "minimal"}
-        response_bytes = bytearray()
+        generated, metadata = await self._request_json(system_prompt, user_content)
         try:
-            async with asyncio.timeout(self.settings.timeout_seconds):
-                async with httpx.AsyncClient(transport=self.transport, timeout=httpx.Timeout(self.settings.timeout_seconds),
-                                             follow_redirects=False, trust_env=False) as client:
-                    async with client.stream("POST", self.settings.base_url + "/chat/completions",
-                                             headers={"Authorization": "Bearer " + self.settings.api_key, "Content-Type": "application/json"}, json=payload) as response:
-                        if response.status_code == 429 and self.settings.is_openrouter:
-                            raise AIError("LLM_RATE_LIMITED", "免費模型目前達到使用限制，請稍後重試。", 503)
-                        if response.status_code != 200:
-                            raise AIError("LLM_PROVIDER_ERROR", "外部模型服務暫時無法完成請求，請稍後重試。", 503)
-                        async for part in response.aiter_bytes():
-                            response_bytes.extend(part)
-                            if len(response_bytes) > MAX_RESPONSE_BYTES:
-                                self._invalid()
-        except (httpx.TimeoutException, TimeoutError):
-            raise AIError("LLM_TIMEOUT", "外部模型回覆逾時，請稍後重試。", 503) from None
-        except httpx.HTTPError:
-            raise AIError("LLM_PROVIDER_ERROR", "外部模型連線失敗，請稍後重試。", 503) from None
-        try:
-            envelope = json.loads(response_bytes)
-            metadata = self._openrouter_metadata(envelope) if self.settings.is_openrouter else None
-            choices = envelope["choices"]
-            if not isinstance(choices, list) or len(choices) != 1 or choices[0].get("finish_reason") != "stop":
-                self._invalid()
-            model_message = choices[0]["message"]
-            if model_message.get("refusal") or model_message.get("tool_calls") or not isinstance(model_message.get("content"), str):
-                self._invalid()
-            generated = json.loads(model_message["content"])
             if self.settings.is_openrouter:
                 if not isinstance(generated, dict) or set(generated) != {"evidence_ids"}:
                     self._invalid()
@@ -257,10 +275,4 @@ class OpenAICompatibleProvider:
         answer = {**baseline, "message": "\n".join(f"{item['title']}：{item['text']}" for item in selected)
                   + "\n模型僅整理以上已查核段落；適用條件仍依保單與承辦人確認，初步檢查不代表核准。",
                   "source_references": expected_sources, "provider": self.name, "is_simulated": False}
-        validated = validate_assistant_response(answer, self.retriever)
-        if (metadata is not None and self.transport is None
-                and self._verification_epoch is _verification_epoch
-                and _settings_fingerprint(self.settings) == _verification_fingerprint):
-            global _verified_metadata
-            _verified_metadata = metadata
-        return validated
+        return self._finish(answer, metadata)

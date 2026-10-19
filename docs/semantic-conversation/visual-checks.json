@@ -1,0 +1,155 @@
+{
+  "timestamp": "2026-10-19T16:31:01.495Z",
+  "results": [
+    {
+      "target": "docker-mock",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "consoleErrors": 0,
+      "pageErrors": 0,
+      "messageRequests": 0,
+      "analysisRequests": 0,
+      "cleanup": true,
+      "screenshots": [
+        "docker-mock-1440-assistant.png",
+        "docker-mock-1440-workspace-chat.png"
+      ],
+      "guidedLayout": {
+        "viewport": 1440,
+        "content": 1440
+      },
+      "workspaceLayout": {
+        "viewport": 1440,
+        "content": 1440
+      },
+      "status": "PASS"
+    },
+    {
+      "target": "docker-mock",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "consoleErrors": 0,
+      "pageErrors": 0,
+      "messageRequests": 0,
+      "analysisRequests": 0,
+      "cleanup": true,
+      "screenshots": [
+        "docker-mock-768-assistant.png",
+        "docker-mock-768-workspace-chat.png"
+      ],
+      "guidedLayout": {
+        "viewport": 768,
+        "content": 768
+      },
+      "workspaceLayout": {
+        "viewport": 768,
+        "content": 768
+      },
+      "status": "PASS"
+    },
+    {
+      "target": "docker-mock",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "consoleErrors": 0,
+      "pageErrors": 0,
+      "messageRequests": 0,
+      "analysisRequests": 0,
+      "cleanup": true,
+      "screenshots": [
+        "docker-mock-390-assistant.png",
+        "docker-mock-390-workspace-chat.png"
+      ],
+      "guidedLayout": {
+        "viewport": 390,
+        "content": 390
+      },
+      "workspaceLayout": {
+        "viewport": 390,
+        "content": 390
+      },
+      "status": "PASS"
+    },
+    {
+      "target": "public-api",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "consoleErrors": 0,
+      "pageErrors": 0,
+      "messageRequests": 0,
+      "analysisRequests": 0,
+      "cleanup": true,
+      "screenshots": [
+        "public-api-1440-assistant.png",
+        "public-api-1440-workspace-chat.png"
+      ],
+      "guidedLayout": {
+        "viewport": 1440,
+        "content": 1440
+      },
+      "workspaceLayout": {
+        "viewport": 1440,
+        "content": 1440
+      },
+      "status": "PASS"
+    },
+    {
+      "target": "public-api",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "consoleErrors": 0,
+      "pageErrors": 0,
+      "messageRequests": 0,
+      "analysisRequests": 0,
+      "cleanup": true,
+      "screenshots": [
+        "public-api-768-assistant.png",
+        "public-api-768-workspace-chat.png"
+      ],
+      "guidedLayout": {
+        "viewport": 768,
+        "content": 768
+      },
+      "workspaceLayout": {
+        "viewport": 768,
+        "content": 768
+      },
+      "status": "PASS"
+    },
+    {
+      "target": "public-api",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "consoleErrors": 0,
+      "pageErrors": 0,
+      "messageRequests": 0,
+      "analysisRequests": 0,
+      "cleanup": true,
+      "screenshots": [
+        "public-api-390-assistant.png",
+        "public-api-390-workspace-chat.png"
+      ],
+      "guidedLayout": {
+        "viewport": 390,
+        "content": 390
+      },
+      "workspaceLayout": {
+        "viewport": 390,
+        "content": 390
+      },
+      "status": "PASS"
+    }
+  ]
+}
