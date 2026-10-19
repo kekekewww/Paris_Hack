@@ -1,11 +1,11 @@
 import {createClaimService} from './services/index.js';
-import {escape,types,statuses,isReady,shell,serviceInfo,guided,selection,workspace,summary,uploadDialog,analysisResult,docCard} from './components.js';
+import {escape,types,statuses,isReady,shell,serviceInfo,guided,guidedChoices,selection,workspace,summary,uploadDialog,analysisResult,docCard} from './components.js';
 
 const params=new URLSearchParams(location.search);
 // 顯式設定，API失敗時不會轉成Mock。
 const mode=params.get('service')||import.meta.env.VITE_SERVICE_MODE||'mock';
 const service=createClaimService({mode});
-const state={case:null,claimTypes:[],source:null,health:null,selected:null,directConditions:{},assistantOpen:false,editing:false,route:'triage',busy:false};
+const state={case:null,claimTypes:[],source:null,health:null,selected:null,directConditions:{},guidedChoice:null,assistantOpen:false,editing:false,route:'triage',busy:false};
 const app=document.querySelector('#app');
 const home=document.querySelector('#viewTriage');
 // 初始服務載入期間不接受輸入，避免初始化完成時覆寫使用者草稿。
@@ -14,15 +14,21 @@ let retryOperation=null,toastTimer=null,currentFile=null,previewUrl=null,activeD
 let injectMessageError=params.get('mock_error')==='message';
 let pdfPreview=null,pdfPage=1,fileSelectionVersion=0,fileChecking=false;
 let directFlowVersion=0,printConditionSnapshot=null;
+let guidedFlowVersion=0,guidedChoiceVersion=0,guidedResponsePending=false;
 const storageKey=`cardif-active-${mode}-v1`;
 const remembered=()=>{try{return sessionStorage.getItem(storageKey)}catch{return null}};
 function remember(id){try{id?sessionStorage.setItem(storageKey,id):sessionStorage.removeItem(storageKey)}catch{notify('無法保存瀏覽器進度，重新整理後可能需要重新開始。')}}
 function notify(message){const el=document.querySelector('#toast');el.textContent=message;el.classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('visible'),4000)}
 function errorMessage(error){return error?.message||'服務暫時無法完成操作，請稍後重試。'}
 function showError(error,operation,target='#global-error'){const el=document.querySelector(target);if(!el){notify(errorMessage(error));return}retryOperation=operation;el.innerHTML=`<div class="error-box" role="alert"><span>${escape(errorMessage(error))}</span>${operation?'<button class="btn small" data-action="retry">重試</button>':''}</div>`}
-async function action(operation,{busy='正在處理，請稍候…',target='#global-error',progress='#busy-status'}={}){if(state.busy){notify('上一個操作仍在處理，請稍候。');return}state.busy=true;const err=document.querySelector(target);if(err)err.innerHTML='';const status=document.querySelector(progress);if(status)status.innerHTML=`<div class="busy">${escape(busy)}</div>`;document.querySelectorAll('button[type="submit"]').forEach(b=>b.disabled=true);try{await operation();retryOperation=null}catch(e){showError(e,()=>action(operation,{busy,target,progress}),target)}finally{state.busy=false;const status=document.querySelector(progress);if(status)status.innerHTML='';document.querySelectorAll('button[type="submit"], input[type="file"], #scenario').forEach(b=>b.disabled=false);syncUploadButton()}}
-function setCase(c){state.case=c;remember(c.id)}
-function beginDirectFlow({claimType=null,conditions={},editing=false}={}){directFlowVersion++;state.selected=claimType;state.directConditions={...conditions};state.editing=editing;retryOperation=null}
+async function action(operation,{busy='正在處理，請稍候…',target='#global-error',progress='#busy-status'}={}){if(state.busy){notify('上一個操作仍在處理，請稍候。');return}state.busy=true;syncGuidedPicker();const err=document.querySelector(target);if(err)err.innerHTML='';const status=document.querySelector(progress);if(status)status.innerHTML=`<div class="busy">${escape(busy)}</div>`;document.querySelectorAll('button[type="submit"]').forEach(b=>b.disabled=true);try{await operation();retryOperation=null}catch(e){showError(e,()=>action(operation,{busy,target,progress}),target)}finally{state.busy=false;const status=document.querySelector(progress);if(status)status.innerHTML='';document.querySelectorAll('button[type="submit"], input[type="file"], #scenario').forEach(b=>b.disabled=false);syncUploadButton();syncGuidedPicker()}}
+function clearGuidedChoice(){state.guidedChoice=null;guidedChoiceVersion++;retryOperation=null}
+function invalidateGuidedFlow(){guidedFlowVersion++;guidedResponsePending=false;clearGuidedChoice()}
+function setCase(c){if(state.case?.id!==c.id)clearGuidedChoice();state.case=c;remember(c.id)}
+function beginDirectFlow({claimType=null,conditions={},editing=false}={}){invalidateGuidedFlow();directFlowVersion++;state.selected=claimType;state.directConditions={...conditions};state.editing=editing;retryOperation=null}
+function currentGuidedContext(){return guidedResponsePending?null:guidedChoices(state.case,state.claimTypes)}
+function currentGuidedChoice(context=currentGuidedContext()){const choice=state.guidedChoice;return context&&choice&&choice.caseId===context.caseId&&choice.responseKey===context.responseKey&&choice.flowVersion===guidedFlowVersion&&context.catalog.some(t=>t.id===choice.type)?choice:null}
+function syncGuidedPicker(){const context=currentGuidedContext(),choice=currentGuidedChoice(context),picker=document.querySelector('.guided-type-picker'),button=document.querySelector('[data-action="build-guided-checklist"]');if(picker){picker.hidden=!context;picker.disabled=state.busy||!context;picker.querySelectorAll('input[name="guided-claim-type"]').forEach(input=>{input.checked=input.value===choice?.type;input.disabled=state.busy||!context||!context.catalog.some(t=>t.id===input.value)})}if(button){button.hidden=!context;button.disabled=state.busy||!choice}}
 function go(route){if(location.hash===`#${route}`)render(route);else location.hash=route}
 function render(route=location.hash.slice(1)||'triage'){
   if(!['triage','assistant','search','workspace','summary'].includes(route))route='triage';
@@ -37,17 +43,18 @@ function render(route=location.hash.slice(1)||'triage'){
   if(skipLink)skipLink.href=route==='triage'?'#home-main-content':'#main-content';
   if(route==='triage'){document.title='理賠申請，需要什麼？｜法國巴黎人壽';window.scrollTo(0,0);return}
   let body='';
-  if(route==='assistant')body=guided(state.case?.entry_path==='guided'?state.case:null,mode);
+  if(route==='assistant')body=guided(state.case?.entry_path==='guided'?state.case:null,mode,{claimTypes:state.claimTypes,selectedType:currentGuidedChoice()?.type,busy:state.busy,pending:guidedResponsePending});
   if(route==='search')body=selection(state.claimTypes,state.selected,state.directConditions,mode);
   if(route==='workspace')body=workspace(state.case,state.assistantOpen,mode);
   if(route==='summary')body=summary(state.case,state.source);
   app.innerHTML=shell(body,{mode,hasCase:!!state.case?.claim_type_id,route,health:state.health});
+  syncGuidedPicker();
   document.title=({assistant:'AI 智慧引導',search:'文件快速搜尋',workspace:'文件準備工作區',summary:'送件前準備摘要'})[route]+'｜法國巴黎人壽';
   document.querySelectorAll('.chat-thread').forEach(el=>el.scrollTop=el.scrollHeight);
   document.querySelector('#main-content')?.focus({preventScroll:true});
 }
-function ensureGuidedCase(){return state.case?.entry_path==='guided'&&!state.case.claim_type_id?Promise.resolve(state.case):service.createCase({entry_path:'guided'}).then(c=>{setCase(c);return c})}
-async function sendGuided(message){await ensureGuidedCase();if(injectMessageError&&mode==='mock'){service.simulateFailure();injectMessageError=false}const result=await service.sendMessage(state.case.id,message);setCase(result.case);render();if(state.route==='assistant')document.querySelector('#guided-input')?.focus()}
+async function ensureGuidedCase(flowVersion){if(flowVersion!==guidedFlowVersion)return null;if(state.case?.entry_path==='guided'&&!state.case.claim_type_id)return state.case;const c=await service.createCase({entry_path:'guided'});if(flowVersion!==guidedFlowVersion)return null;setCase(c);return c}
+async function sendGuided(message,flowVersion){try{if(flowVersion!==guidedFlowVersion)return;const c=await ensureGuidedCase(flowVersion);if(!c||flowVersion!==guidedFlowVersion)return;if(injectMessageError&&mode==='mock'){service.simulateFailure();injectMessageError=false}const result=await service.sendMessage(c.id,message);if(flowVersion!==guidedFlowVersion||state.case?.id!==c.id)return;setCase(result.case);clearGuidedChoice();guidedResponsePending=false;render();if(state.route==='assistant')document.querySelector('#guided-input')?.focus()}catch(error){if(flowVersion!==guidedFlowVersion)return;throw error}}
 function getDoc(id){return state.case?.documents.find(d=>d.id===id)}
 function closeDialog(){const dialog=document.querySelector('dialog');if(!dialog)return;fileSelectionVersion++;fileChecking=false;pdfPreview?.destroy().catch(()=>{});pdfPreview=null;const docId=activeDoc;dialog.close();document.querySelector('#dialog-root').innerHTML='';if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=null;currentFile=null;activeDoc=null;if(state.route==='workspace')render('workspace');const selector=CSS.escape(docId||'');const trigger=document.querySelector(`[data-action="upload"][data-doc="${selector}"], [data-action="result"][data-doc="${selector}"]`);(trigger||dialogTrigger)?.focus();dialogTrigger=null}
 function openDialog(id){const doc=getDoc(id);if(!doc)return;dialogTrigger=document.activeElement;activeDoc=id;currentFile=null;document.querySelector('#dialog-root').innerHTML=uploadDialog(doc,mode);const dialog=document.querySelector('dialog');dialog.addEventListener('cancel',e=>{e.preventDefault();closeDialog()});dialog.showModal();syncUploadButton();dialog.querySelector('.dialog-close').focus()}
@@ -67,14 +74,18 @@ document.addEventListener('click',async e=>{
   const name=button.dataset.action;
   if(name==='resume'){go(state.case?.claim_type_id?'workspace':'assistant');return}
   if(name==='select-type'){const form=document.querySelector('form[data-form="direct"]');if(form)state.directConditions=Object.fromEntries(new FormData(form));state.selected=button.dataset.type;render('search');return}
-  if(name==='confirm-suggestion'){
-    const response=[...(state.case?.messages||[])].reverse().find(m=>m.response)?.response;
-    action(async()=>{setCase(await service.updateCase(state.case.id,{claim_type_id:button.dataset.type,conditions:response?.proposed_case_updates?.conditions||{}}));go('workspace');notify('已建立文件準備清單。')});return
+  if(name==='build-guided-checklist'){
+    if(state.busy){notify('上一個操作仍在處理，請稍候。');return}
+    const context=currentGuidedContext(),choice=currentGuidedChoice(context);
+    if(!choice){syncGuidedPicker();notify('請先選擇理賠類型。');return}
+    const snapshot={caseId:choice.caseId,responseKey:choice.responseKey,type:choice.type,flowVersion:guidedFlowVersion,choiceVersion:guidedChoiceVersion,conditions:{...(context.response.proposed_case_updates?.conditions||{})}};
+    const current=()=>{const latest=currentGuidedContext(),selected=currentGuidedChoice(latest);return snapshot.flowVersion===guidedFlowVersion&&snapshot.choiceVersion===guidedChoiceVersion&&latest?.caseId===snapshot.caseId&&latest?.responseKey===snapshot.responseKey&&selected?.type===snapshot.type};
+    action(async()=>{if(!current())return;let result;try{result=await service.updateCase(snapshot.caseId,{claim_type_id:snapshot.type,conditions:snapshot.conditions})}catch(error){if(!current())return;throw error}if(!current())return;setCase(result);invalidateGuidedFlow();if(state.route==='assistant')go('workspace');notify('已建立文件準備清單。')},{busy:'正在整理官方文件清單…'});return
   }
   if(name==='prompt'){document.querySelector('#guided-input').value=button.dataset.prompt;document.querySelector('#guided-input').focus();return}
   if(name==='toggle-assistant'){state.assistantOpen=!state.assistantOpen;render('workspace');document.querySelector('[data-action="toggle-assistant"]')?.focus({preventScroll:true});return}
   if(name==='edit-case'){beginDirectFlow({claimType:state.case.claim_type_id,conditions:state.case.conditions,editing:true});go('search');return}
-  if(name==='delete-case'){if(!confirm('清除本次測試案件、對話與分析紀錄？請先下載需要保留的準備摘要。'))return;action(async()=>{await service.deleteCase(state.case.id);state.case=null;state.selected=null;state.directConditions={};state.assistantOpen=false;state.editing=false;remember(null);go('triage');notify('已清除本次測試案件。')});return}
+  if(name==='delete-case'){if(!confirm('清除本次測試案件、對話與分析紀錄？請先下載需要保留的準備摘要。'))return;action(async()=>{invalidateGuidedFlow();await service.deleteCase(state.case.id);state.case=null;state.selected=null;state.directConditions={};state.assistantOpen=false;state.editing=false;remember(null);go('triage');notify('已清除本次測試案件。')});return}
   if(name==='upload'||name==='result'){openDialog(button.dataset.doc);return}
   if(name==='close-dialog'){closeDialog();return}
   if(name==='finding'){const target=document.querySelector(`[data-finding-id="${CSS.escape(button.dataset.finding)}"]`);document.querySelectorAll('.finding').forEach(el=>el.classList.remove('selected'));if(target){target.classList.add('selected');const details=target.querySelector('.finding-details');if(details)details.open=true;target.focus({preventScroll:true});const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;target.scrollIntoView({behavior:reduced?'auto':'smooth',block:'nearest'})}return}
@@ -86,7 +97,7 @@ document.addEventListener('click',async e=>{
 });
 document.addEventListener('submit',e=>{
   const form=e.target.closest('[data-form]');if(!form)return;e.preventDefault();const data=new FormData(form);
-  if(form.dataset.form==='guided'){const message=String(data.get('message')||'').trim();if(message)action(()=>sendGuided(message),{busy:'正在釐清就醫情況…'});return}
+  if(form.dataset.form==='guided'){const message=String(data.get('message')||'').trim();if(message){if(state.busy){notify('上一個操作仍在處理，請稍候。');return}guidedFlowVersion++;clearGuidedChoice();guidedResponsePending=true;syncGuidedPicker();const flowVersion=guidedFlowVersion;action(()=>sendGuided(message,flowVersion),{busy:'正在釐清就醫情況…'})}return}
   if(form.dataset.form==='direct'){
     const conditions=Object.fromEntries(data);const claim_type_id=state.selected;
     const editingCaseId=state.editing?state.case.id:null,flowVersion=directFlowVersion;
@@ -103,6 +114,7 @@ document.addEventListener('submit',e=>{
   }
 });
 document.addEventListener('change',e=>{
+  if(e.target.name==='guided-claim-type'){const context=currentGuidedContext();if(state.busy||!context||!context.catalog.some(t=>t.id===e.target.value)){syncGuidedPicker();return}clearGuidedChoice();state.guidedChoice={caseId:context.caseId,responseKey:context.responseKey,type:e.target.value,flowVersion:guidedFlowVersion};const error=document.querySelector('#global-error');if(error)error.innerHTML='';syncGuidedPicker();return}
   if(e.target.id==='surgery'&&e.target.value==='yes'){const details=document.querySelector('form[data-form="direct"] .advanced-options');if(details)details.open=true;return}
   if(e.target.id==='pdf-page'){pdfPage=Number(e.target.value);refreshAnalysis();return}
   if(e.target.id==='document-file'){selectFile(e.target.files[0]);return}

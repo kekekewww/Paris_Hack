@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-19",
+  "scope": "guided 單選與獨立建立；僅本機前端單元，非瀏覽器或真 API 驗收",
+  "red": {
+    "command": "node --test tests/components.test.js",
+    "exit_code": 1,
+    "total": 18,
+    "passed": 14,
+    "failed": 4,
+    "duration_ms": 125.8485,
+    "failed_tests": [
+      "a suggested direction requires a separate unselected radio choice before the checklist action",
+      "only service suggestions are called related while other catalog types remain separate selectable alternatives",
+      "an explicit guided alternative enables the separate action and busy state disables the whole picker",
+      "clarification, confirmed cases, and invalid guided selections cannot silently create a checklist"
+    ],
+    "reason": "舊產品只有 confirm-suggestion 直接建立按鈕，沒有 radio、建議/其他分類、獨立 disabled 建立操作與明確選取狀態。"
+  },
+  "green": {
+    "command": "node --test tests/components.test.js",
+    "exit_code": 0,
+    "total": 18,
+    "passed": 18,
+    "failed": 0,
+    "duration_ms": 89.1723
+  },
+  "regression": {
+    "command": "npm test",
+    "exit_code": 0,
+    "total": 36,
+    "passed": 36,
+    "failed": 0,
+    "duration_ms": 462.6706
+  },
+  "checks": [
+    {
+      "command": "node --check src/app.js",
+      "exit_code": 0
+    },
+    {
+      "command": "git -c safe.directory=D:/Developing/Paris diff --check -- src/app.js src/components.js tests/components.test.js",
+      "exit_code": 0
+    }
+  ],
+  "source_boundaries": "未改 CSS、E2E、docs、服務、後端或 API；未建立憑證或呼叫 LLM；QA 的瀏覽器驗收獨立執行。",
+  "recorder_role": "前端實作子代理；source_boundaries僅描述該代理負責範圍，非整輪修改範圍",
+  "root_regression": {
+    "passed": 36,
+    "failed": 0,
+    "exit_code": 0,
+    "duration_ms": 276.8846
+  }
+}

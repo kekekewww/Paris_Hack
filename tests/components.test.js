@@ -144,11 +144,51 @@ test('compact renderers continue escaping untrusted document and conversation co
 });
 
 
-test('a confirmed direction makes building the checklist the guided primary action',()=>{
+test('a suggested direction requires a separate unselected radio choice before the checklist action',()=>{
   const first=guided(null,'mock');
   assert.match(first,/<button class="btn primary" type="submit" aria-label="送出描述">/);
   const suggested=guided({messages:[{role:'assistant',content:'請確認準備方向',response:{suggested_claim_types:['inpatient']}}]},'mock');
-  assert.match(suggested,/<button class="btn primary" data-action="confirm-suggestion"/);
+  assert.match(suggested,/<input[^>]*type="radio"[^>]*name="guided-claim-type"[^>]*value="inpatient"[^>]*aria-label="住院醫療"/);
+  assert.ok(!suggested.includes(' checked'));
+  assert.match(suggested,/<button[^>]*data-action="build-guided-checklist"[^>]*aria-label="建立文件清單"[^>]*disabled/);
   assert.match(suggested,/<button class="btn" type="submit" aria-label="送出描述">/);
-  assert.equal((suggested.match(/class="btn primary"/g)||[]).length,1);
+  assert.ok(!suggested.includes('data-action="confirm-suggestion"'));
+});
+
+test('only service suggestions are called related while other catalog types remain separate selectable alternatives',()=>{
+  const c={entry_path:'guided',claim_type_id:null,messages:[{role:'assistant',response:{suggested_claim_types:[{id:'inpatient'},'inpatient',{id:'unverified'}]}}]};
+  const html=guided(c,'mock',{claimTypes});
+  const suggested=html.match(/<div class="guided-type-options">([\s\S]*?)<\/div>/)?.[1];
+  const others=html.match(/<details class="guided-other-types"[^>]*>([\s\S]*?)<\/details>/)?.[1];
+  assert.ok(suggested&&others);
+  assert.equal((suggested.match(/name="guided-claim-type"/g)||[]).length,1);
+  assert.ok(suggested.includes('value="inpatient"'));
+  assert.ok(!suggested.includes('value="outpatient"'));
+  assert.ok(others.includes('選擇其他類型'));
+  assert.ok(others.includes('value="outpatient"'));
+  assert.ok(others.includes('value="critical_illness"'));
+  assert.ok(!html.includes('value="unverified"'));
+  assert.equal((html.match(/name="guided-claim-type"/g)||[]).length,3);
+});
+
+test('an explicit guided alternative enables the separate action and busy state disables the whole picker',()=>{
+  const c={entry_path:'guided',claim_type_id:null,messages:[{role:'assistant',response:{suggested_claim_types:['inpatient']}}]};
+  const selected=guided(c,'mock',{claimTypes,selectedType:'outpatient'});
+  assert.match(selected,/<input[^>]*value="outpatient"[^>]*checked/);
+  assert.equal((selected.match(/ checked/g)||[]).length,1);
+  const button=selected.match(/<button[^>]*data-action="build-guided-checklist"[^>]*>/)?.[0];
+  assert.ok(button&&!button.includes('disabled'));
+  const busy=guided(c,'mock',{claimTypes,selectedType:'outpatient',busy:true});
+  assert.match(busy,/<fieldset class="guided-type-picker"[^>]*disabled/);
+  assert.match(busy,/<button[^>]*data-action="build-guided-checklist"[^>]*disabled/);
+});
+
+test('clarification, confirmed cases, and invalid guided selections cannot silently create a checklist',()=>{
+  const suggested={entry_path:'guided',claim_type_id:null,messages:[{role:'assistant',response:{suggested_claim_types:['inpatient']}}]};
+  const clarification=guided({...suggested,messages:[...suggested.messages,{role:'assistant',response:{suggested_claim_types:[]}}]},'mock',{claimTypes});
+  const confirmed=guided({...suggested,claim_type_id:'inpatient'},'mock',{claimTypes});
+  for(const html of [clarification,confirmed]){assert.ok(!html.includes('name="guided-claim-type"'));assert.ok(!html.includes('data-action="build-guided-checklist"'));}
+  const invalid=guided(suggested,'mock',{claimTypes,selectedType:'unverified'});
+  assert.ok(!invalid.includes(' checked'));
+  assert.match(invalid,/<button[^>]*data-action="build-guided-checklist"[^>]*disabled/);
 });

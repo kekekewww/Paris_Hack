@@ -33,10 +33,26 @@ export function shell(body,{mode,hasCase,route,health}){
 export function errorRegion(){return '<div id="global-error" aria-live="assertive"></div><div id="busy-status" role="status" aria-live="polite"></div>'}
 export function debugTools(mode){return mode==='mock'?'<details class="debug-tools"><summary>展示測試工具</summary><button class="btn small" data-action="simulate-error">模擬下次服務錯誤</button><p>只影響下一次服務呼叫，可於錯誤提示中重試。</p></details>':''}
 
-export function guided(c,mode){
-  const last=[...(c?.messages||[])].reverse().find(m=>m.role!=='user');
-  const suggestions=last?.response?.suggested_claim_types||last?.suggested_claim_types||[];
-  return `<main id="main-content" tabindex="-1" class="page">${breadcrumbs('assistant')}<div class="page-head"><h1>讓我們協助您的理賠流程</h1><p>描述就醫情況，從需要的文件開始。</p></div><div class="guided-layout guided-focus"><section class="panel conversation-panel"><div class="chat-thread" id="guided-thread" role="log" aria-label="引導對話">${c?.messages?.length?messages(c.messages):'<div class="empty"><h2>先從您的情況開始</h2><p>例如：車禍後住院三天，沒有手術。</p></div>'}</div>${suggestions.length?`<div class="suggested-types spaced"><strong>可能相關的類型，請您確認</strong><div class="prompt-chips">${suggestions.map(s=>{const id=typeof s==='string'?s:s.id||s.claim_type_id;return `<button class="btn${suggestions.length===1?' primary':''}" data-action="confirm-suggestion" data-type="${escape(id)}">確認並建立清單${suggestions.length>1?'：'+escape(types[id]||id):''}</button>`}).join('')}</div></div>`:''}${errorRegion()}<form class="chat-form" data-form="guided"><label for="guided-input">描述就醫情況</label><div class="input-bar"><input id="guided-input" name="message" maxlength="2000" required placeholder="例如：車禍後住院三天，沒有手術" autocomplete="off"><button class="btn${suggestions.length?'':' primary'}" type="submit" aria-label="送出描述">送出描述 ↑</button></div></form><div class="prompt-chips"><button data-action="prompt" data-prompt="我因車禍住院三天，沒有接受手術">意外事故住院</button><button data-action="prompt" data-prompt="我只有門診治療，沒有住院">只有門診治療</button><button data-action="prompt" data-prompt="可能是重大疾病，但我還不確定">保單條款不確定</button></div><p class="section-note">請勿提供姓名、身分證字號或病歷。</p><a class="small" href="#search">已知道類型？直接選擇 →</a></section></div></main>`;
+export function guidedChoices(c,claimTypes=Object.entries(types).map(([id,title])=>({id,title}))){
+  if(!c||c.claim_type_id||(c.entry_path&&c.entry_path!=='guided'))return null;
+  const entries=c.messages||[];
+  let lastIndex=-1;
+  for(let i=entries.length-1;i>=0;i--)if(entries[i].role==='assistant'){lastIndex=i;break}
+  const last=entries[lastIndex];if(!last)return null;
+  const response=last.response||last;
+  const catalog=[...new Map(claimTypes.filter(t=>Object.hasOwn(types,t.id)).map(t=>[t.id,{id:t.id,title:t.title||t.label||types[t.id]}])).values()];
+  const raw=last.response?.suggested_claim_types||last.suggested_claim_types||[];
+  const suggested=[...new Set(raw.map(s=>typeof s==='string'?s:s?.id||s?.claim_type_id))].map(id=>catalog.find(t=>t.id===id)).filter(Boolean);
+  if(!suggested.length)return null;
+  const other=catalog.filter(t=>!suggested.some(s=>s.id===t.id));
+  return {caseId:c.id,responseKey:`${c.id||''}:${last.id||lastIndex}:${entries.length}`,response,suggested,other,catalog};
+}
+export function guided(c,mode,{claimTypes,selectedType=null,busy=false,pending=false}={}){
+  const choices=pending?null:guidedChoices(c,claimTypes);
+  const selected=choices?.catalog.some(t=>t.id===selectedType)?selectedType:null;
+  const option=t=>`<label class="guided-type-option"><input type="radio" name="guided-claim-type" value="${escape(t.id)}" aria-label="${escape(t.title)}"${selected===t.id?' checked':''}${busy?' disabled':''}><span>${escape(t.title)}</span></label>`;
+  const picker=choices?`<fieldset class="guided-type-picker"${busy?' disabled':''}><legend>可能相關的類型</legend><div class="guided-type-options">${choices.suggested.map(option).join('')}</div>${choices.other.length?`<details class="guided-other-types"${choices.other.some(t=>t.id===selected)?' open':''}><summary>選擇其他類型</summary><p class="section-note">其他類型，非本次建議。</p><div class="guided-type-options">${choices.other.map(option).join('')}</div></details>`:''}</fieldset><button class="btn primary guided-confirm" data-action="build-guided-checklist" aria-label="建立文件清單" type="button"${busy||!selected?' disabled':''}>建立文件清單 →</button>`:'';
+  return `<main id="main-content" tabindex="-1" class="page">${breadcrumbs('assistant')}<div class="page-head"><h1>讓我們協助您的理賠流程</h1><p>描述就醫情況，從需要的文件開始。</p></div><div class="guided-layout guided-focus"><section class="panel conversation-panel"><div class="chat-thread" id="guided-thread" role="log" aria-label="引導對話">${c?.messages?.length?messages(c.messages):'<div class="empty"><h2>先從您的情況開始</h2><p>例如：車禍後住院三天，沒有手術。</p></div>'}</div>${picker}${errorRegion()}<form class="chat-form" data-form="guided"><label for="guided-input">描述就醫情況</label><div class="input-bar"><input id="guided-input" name="message" maxlength="2000" required placeholder="例如：車禍後住院三天，沒有手術" autocomplete="off"><button class="btn${choices?'':' primary'}" type="submit" aria-label="送出描述">送出描述 ↑</button></div></form><div class="prompt-chips"><button data-action="prompt" data-prompt="我因車禍住院三天，沒有接受手術">意外事故住院</button><button data-action="prompt" data-prompt="我只有門診治療，沒有住院">只有門診治療</button><button data-action="prompt" data-prompt="可能是重大疾病，但我還不確定">保單條款不確定</button></div><p class="section-note">請勿提供姓名、身分證字號或病歷。</p><a class="small" href="#search">已知道類型？直接選擇 →</a></section></div></main>`;
 }
 
 export function selection(claimTypes,selected,conditions={},mode){

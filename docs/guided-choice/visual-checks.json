@@ -1,0 +1,23 @@
+[
+  {
+    "size": "desktop",
+    "overflow": false,
+    "unselected_disabled": true,
+    "selection_stays_guided": true,
+    "page_errors": []
+  },
+  {
+    "size": "tablet",
+    "overflow": false,
+    "unselected_disabled": true,
+    "selection_stays_guided": true,
+    "page_errors": []
+  },
+  {
+    "size": "mobile",
+    "overflow": false,
+    "unselected_disabled": true,
+    "selection_stays_guided": true,
+    "page_errors": []
+  }
+]

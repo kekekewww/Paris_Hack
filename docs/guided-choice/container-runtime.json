@@ -1,0 +1,19 @@
+{
+  "image_id": "sha256:8380799888f4d4783df2815292e833c77ec77a281ad721bcf5de42fed50434f0",
+  "uid": 10001,
+  "private_paths_absent": true,
+  "guided_radio": true,
+  "separate_build": true,
+  "old_combined_action_absent": true,
+  "readonly_rootfs": true,
+  "cap_drop_all": true,
+  "no_new_privileges": true,
+  "health": {
+    "status": "ok",
+    "service_mode": "api",
+    "llm_provider": "grounded_rules",
+    "llm_configured": false,
+    "llm_verified": false,
+    "ocr_provider": "pymupdf+rapidocr"
+  }
+}

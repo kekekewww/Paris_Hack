@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-19",
+  "scope": "引導類型選擇與獨立建立修正；未啟用外部LLM",
+  "status": "PASS",
+  "unit": {
+    "passed": 36,
+    "failed": 0,
+    "exit_code": 0,
+    "duration_ms": 276.8846
+  },
+  "target": {
+    "passed": 9,
+    "exit_code": 0,
+    "reported_time": "17.9s"
+  },
+  "mock": {
+    "passed": 87,
+    "projects": 3,
+    "per_project": 29,
+    "exit_code": 0,
+    "reported_time": "1.9m"
+  },
+  "pdf": {
+    "passed": 2,
+    "exit_code": 0,
+    "reported_time": "7.3s"
+  },
+  "build": {
+    "exit_code": 0,
+    "reported_time": "2.00s"
+  },
+  "api": {
+    "passed": 27,
+    "projects": 3,
+    "per_project": 9,
+    "exit_code": 0,
+    "reported_time": "1.9m"
+  },
+  "demo_g": {
+    "passed": 1,
+    "exit_code": 0,
+    "reported_time": "3.8s"
+  },
+  "public_http": {
+    "checks": 23,
+    "exit_code": 0
+  },
+  "public_browser": {
+    "passed": 3,
+    "exit_code": 0,
+    "reported_time": "51.6s"
+  },
+  "container": {
+    "image_id": "sha256:8380799888f4d4783df2815292e833c77ec77a281ad721bcf5de42fed50434f0",
+    "build_exit_code": 0,
+    "smoke_checks": 60,
+    "smoke_cleanup": "VERIFIED_DELETED",
+    "browser_passed": 1,
+    "browser_reported_time": "11.3s",
+    "restart_identical": true,
+    "synthetic_case_deleted": true,
+    "test_resources_removed": true
+  },
+  "backend_and_dependencies": "本輪未變更；前輪190項／來源與依賴查核保留為歷史，不宣稱重跑",
+  "external_llm_verified": false
+}

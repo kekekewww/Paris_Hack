@@ -1,8 +1,14 @@
 # 本機容器驗收
 
+> 最新引導修正（2026-10-19）：先以具名radio選類型、再獨立建立清單，已發布。單元36、三尺寸Mock87、PDF2、真API27、G1、公開HTTP23／browser3（51.6秒）及新版容器60checks／引導browser1（11.3秒）與真restart均通過。[完整報告](GUIDED_CHOICE.md)含新版映像、截圖與去敏感結果；下方先前輪次保留為歷史，不混稱目前版本。外部LLM仍未驗證。
+
 > 2026-10-19無金鑰續驗：重用下述b25049ed映像，另建隔離容器完成60checks、瀏覽器1/1（9.6秒），並真restart確認案件完全一致、刪除404；權限與私有檔檢查通過，測試容器／volume已清。未改產品或宣稱重新build，新證據見[本輪報告](ACCEPTANCE_NO_KEYS_20261019.md)。
 
-## 2026-10-19 新版介面產物
+## 2026-10-19 引導選擇修正產物
+
+目前tag：`cardif-claim-preparation:guided-20261019`，image ID：`sha256:8380799888f4d4783df2815292e833c77ec77a281ad721bcf5de42fed50434f0`。實際Docker build exit0，前端新radio與build操作存在、舊confirm-suggestion不存在。以專用paris-claim-guided-20261019 container／paris_claim_guided_20261019 volume及loopback8004驗收60checks PASS、引導browser1/1（11.3秒），再真restart確認同cookie案件完全一致及刪除404。UID10001、唯讀、capdropALL、no-new-privileges及私有檔排除皆通過，專用資源已清除、image保留；未傳入金鑰。新版[metadata](guided-choice/container-runtime.json)、[smoke](guided-choice/container-smoke.json)及[重啟紀錄](guided-choice/container-persistence.json)提供實際證據。
+
+## 前輪：2026-10-19 介面簡化產物
 
 `docker build --progress plain -t cardif-claim-preparation:ux-20261019 .` 實際exit0；image ID為 `sha256:b25049ed997c4d2167562056356dbed1d464cb8112918740d3cde3fc3c3130af`。映像內實際確認含「描述我的狀況」新版入口，UID10001／rootfs唯讀／capdropALL／no-new-privileges，無.env／.git／tests／demo／docs。沒有傳入金鑰或改動後端依賴。
 

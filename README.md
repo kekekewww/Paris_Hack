@@ -15,11 +15,13 @@
 
 Phase 1 已通過，證據見 [前端驗收報告](docs/PHASE1_ACCEPTANCE.md)。Phase 2 整合驗證與後續交付仍以實際驗收紀錄為準；這份 README 不代表外部部署或所有階段已完成。
 
-2026-10-19 已更新 [Quick Tunnel 臨時 HTTPS 展示](https://retirement-trim-reported-jesus.trycloudflare.com/?service=api)。新版公開 HTTP 22 項與瀏覽器流程 3/3 通過，涵蓋兩入口、真實圖片 OCR、PDF 與摘要。電腦與隧道必須保持執行；設定、歷史驗收及限制見 [臨時展示紀錄](docs/QUICK_TUNNEL.md)。
+2026-10-19 已更新 [Quick Tunnel 臨時 HTTPS 展示](https://retirement-trim-reported-jesus.trycloudflare.com/?service=api)。最新公開 HTTP 23 項與瀏覽器流程 3/3 通過，涵蓋兩入口、真實圖片 OCR、PDF 與摘要。電腦與隧道必須保持執行；設定、歷史驗收及限制見 [臨時展示紀錄](docs/QUICK_TUNNEL.md)。
 
-本輪[介面簡化](docs/UI_SIMPLIFICATION.md)已通過三尺寸視覺、33項單元、Mock 75項、PDF 2項、真API 27項與故障恢復1項。工作區同情境可見文字減少45.7%，只突出下一份文件；來源、案件管理與助手採漸進揭露。外部生成式LLM仍依使用者決定稍後設定。
+前輪[介面簡化](docs/UI_SIMPLIFICATION.md)已通過三尺寸視覺、33項單元、Mock 75項、PDF 2項、真API 27項與故障恢復1項。工作區同情境可見文字減少45.7%，只突出下一份文件；來源、案件管理與助手採漸進揭露。外部生成式LLM仍依使用者決定稍後設定。
 
-後續[無金鑰完整重驗收](docs/ACCEPTANCE_NO_KEYS_20261019.md)亦通過：後端190、前端33、Mock75、真API27、PDF2、公開及容器流程、來源11項與依賴掃描均有新實測。使用者最新選擇「暫不建立金鑰」；[三家供應商](docs/PROVIDER_SETUP.md)只預留空白後端欄位，OpenRouter記錄指定模型openrouter/free，沒有啟用或完成真LLM串接。
+前輪[無金鑰完整重驗收](docs/ACCEPTANCE_NO_KEYS_20261019.md)亦通過：後端190、前端33、Mock75、真API27、PDF2、公開及容器流程、來源11項與依賴掃描均有新實測。使用者最新選擇「暫不建立金鑰」；[三家供應商](docs/PROVIDER_SETUP.md)只預留空白後端欄位，OpenRouter記錄指定模型openrouter/free，沒有啟用或完成真LLM串接。
+
+最新[引導確認修正](docs/GUIDED_CHOICE.md)已發布：送出描述後先選一種類型，再按「建立文件清單」；單一建議也不預選，點選／改選不寫入案件。單元36、三尺寸Mock87、真API27、PDF2／G1、公開與新版Docker皆已實際回歸。
 
 ## 本機啟動（PowerShell）
 

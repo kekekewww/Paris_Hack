@@ -228,6 +228,14 @@ test.afterEach(async ({ page }) => {
 });
 
 test('真實 API 引導、官方連結、缺漏 PNG、人工確認及摘要完整串接', async ({ page }, testInfo) => {
+  let patchRequests = 0;
+  let analysisRequests = 0;
+  page.on('request', (request) => {
+    const path = new URL(request.url()).pathname;
+    if (!path.startsWith('/api/v1/cases/')) return;
+    if (request.method() === 'PATCH') patchRequests += 1;
+    if (request.method() === 'POST' && path.endsWith('/analyze')) analysisRequests += 1;
+  });
   await page.goto('/?service=api#triage');
   await page.getByRole('button', { name: '描述我的狀況', exact: true }).click();
   await page.getByLabel('描述就醫情況', { exact: true }).fill('我因車禍住院三天，沒有手術，想準備文件。');
@@ -243,8 +251,51 @@ test('真實 API 引導、官方連結、缺漏 PNG、人工確認及摘要完�
   expect(answer.response.provider).toBe(expectedProvider);
   expect(answer.response.is_simulated).toBe(false);
   expect(answer.response.source_references.length).toBeGreaterThan(0);
-  await page.getByRole('button', { name: '確認並建立清單', exact: true }).click();
+  const assertNotBuilt = async () => {
+    await expect(page).toHaveURL(/#assistant$/);
+    const response = await page.request.get(`/api/v1/cases/${item.id}`);
+    expect(response.status()).toBe(200);
+    const current = await response.json();
+    expect(current.claim_type_id).toBeNull();
+    expect(current.documents).toEqual([]);
+    expect(patchRequests).toBe(0);
+    expect(analysisRequests).toBe(0);
+  };
+  const picker = page.locator('fieldset.guided-type-picker');
+  const inpatient = picker.getByRole('radio', { name: '住院醫療', exact: true });
+  const build = page.getByRole('button', { name: '建立文件清單', exact: true });
+  await expect(picker).toBeVisible();
+  await expect(picker.locator('input[name="guided-claim-type"]:checked')).toHaveCount(0);
+  await expect(build).toHaveAttribute('data-action', 'build-guided-checklist');
+  await expect(build).toBeDisabled();
+  await assertNotBuilt();
+
+  await inpatient.check();
+  await expect(inpatient).toBeChecked();
+  await expect(build).toBeEnabled();
+  await assertNotBuilt();
+  await picker.locator('details.guided-other-types').getByText('選擇其他類型', { exact: true }).click();
+  const outpatient = picker.getByRole('radio', { name: '醫療門診', exact: true });
+  await outpatient.check();
+  await expect(outpatient).toBeChecked();
+  await expect(inpatient).not.toBeChecked();
+  await assertNotBuilt();
+  await inpatient.check();
+  await expect(inpatient).toBeChecked();
+  await expect(outpatient).not.toBeChecked();
+  await assertNotBuilt();
+
+  const built = page.waitForResponse((response) => endpoint(response, `/cases/${item.id}`, 'PATCH'));
+  await build.click();
+  const builtResponse = await built;
+  expect(builtResponse.status()).toBe(200);
+  expect(builtResponse.request().postDataJSON().claim_type_id).toBe('inpatient');
+  const builtCase = await builtResponse.json();
+  expect(builtCase.claim_type_id).toBe('inpatient');
+  expect(builtCase.documents.length).toBeGreaterThan(0);
   await expect(page.getByRole('heading', { name: '文件準備工作區', exact: true })).toBeVisible();
+  expect(patchRequests).toBe(1);
+  expect(analysisRequests).toBe(0);
   await openOfficialSource(page);
   const { dialog, document } = await analyzeUI(page, item, 'application-missing.png');
   expect(document.analysis.provider).toBe('rapidocr');

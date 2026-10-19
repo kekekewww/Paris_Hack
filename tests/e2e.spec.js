@@ -53,6 +53,41 @@ async function expectSingleNextDocument(page, expectedId) {
   await expect(next.locator('.doc-actions button.primary')).toBeVisible();
 }
 
+async function currentMockCase(page) {
+  const item = await page.evaluate(() => {
+    const id = sessionStorage.getItem('cardif-active-mock-v1');
+    const cases = JSON.parse(sessionStorage.getItem('cardif-claim-demo-cases-v1') || '{}');
+    return cases[id] || null;
+  });
+  expect(item?.id).toEqual(expect.any(String));
+  return item;
+}
+
+async function chooseGuidedType(page, label = '住院醫療') {
+  await expect(page.locator('fieldset.guided-type-picker')).toBeVisible();
+  const radio = page.getByRole('radio', { name: label, exact: true });
+  if (!await radio.isVisible()) {
+    await page.getByText('選擇其他類型', { exact: true }).click();
+  }
+  await radio.check();
+  await expect(radio).toBeChecked();
+  await expect(page).toHaveURL(/#assistant$/);
+  return radio;
+}
+
+async function simulateNextMockError(page) {
+  const service = page.locator('#app details.service-info');
+  if (!await service.evaluate((element) => element.open)) {
+    await service.getByText('服務說明', { exact: true }).click();
+  }
+  const tools = service.locator('details.debug-tools');
+  if (!await tools.evaluate((element) => element.open)) {
+    await tools.getByText('展示測試工具', { exact: true }).click();
+  }
+  await tools.getByRole('button', { name: '模擬下次服務錯誤', exact: true }).click();
+  await service.getByText('服務說明', { exact: true }).click();
+}
+
 async function startDirectCase(page, claimType = '住院醫療') {
   await page.goto('/?service=mock#triage');
   await page.getByRole('button', { name: '選擇理賠類型', exact: true }).click();
@@ -127,8 +162,9 @@ test('AI 引導確認類型後進入共用工作區並取得準備摘要', async
   await page.getByRole('button', { name: '描述我的狀況', exact: true }).click();
   await page.getByLabel('描述就醫情況', { exact: true }).fill('我上星期車禍住院三天，沒有接受手術，想準備理賠文件。');
   await page.getByRole('button', { name: '送出描述', exact: true }).click();
-  await expect(page.getByRole('button', { name: '確認並建立清單', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: '確認並建立清單', exact: true }).click();
+  await expect(page.getByRole('button', { name: '建立文件清單', exact: true })).toBeDisabled();
+  await chooseGuidedType(page);
+  await page.getByRole('button', { name: '建立文件清單', exact: true }).click();
   await expect(page.getByRole('heading', { name: '文件準備工作區', exact: true })).toBeVisible();
   await expect(page.locator('article[data-document-id]')).not.toHaveCount(0);
   await assertNoHorizontalOverflow(page);
@@ -146,10 +182,153 @@ test('資訊不足會先追問而不直接建立文件清單', async ({ page }) 
   await page.getByLabel('描述就醫情況', { exact: true }).fill('我想申請理賠，不知道怎麼開始。');
   await page.getByRole('button', { name: '送出描述', exact: true }).click();
   await expect(page.getByRole('log', { name: '引導對話', exact: true }).getByText(/請先確認.*住院.*門診/)).toBeVisible();
-  await expect(page.getByRole('button', { name: '確認並建立清單', exact: true })).toHaveCount(0);
+  await expect(page.locator('fieldset.guided-type-picker')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '建立文件清單', exact: true })).toHaveCount(0);
   await page.getByLabel('描述就醫情況', { exact: true }).fill('因為疾病住院三天，沒有接受手術。');
   await page.getByRole('button', { name: '送出描述', exact: true }).click();
-  await expect(page.getByRole('button', { name: '確認並建立清單', exact: true })).toBeVisible();
+  await expect(page.getByRole('radio', { name: '住院醫療', exact: true })).toBeVisible();
+  await expect(page.getByRole('radio', { name: '住院醫療', exact: true })).not.toBeChecked();
+  await expect(page.getByRole('button', { name: '建立文件清單', exact: true })).toBeDisabled();
+});
+
+test('引導類型須先選擇再獨立建立，改選前不會產生文件清單', async ({ page }, testInfo) => {
+  await page.goto('/?service=mock#assistant');
+  await page.getByLabel('描述就醫情況', { exact: true }).fill('車禍後住院三天，沒有手術。');
+  await page.getByRole('button', { name: '送出描述', exact: true }).click();
+  await expect(page.getByRole('log', { name: '引導對話', exact: true }).getByText(/依您描述的就醫情形/)).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath('guided-before-choice.png'), fullPage: true });
+  const inpatient = page.getByRole('radio', { name: '住院醫療', exact: true });
+  await expect(inpatient).toBeVisible({ timeout: 1500 });
+  await expect(inpatient).toHaveAttribute('name', 'guided-claim-type');
+  await expect(inpatient).not.toBeChecked();
+  const build = page.getByRole('button', { name: '建立文件清單', exact: true });
+  await expect(build).toBeDisabled();
+  const intake = await currentMockCase(page);
+  expect(intake.claim_type_id).toBeNull();
+  expect(intake.documents).toEqual([]);
+  await inpatient.check();
+  await expect(build).toBeEnabled();
+  await expect(page).toHaveURL(/#assistant$/);
+  expect((await currentMockCase(page)).claim_type_id).toBeNull();
+  expect((await currentMockCase(page)).documents).toEqual([]);
+  await page.getByText('選擇其他類型', { exact: true }).click();
+  const outpatient = page.getByRole('radio', { name: '醫療門診', exact: true });
+  await outpatient.focus();
+  await page.keyboard.press('Space');
+  await expect(outpatient).toBeChecked();
+  await expect(outpatient).toBeFocused();
+  await expect(inpatient).not.toBeChecked();
+  await expect(page).toHaveURL(/#assistant$/);
+  const changed = await currentMockCase(page);
+  expect(changed.id).toBe(intake.id);
+  expect(changed.claim_type_id).toBeNull();
+  expect(changed.documents).toEqual([]);
+  await build.click();
+  await expect(page.getByRole('heading', { name: '文件準備工作區', exact: true })).toBeVisible();
+  const created = await currentMockCase(page);
+  expect(created.id).toBe(intake.id);
+  expect(created.claim_type_id).toBe('outpatient');
+  expect(created.documents.length).toBeGreaterThan(0);
+  await expect(page.getByText('醫療門診', { exact: true }).first()).toBeVisible();
+  await assertNoHorizontalOverflow(page);
+});
+
+test('新的就醫描述立即清除類型選取，回覆後仍須重新選擇', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-10-19T03:00:00Z') });
+  await page.goto('/?service=mock#assistant');
+  await page.getByLabel('描述就醫情況', { exact: true }).fill('車禍後住院三天，沒有手術。');
+  await page.getByRole('button', { name: '送出描述', exact: true }).click();
+  await chooseGuidedType(page);
+  const intake = await currentMockCase(page);
+  await expect(page.getByRole('button', { name: '建立文件清單', exact: true })).toBeEnabled();
+  await waitForEntryMotion(page);
+  await page.clock.pauseAt(new Date('2026-10-19T04:00:00Z'));
+  await page.getByLabel('描述就醫情況', { exact: true }).fill('更正：我只有門診治療，沒有住院。');
+  await page.getByRole('button', { name: '送出描述', exact: true }).click();
+  await expect(page.locator('input[name="guided-claim-type"]:checked')).toHaveCount(0);
+  await expect(page.locator('input[name="guided-claim-type"]:enabled')).toHaveCount(0);
+  // 等待新回覆時可收起舊建議或禁用按鈕，兩者都不得留下可執行的舊建立動作。
+  await expect(page.locator('button[data-action="build-guided-checklist"]:enabled')).toHaveCount(0);
+  const pending = await currentMockCase(page);
+  expect(pending.id).toBe(intake.id);
+  expect(pending.claim_type_id).toBeNull();
+  expect(pending.documents).toEqual([]);
+  await page.clock.runFor(1000);
+  const outpatient = page.locator('.guided-type-options').getByRole('radio', { name: '醫療門診', exact: true });
+  await expect(outpatient).toBeVisible();
+  await expect(outpatient).not.toBeChecked();
+  await expect(page.locator('input[name="guided-claim-type"]:checked')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '建立文件清單', exact: true })).toBeDisabled();
+  const updated = await currentMockCase(page);
+  expect(updated.id).toBe(intake.id);
+  expect(updated.claim_type_id).toBeNull();
+  expect(updated.documents).toEqual([]);
+  expect(updated.messages.filter((message) => message.role === 'user')).toHaveLength(2);
+  await expect(page).toHaveURL(/#assistant$/);
+});
+
+test('建立清單失敗保留選取可重試，改選類型會清除舊重試動作', async ({ page }) => {
+  await page.goto('/?service=mock#assistant');
+  await page.getByLabel('描述就醫情況', { exact: true }).fill('車禍後住院三天，沒有手術。');
+  await page.getByRole('button', { name: '送出描述', exact: true }).click();
+  const inpatient = await chooseGuidedType(page);
+  const intake = await currentMockCase(page);
+  await simulateNextMockError(page);
+  await page.getByRole('button', { name: '建立文件清單', exact: true }).click();
+  await expect(page.getByRole('button', { name: '重試', exact: true })).toBeVisible();
+  await expect(inpatient).toBeChecked();
+  await expect(page).toHaveURL(/#assistant$/);
+  expect((await currentMockCase(page)).claim_type_id).toBeNull();
+  expect((await currentMockCase(page)).documents).toEqual([]);
+  const outpatient = await chooseGuidedType(page, '醫療門診');
+  await expect(page.getByRole('button', { name: '重試', exact: true })).toHaveCount(0);
+  expect((await currentMockCase(page)).claim_type_id).toBeNull();
+  expect((await currentMockCase(page)).documents).toEqual([]);
+  await simulateNextMockError(page);
+  await page.getByRole('button', { name: '建立文件清單', exact: true }).click();
+  await expect(page.getByRole('button', { name: '重試', exact: true })).toBeVisible();
+  await expect(outpatient).toBeChecked();
+  await page.getByRole('button', { name: '重試', exact: true }).click();
+  await expect(page.getByRole('heading', { name: '文件準備工作區', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '重試', exact: true })).toHaveCount(0);
+  const created = await currentMockCase(page);
+  expect(created.id).toBe(intake.id);
+  expect(created.claim_type_id).toBe('outpatient');
+  expect(created.documents.length).toBeGreaterThan(0);
+});
+
+test('重新整理保留未建立的引導對話但清除選取，建立後仍保存所選案件', async ({ page }) => {
+  await page.goto('/?service=mock#assistant');
+  await page.getByLabel('描述就醫情況', { exact: true }).fill('車禍後住院三天，沒有手術。');
+  await page.getByRole('button', { name: '送出描述', exact: true }).click();
+  await chooseGuidedType(page, '醫療門診');
+  const intake = await currentMockCase(page);
+  expect(intake.claim_type_id).toBeNull();
+  expect(intake.documents).toEqual([]);
+  await expect(page.getByRole('button', { name: '建立文件清單', exact: true })).toBeEnabled();
+  await page.reload();
+  await expect(page).toHaveURL(/#assistant$/);
+  await expect(page.getByRole('log', { name: '引導對話', exact: true }).getByText('車禍後住院三天，沒有手術。', { exact: true })).toBeVisible();
+  await expect(page.getByRole('radio', { name: '住院醫療', exact: true })).toBeVisible();
+  await expect(page.locator('input[name="guided-claim-type"]:checked')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '建立文件清單', exact: true })).toBeDisabled();
+  const reloaded = await currentMockCase(page);
+  expect(reloaded.id).toBe(intake.id);
+  expect(reloaded.claim_type_id).toBeNull();
+  expect(reloaded.documents).toEqual([]);
+  expect(reloaded.messages).toEqual(intake.messages);
+  await chooseGuidedType(page, '醫療門診');
+  await page.getByRole('button', { name: '建立文件清單', exact: true }).click();
+  await expect(page.getByRole('heading', { name: '文件準備工作區', exact: true })).toBeVisible();
+  const created = await currentMockCase(page);
+  expect(created.claim_type_id).toBe('outpatient');
+  expect(created.documents.length).toBeGreaterThan(0);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: '文件準備工作區', exact: true })).toBeVisible();
+  const persisted = await currentMockCase(page);
+  expect(persisted.id).toBe(intake.id);
+  expect(persisted.claim_type_id).toBe('outpatient');
+  expect(persisted.documents).toEqual(created.documents);
 });
 
 test('切換理賠類型保留六項條件草稿，修改條件後清單重新計算', async ({ page }) => {
@@ -480,7 +659,9 @@ test('服務失敗顯示錯誤且重試能恢復對話', async ({ page }) => {
   await page.getByRole('button', { name: '送出描述', exact: true }).click();
   await expect(page.getByRole('button', { name: '重試', exact: true })).toBeVisible();
   await page.getByRole('button', { name: '重試', exact: true }).click();
-  await expect(page.getByRole('button', { name: '確認並建立清單', exact: true })).toBeVisible();
+  await expect(page.getByRole('radio', { name: '住院醫療', exact: true })).toBeVisible();
+  await expect(page.getByRole('radio', { name: '住院醫療', exact: true })).not.toBeChecked();
+  await expect(page.getByRole('button', { name: '建立文件清單', exact: true })).toBeDisabled();
   await expect(page.getByRole('button', { name: '重試', exact: true })).toHaveCount(0);
 });
 
@@ -551,7 +732,9 @@ test('惡意輸入以純文字顯示，不執行 HTML 事件', async ({ page }) 
   await page.getByLabel('描述就醫情況', { exact: true }).fill(`我住院三天 ${injection}`);
   await page.getByRole('button', { name: '送出描述', exact: true }).click();
   await expect(page.getByText(`我住院三天 ${injection}`, { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: '確認並建立清單', exact: true })).toBeVisible();
+  await expect(page.getByRole('radio', { name: '住院醫療', exact: true })).toBeVisible();
+  await expect(page.getByRole('radio', { name: '住院醫療', exact: true })).not.toBeChecked();
+  await expect(page.getByRole('button', { name: '建立文件清單', exact: true })).toBeDisabled();
   expect(await page.evaluate(() => window.__claimXss)).toBeUndefined();
   await expect(page.locator('img[src="x"]')).toHaveCount(0);
 });
@@ -592,7 +775,7 @@ test('助手收合不阻礙文件操作，且鍵盤可關閉檢查視窗', async
   await assertNoHorizontalOverflow(page);
 });
 
-test('首頁與文件工作區符合基本 WCAG A / AA 自動檢查', async ({ page }) => {
+test('首頁、文件工作區與引導類型選擇符合基本 WCAG A / AA 自動檢查', async ({ page }) => {
   await page.goto('/?service=mock#triage');
   await expect(page.getByRole('button', { name: '描述我的狀況', exact: true })).toBeEnabled();
   await expect(page.getByRole('button', { name: '選擇理賠類型', exact: true })).toBeEnabled();
@@ -603,4 +786,11 @@ test('首頁與文件工作區符合基本 WCAG A / AA 自動檢查', async ({ p
   await waitForEntryMotion(page);
   const workspace = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
   expect(workspace.violations.map(({ id, nodes }) => ({ id, nodes: nodes.map(({ target, failureSummary }) => ({ target, failureSummary })) }))).toEqual([]);
+  await page.goto('/?service=mock#assistant');
+  await page.getByLabel('描述就醫情況', { exact: true }).fill('車禍後住院三天，沒有手術。');
+  await page.getByRole('button', { name: '送出描述', exact: true }).click();
+  await chooseGuidedType(page, '醫療門診');
+  await waitForEntryMotion(page);
+  const guided = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+  expect(guided.violations.map(({ id, nodes }) => ({ id, nodes: nodes.map(({ target, failureSummary }) => ({ target, failureSummary })) }))).toEqual([]);
 });

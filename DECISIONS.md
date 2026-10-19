@@ -29,3 +29,5 @@
 21. 使用者切換模型後已恢復真瀏覽器驗收。以仍在運行的舊dist作before、Vite新版作after，等初始化／toast穩定才擷取；文字量排除收合內容與讀屏專用文字，不將不同捲動位置的dialog納入減字百分比。Mock75／PDF2與三尺寸目視通過後才更新正式dist；真API27、G1及公開HTTP22／瀏覽器3亦通過。首頁測試只修readiness與巢狀summary精準定位，保留所有聲明斷言及失敗證據。外部LLM依原決定稍後配置。
 22. 使用者要求規劃OpenAI、Google AI Studio與OpenRouter（openrouter/free）安全設定，但在憑證選擇中明確回覆「暫不建立金鑰」。本輪不建立／寫入secret、不開金鑰表單、不切換LLM_PROVIDER、不呼叫模型。僅以空白後端欄位記錄未來需求，沒有自動alias到現有LLM_API_KEY，Gemini／OpenRouter未宣稱已串接；繼續完整無key驗收，金鑰任務與整體LLMgate保留BLOCKED。
 23. 無key完整重驗以f41d74d產品版本執行：後端190、前端33、Mock75、API27、PDF2、G1、公開HTTP22／browser3、容器60／browser1與restart保存皆過；來源11及依賴重掃亦通過。只更新.env.example預留欄位及文件，不增加SDK或串接邏輯；既有映像產品未變，重用映像驗收而不無謂重build。合成key canary隔離build207檔零洩漏，runtime保持grounded_rules。實際金鑰、供應商參數、模型回覆與整體P2／P3gate仍未完成，結果不混稱。
+24. 依使用者回饋，將guided候選的「確認並建立清單」拆為具名原生radio選型與獨立「建立文件清單」。即使單一建議也不預選；選取僅前端狀態，不呼叫updateCase。其他既有類型放於可展開區，與真正建議分開，不虛構相關性；維持單一類型／單一清單及既有API契約。重述／新回覆清選取，busy與重試採案件／回覆／選取快照防舊狀態，沿用品牌與克制排版。
+25. 本次引導修正在原產品先取得單元及瀏覽器RED，再完成獨立選型及快照隔離；source freeze後單元36／Mock87／API27及公開HTTP23／browser3均過，才以新版原始碼建立guided-20261019映像並實測60checks／新引導／restart。前輪後端190、來源與依賴保持歷史證據，不因UI更新冒稱重跑。正式dist與展示連結已更新；測試程序／容器／volume核對身分清除，公開服務保留；金鑰與真LLM仍依使用者決定暫緩。

@@ -1,0 +1,13 @@
+{
+  "test_port": 8003,
+  "test_processes_stopped": [
+    13868,
+    50016
+  ],
+  "test_container_removed": true,
+  "test_volume_removed": true,
+  "public_backend_alive": true,
+  "public_listener": 40288,
+  "tunnel_retained": 36692,
+  "image_retained": "sha256:8380799888f4d4783df2815292e833c77ec77a281ad721bcf5de42fed50434f0"
+}

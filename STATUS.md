@@ -1,34 +1,28 @@
 # 續作狀態
 
-更新日期：2026-10-19（臺灣）。**使用者最新決定「暫不建立金鑰」；三家真實憑證與模型串接暫緩。本輪不含外部LLM的完整重驗收已通過，整案仍未標 Completed。**
+更新日期：2026-10-19（臺灣）。**GUIDED-20261019已完成驗收並發布：描述後先選類型，再獨立建立清單。整案仍待使用者稍後設定真實金鑰及完成真LLM驗證。**
 
-- current_phase：Phase 1介面優化與既有Phase 3交付產物更新完成；Phase 2／3整體閘門待真外部LLM。
-- current_task：KEY-20261019、ACC-20261019 DONE；KEY-CREDENTIALS依使用者暫緩BLOCKED，不啟用或呼叫外部LLM。UX-20261019已DONE。
-- last_completed_task：三家空白欄位／建置與runtime隔離、完整前後端／真OCR／公開／容器／來源／依賴重驗，並修正過時文件；[本輪驗收](docs/ACCEPTANCE_NO_KEYS_20261019.md)。
-- last_successful_test：後端190/190（69.07秒、AI113／OCR28／core49）；前端33/33；Mock75/75（1.6分鐘、各25）；PDF2/2（7.4秒）；真API27/27（1.8分鐘）；G1/1（4.1秒）；公開HTTP22及browser3/3（36.4秒）；容器60checks及browser1/1（9.6秒）、restart案件一致／刪除404，均exit0、合成案件清除。
-- visual_evidence：新before／after30張，1440／768／390三尺寸；主代理與獨立代理目視通過。穩定狀態工作區可見文字814→442、實心主按鈕10→1；無橫向溢出。[截圖及量測](docs/ui-simplification/metrics.json)。
-- runtime_state：正式dist仍為已驗收新版，本輪產品未改、未覆寫公開產物；隔離build exit0／1.99秒。公開FastAPI listener40288／8002、cloudflared36692；Vite listener27888／5174保留。本輪獨立8003測試後端與8004驗收container／volume已核對識別後清理，未動其他8000／3137服務。
-- public_url：https://retirement-trim-reported-jesus.trycloudflare.com/?service=api 。本輪真正HTTP與完整browser流程通過；臨時網址需電腦與程序保持執行，跨工作階段仍先確認存活，不憑舊PID停程序。
+- current_phase：Phase 1引導互動修正與Phase 3對應交付產物更新完成；Phase 2／3整體閘門仍BLOCKED。
+- current_task：GUIDED-20261019 DONE；所有本次必要無key操作與驗收完成。KEY-CREDENTIALS、P2-04、P2-09及P3-GATE依使用者「暫不建立金鑰」仍BLOCKED，不再次索取。
+- last_completed_task：具名radio不預選；選取／改選只改草稿；獨立建立才寫入類型與文件；新描述／新回覆／切案／reload清選取，busy與重試綁定案件及回覆快照。[本次報告](docs/GUIDED_CHOICE.md)。
+- last_successful_test：前端36/36；引導target9/9（17.9秒）；Mock87/87（1.9分鐘、三尺寸各29）；PDF2/2（7.3秒）；正式build PASS（2.00秒）；真API27/27（1.9分鐘）；G1/1（3.8秒）；公開HTTP23及browser3/3（51.6秒）；新容器60checks、browser1/1（11.3秒）、真restart同case及刪除404，皆exit0。[結果](docs/guided-choice/test-summary.json)。
+- visual_evidence：修改前桌面／手機圖與RED保留.local；新版三尺寸等待動畫後實拍六張，主代理目視桌面／平板未選與手機已選通過。無橫向溢出、pageerror；三尺寸axe與非預期console斷言通過。[可分享畫面與量測](docs/GUIDED_CHOICE.md#視覺與保存)。
+- runtime_state：正式dist已更新，公開FastAPI listener40288／8002、cloudflared36692及Vite27888／5174保留。本次專用8003 parent50016／child13868及8004容器／volume已核對身分清除；未動其他8000／3137服務。[清理紀錄](docs/guided-choice/cleanup.json)。跨階段先查實際程序，不憑舊PID停服務。
+- public_url：https://retirement-trim-reported-jesus.trycloudflare.com/?service=api 。本輪已真HTTP與browser驗證；臨時網址需電腦及程序保持執行。
 - public_settings：單worker、專用合成DB、精確HTTPS origin、Secure／HttpOnly／Strict host-only cookie、no-access-log／no-proxy-headers、rate120；不持久保存raw文件。
-- docker_status：tag cardif-claim-preparation:ux-20261019，image ID `sha256:b25049ed997c4d2167562056356dbed1d464cb8112918740d3cde3fc3c3130af`。產品未改，重用映像另啟新容器驗收，未宣稱重build。UID10001、唯讀、capdropALL、no-new-privileges、無私有檔；60checks、browser1與真restart一致通過，專用container／volume已清、image保留。[容器報告](docs/CONTAINER_ACCEPTANCE.md)。
-- current_blockers：KEY-CREDENTIALS（三家實際金鑰）、P2-04真LLM、P2-09及P3-GATE依使用者「暫不建立金鑰」仍BLOCKED。沒有未完成的必要無key驗收；不再詢問金鑰。
-- external_dependencies：三家實際金鑰與原生／相容參數、實際provider／引用／失敗恢復仍未驗證。空白預留欄位不alias至LLM_API_KEY、不啟用模型；OpenRouter指定名稱openrouter/free只記後續意向。[供應商狀態](docs/PROVIDER_SETUP.md)。grounded_rules非生成式LLM，configured=false、verified=false。
-- analysis_semantics：品質不足provider=quality_precheck、未OCR、uncertain、fields空；mixed保留實際provider與逐頁品質提示。簽名及真實性人工覆核；信心不是整檔正確率或核准。
-- operating_constraints：單worker／單app副本，擴充需資料庫CAS／協調；health不是模型readiness。冷啟45秒timeout與一次未明OCR_UNAVAILABLE仍列已知限制，未宣稱根治。只用合成資料，對話及結構化結果仍敏感，無真理賠送件。
-- fresh_security_and_sources：本輪Python runtime33/33零known／skip、npm88依賴零known、pip check與constraints一致；官方來源11/11實GET200、主要規則與第3頁通過，registry及依賴檔SHA未變。來源與API Contract不變，不代表正式資安認證或逐位元來源相同。
-- original_design：原HTML及docs/baseline/original.html SHA256仍相同 `59a6fd5053e9811560823b3f12637ef0c7bbe7f3aa2fd9a1abe1ea90fad1c8a1`。
-- saved_evidence：新log／JUnit／Playwright／掃描輸出在`.local/acceptance-no-keys-20261019/`；可分享JSON在docs/evidence/acceptance-no-keys-20261019。所有browser狀態passed／failedTests空，四個合成key值在207產物檔零洩漏。舊UI前後圖保留，不提交DB、cookie或憑證。
+- docker_status：新版tag cardif-claim-preparation:guided-20261019，image ID `sha256:8380799888f4d4783df2815292e833c77ec77a281ad721bcf5de42fed50434f0`，實際build及真API／OCR／新引導／restart通過，UID10001、唯讀、capdropALL、no-new-privileges、無私有檔。測試container／volume已清，image保留。[報告](docs/CONTAINER_ACCEPTANCE.md)。
+- unchanged_scope：本輪未改後端、Mock／HTTP服務層、API契約、官方規則／來源或依賴。前一輪後端190/190、來源11/11實GET、Python33/33及npm88零known查核仍屬前輪證據，未宣稱此次重跑。[前輪完整驗收](docs/ACCEPTANCE_NO_KEYS_20261019.md)。
+- external_dependencies：三家實際金鑰、明確模型與供應商參數、真provider引用／失敗恢復未驗證。只預留空白後端欄位，不alias至LLM_API_KEY；OpenRouter的openrouter/free僅後續意向。grounded_rules不是生成式LLM，configured=false、verified=false。[供應商狀態](docs/PROVIDER_SETUP.md)。
+- operating_constraints：單worker／單app副本；health不是模型readiness。冷啟45秒timeout及一次未明OCR_UNAVAILABLE仍列已知限制。品質不足明示未OCR／uncertain；mixed保留實際provider與逐頁提示；簽名與真實性人工覆核，非核准。不使用真實個資或送出理賠。
+- original_design：原HTML及docs/baseline/original.html SHA256保持 `59a6fd5053e9811560823b3f12637ef0c7bbe7f3aa2fd9a1abe1ea90fad1c8a1`，沿用品牌、Vanilla與原生鍵盤控制。
+- saved_evidence：本次RED／log／trace／穩定截圖及原始測試輸出在.local/guided-choice-20261019；去敏感JSON與圖片在docs/guided-choice。無案件DB、cookie或憑證提交。
 
-## 本輪失敗與恢復
+## 失敗與恢復
 
-功能測試首輪全部通過；依賴掃描初次沙箱DNS解析失敗exit1，保留原始輸出後以正常升權網路重跑，Python／npm皆exit0。後端有1項既有Starlette/httpx棄用警告，未為警告改依賴；測試與產品未改，斷言未弱化。
-
-## 先前介面驗收歷史
-
-前一工作階段升權／browser因Selected model is at capacity未執行，預設Git寫入index.lock亦被沙箱拒絕；本輪使用者切換模型後正常升權恢復，未繞過審核。Mock初輪72pass／3fail為首頁未等初始化；補等待後target3fail為巢狀summary定位不唯一；精準定位後target3pass，再完整75pass。未放寬聲明、安全、axe或真OCR斷言，失敗trace保留。詳細歷程見[介面報告](docs/UI_SIMPLIFICATION.md)；更早OCR／容器失敗見[最終歷史](docs/FINAL_ACCEPTANCE.md)。
+本次先取得舊產品單元14pass／4fail及browser1fail的預期RED，再實作；新版target、完整Mock、PDF、API、G、公開及容器首次均通過，未弱化重要斷言。截圖最初捕捉到動畫中狀態，改為等待有限動畫並回頂後重拍，不當作產品缺陷。預設沙箱不允許CIM查詢，依正常升權讀取後才核對清理。先前UI與OCR等失敗歷程保留於[介面報告](docs/UI_SIMPLIFICATION.md)、[前輪完整驗收](docs/ACCEPTANCE_NO_KEYS_20261019.md)與[歷史最終報告](docs/FINAL_ACCEPTANCE.md)。
 
 ## 下一個工作階段的三步
 
-1. 先讀規範與本紀錄，確認公開程序／網址存活；目前介面、必要本機與公開測試已通過，勿重做完成項目或操作其他服務。
-2. 使用者稍後安全設定金鑰與明確模型後，執行真provider request、來源與失敗恢復驗證；現在不反覆詢問或把Mock／離線測試當完成。
-3. 真LLM驗證通過後，自動完成包含該provider的整合測試及P2／P3整體閘門，補最終驗收；只有所有必要gate通過才標整案完成。
+1. 先讀規範、本紀錄及新引導報告；確認公開程序與網址存活，無須重做已完成項目。
+2. 使用者稍後安全設定金鑰與明確模型後，做真provider request、引用及失敗恢復驗證；現在維持本機規則模式，不重複詢問。
+3. 真LLM驗證通過後，自動完成包含該provider的整合測試及P2／P3整體閘門，補最終報告；全部必要gate通過才標整案完成。

@@ -1,0 +1,31 @@
+{
+  "origin": "https://retirement-trim-reported-jesus.trycloudflare.com",
+  "checks_passed": 23,
+  "checks": [
+    "homepage HTTP 200",
+    "new specific entry actions",
+    "production JavaScript 200",
+    "new workspace action in bundle",
+    "API health 200",
+    "LLM remains unverified grounded rules",
+    "real OCR provider",
+    "Secure HttpOnly Strict host-only cookie",
+    "API no-store",
+    "nosniff",
+    "CSP frame protection",
+    "private path /.env 404",
+    "private path /.git/config 404",
+    "private path /backend/app/main.py 404",
+    "PDF worker JavaScript MIME",
+    "untrusted origin denied",
+    "case created via actual API",
+    "case contract",
+    "owner can read",
+    "other owner cannot read",
+    "case deleted",
+    "deleted case unavailable",
+    "guided selection and separate build shipped"
+  ],
+  "synthetic_cases_deleted": true,
+  "llm_verified": false
+}
