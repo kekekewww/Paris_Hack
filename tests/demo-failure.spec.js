@@ -16,7 +16,7 @@ test('情境 G：明確注入官方 PDF 載入失敗後，實際 API 案件與�
     expect(health.status()).toBe(200);
     expect((await health.json()).service_mode).toBe('api');
     await page.goto('/?service=api#triage');
-    await page.getByRole('button', { name: '開始搜尋', exact: true }).click();
+    await page.getByRole('button', { name: '選擇理賠類型', exact: true }).click();
     await page.getByRole('button', { name: '住院醫療', exact: true }).click();
     await page.getByLabel('事故原因', { exact: true }).selectOption('illness');
     await page.getByLabel('是否接受手術', { exact: true }).selectOption('no');
@@ -29,9 +29,16 @@ test('情境 G：明確注入官方 PDF 載入失敗後，實際 API 案件與�
     const originalCase = await creation.json();
     caseId = originalCase.id;
     await expect(page.getByRole('heading', { name: '文件準備工作區', exact: true })).toBeVisible();
-    await expect(page.locator('.mode-label').first()).toContainText('API');
+    const service = page.locator('#app details.service-info');
+    await service.locator('summary').click();
+    await expect(service.locator('.mode-label')).toBeVisible();
+    await expect(service.locator('.mode-label')).toContainText('API');
+    await service.locator('summary').click();
     const article = page.locator('article[data-document-id="application"]');
-    await article.getByText('文件說明與官方來源', { exact: true }).click();
+    const sourceDetails = article.locator('details.document-details');
+    await expect(sourceDetails).toHaveJSProperty('open', false);
+    await sourceDetails.locator('summary').click();
+    await expect(sourceDetails).toHaveJSProperty('open', true);
     const officialLink = article.getByRole('link', { name: '開啟官方空白表單', exact: false });
     const href = await officialLink.getAttribute('href');
     expect(href).toMatch(/^https:\/\/life\.cardif\.com\.tw\/documents\//);

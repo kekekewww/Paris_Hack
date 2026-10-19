@@ -1,5 +1,13 @@
 # Cloudflare Quick Tunnel 臨時展示
 
+## 目前版本：2026-10-19 介面簡化
+
+最新網址：[理賠文件準備助手](https://retirement-trim-reported-jesus.trycloudflare.com/?service=api)。新版已正式建置至 dist，公開 HTTP **22 checks PASS**、瀏覽器 **3/3 PASS（46.8秒）**，涵蓋兩入口、缺漏／清晰 PNG 真 RapidOCR、PDF／mixed 第2頁、人工確認、重新整理與摘要下載；console／pageerror0，合成測試案件均已刪除。
+
+8002 與 cloudflared 沿用當日重啟程序（listener40288、tunnel36692），本輪實際 health 與完整公開流程均正常；未操作其他8000／3137服務。精確 origin、Secure／HttpOnly／Strict host-only cookie、私有路徑404與origin403再次驗證。證據在 `.local/ui-simplification/public-http.json` 與 `public-results`，UI與三尺寸驗收見[介面報告](UI_SIMPLIFICATION.md)。生成式LLM仍未設定，`llm_verified=false`。
+
+以下10/17網址、PID與數字保留為歷史，不能當作目前入口。臨時網址仍需本機與隧道持續執行。
+
 ## 2026-10-19 目前展示
 
 依使用者要求重啟後的新網址：[開啟理賠文件準備助手](https://retirement-trim-reported-jesus.trycloudflare.com/?service=api)。原專案8002與舊隧道已停止；本次重新啟動專用8002及Quick Tunnel，未操作其他服務。精確新origin、Secure cookie、單worker、no-proxy-headers及grounded_rules沿用；外部LLM仍未配置。

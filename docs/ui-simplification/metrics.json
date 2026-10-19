@@ -1,0 +1,133 @@
+{
+  "date": "2026-10-19",
+  "mode": "mock",
+  "scenario": "inpatient, illness, no surgery, actual receipt, other conditions unknown",
+  "method": "Stable rendered DOM text; whitespace, closed disclosures, screen-reader-only nodes and transient toasts excluded; entire page, not only first viewport. Dialog excluded because scroll positions differ.",
+  "viewports": [
+    "1440x1000",
+    "768x1024",
+    "390x844"
+  ],
+  "rows": [
+    {
+      "size": "desktop",
+      "screen": "home",
+      "before_text_chars": 136,
+      "after_text_chars": 117,
+      "reduction_percent": 14.0,
+      "before_filled_green_buttons": 1,
+      "after_filled_green_buttons": 1,
+      "horizontal_overflow": false
+    },
+    {
+      "size": "desktop",
+      "screen": "search",
+      "before_text_chars": 375,
+      "after_text_chars": 102,
+      "reduction_percent": 72.8,
+      "before_filled_green_buttons": 1,
+      "after_filled_green_buttons": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "size": "desktop",
+      "screen": "conditions",
+      "before_text_chars": 376,
+      "after_text_chars": 156,
+      "reduction_percent": 58.5,
+      "before_filled_green_buttons": 1,
+      "after_filled_green_buttons": 1,
+      "horizontal_overflow": false
+    },
+    {
+      "size": "desktop",
+      "screen": "workspace",
+      "before_text_chars": 814,
+      "after_text_chars": 442,
+      "reduction_percent": 45.7,
+      "before_filled_green_buttons": 10,
+      "after_filled_green_buttons": 1,
+      "horizontal_overflow": false
+    },
+    {
+      "size": "tablet",
+      "screen": "home",
+      "before_text_chars": 136,
+      "after_text_chars": 117,
+      "reduction_percent": 14.0,
+      "before_filled_green_buttons": 1,
+      "after_filled_green_buttons": 1,
+      "horizontal_overflow": false
+    },
+    {
+      "size": "tablet",
+      "screen": "search",
+      "before_text_chars": 375,
+      "after_text_chars": 102,
+      "reduction_percent": 72.8,
+      "before_filled_green_buttons": 1,
+      "after_filled_green_buttons": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "size": "tablet",
+      "screen": "conditions",
+      "before_text_chars": 376,
+      "after_text_chars": 156,
+      "reduction_percent": 58.5,
+      "before_filled_green_buttons": 1,
+      "after_filled_green_buttons": 1,
+      "horizontal_overflow": false
+    },
+    {
+      "size": "tablet",
+      "screen": "workspace",
+      "before_text_chars": 814,
+      "after_text_chars": 442,
+      "reduction_percent": 45.7,
+      "before_filled_green_buttons": 10,
+      "after_filled_green_buttons": 1,
+      "horizontal_overflow": false
+    },
+    {
+      "size": "mobile",
+      "screen": "home",
+      "before_text_chars": 136,
+      "after_text_chars": 117,
+      "reduction_percent": 14.0,
+      "before_filled_green_buttons": 1,
+      "after_filled_green_buttons": 1,
+      "horizontal_overflow": false
+    },
+    {
+      "size": "mobile",
+      "screen": "search",
+      "before_text_chars": 375,
+      "after_text_chars": 102,
+      "reduction_percent": 72.8,
+      "before_filled_green_buttons": 1,
+      "after_filled_green_buttons": 0,
+      "horizontal_overflow": false
+    },
+    {
+      "size": "mobile",
+      "screen": "conditions",
+      "before_text_chars": 376,
+      "after_text_chars": 156,
+      "reduction_percent": 58.5,
+      "before_filled_green_buttons": 1,
+      "after_filled_green_buttons": 1,
+      "horizontal_overflow": false
+    },
+    {
+      "size": "mobile",
+      "screen": "workspace",
+      "before_text_chars": 814,
+      "after_text_chars": 442,
+      "reduction_percent": 45.7,
+      "before_filled_green_buttons": 10,
+      "after_filled_green_buttons": 1,
+      "horizontal_overflow": false
+    }
+  ]
+}

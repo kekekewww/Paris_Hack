@@ -21,3 +21,9 @@
 17. 清晰度閾值是工程條件，不是官方文件要求；品質finding的官方連結標為表單參考，位置標為人工提示區。信心是品質調整後的初步參考，並非文字純平均或整份文件完整率。新增清晰第1頁＋模糊第2頁合成PDF，防止提示錯指頁碼。
 
 18. 使用者明確要求Cloudflare Quick Tunnel分享，授權本輪臨時公開展示。另啟專用loopback8002與獨立合成案件庫，精確公開origin、Secure cookie、單worker及no-proxy-headers；原8000保留。不變更帳號、DNS或安裝常駐服務。公開HTTPS23項及瀏覽器3/3通過後，P3-04／04C以臨時展示範圍DONE，不增加固定網域作為MVP門檻；真LLM仍BLOCKED，隧道存活限制明列。
+
+## 2026-10-19
+
+19. 依使用者明確回饋與提供的apple-design skill，延伸既有品牌而非換成Apple外觀：減少重複介紹、次要細節用原生details、預設收合助手、第一份未完成文件突出、官方空白表單保留直接入口。Mock／未OCR／待確認／非核准仍可見，工程模式集中服務說明。維持Vanilla與API契約，不新增動畫或UI依賴。
+20. 本輪自動審核因Selected model is at capacity未能執行瀏覽器檢查。所有可獨立程式／單元／隔離build先完成；新版只輸出.local/ui-simplification/dist，未覆寫公開dist。沒有把舊截圖、--list或記憶體DOM測試當成新視覺／E2E通過；待審核恢復再驗收與發布。
+21. 使用者切換模型後已恢復真瀏覽器驗收。以仍在運行的舊dist作before、Vite新版作after，等初始化／toast穩定才擷取；文字量排除收合內容與讀屏專用文字，不將不同捲動位置的dialog納入減字百分比。Mock75／PDF2與三尺寸目視通過後才更新正式dist；真API27、G1及公開HTTP22／瀏覽器3亦通過。首頁測試只修readiness與巢狀summary精準定位，保留所有聲明斷言及失敗證據。外部LLM依原決定稍後配置。

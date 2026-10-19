@@ -34,6 +34,17 @@ test('PDF前端實際計頁拒絕11頁，且可換成有效文件恢復',async({
   await dialog.getByLabel('預覽頁碼').selectOption('2');
   await expect(dialog.getByLabel('預覽頁碼')).toHaveValue('2');
   await expect(dialog.locator('#pdf-canvas')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(dialog).not.toBeVisible();
+  const article=page.locator('article[data-document-id]').first();
+  await expect(article.getByRole('button',{name:'上傳與檢查',exact:true})).toHaveCount(0);
+  const result=article.getByRole('button',{name:'查看檢查結果',exact:true});
+  await expect(result).toBeFocused();
+  await result.press('Enter');
+  await expect(page.getByRole('dialog').locator('#analysis-results')).toContainText('Mock');
+  await expect(page.getByRole('dialog').getByLabel('選擇文件',{exact:true})).toBeEnabled();
+  await page.keyboard.press('Escape');
+  await expect(result).toBeFocused();
   expect(errors).toEqual([]);
 });
 test('損毀PDF不會被當成可分析文件',async({page})=>{

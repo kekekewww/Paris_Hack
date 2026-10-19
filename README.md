@@ -15,7 +15,9 @@
 
 Phase 1 已通過，證據見 [前端驗收報告](docs/PHASE1_ACCEPTANCE.md)。Phase 2 整合驗證與後續交付仍以實際驗收紀錄為準；這份 README 不代表外部部署或所有階段已完成。
 
-2026-10-19 已依使用者要求重新啟動 [Quick Tunnel 臨時 HTTPS 展示](https://retirement-trim-reported-jesus.trycloudflare.com/?service=api)。本次公開 HTTP 11 項與門診瀏覽器流程 1 項通過，真實 OCR 已預熱。電腦與隧道必須保持執行；設定、歷史驗收及限制見 [臨時展示紀錄](docs/QUICK_TUNNEL.md)。
+2026-10-19 已更新 [Quick Tunnel 臨時 HTTPS 展示](https://retirement-trim-reported-jesus.trycloudflare.com/?service=api)。新版公開 HTTP 22 項與瀏覽器流程 3/3 通過，涵蓋兩入口、真實圖片 OCR、PDF 與摘要。電腦與隧道必須保持執行；設定、歷史驗收及限制見 [臨時展示紀錄](docs/QUICK_TUNNEL.md)。
+
+本輪[介面簡化](docs/UI_SIMPLIFICATION.md)已通過三尺寸視覺、33項單元、Mock 75項、PDF 2項、真API 27項與故障恢復1項。工作區同情境可見文字減少45.7%，只突出下一份文件；來源、案件管理與助手採漸進揭露。外部生成式LLM仍依使用者決定稍後設定。
 
 ## 本機啟動（PowerShell）
 

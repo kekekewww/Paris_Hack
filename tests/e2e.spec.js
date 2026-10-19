@@ -28,9 +28,34 @@ async function waitForEntryMotion(page) {
   });
 }
 
+async function openDocumentDetails(article) {
+  const details = article.locator('details.document-details');
+  if (!await details.evaluate((element) => element.open)) {
+    await details.locator('summary').click();
+  }
+  await expect(details).toHaveJSProperty('open', true);
+  return details;
+}
+
+async function openCaseOptions(page) {
+  const details = page.locator('details.case-options');
+  if (!await details.evaluate((element) => element.open)) {
+    await details.locator('summary').click();
+  }
+  await expect(details).toHaveJSProperty('open', true);
+}
+
+async function expectSingleNextDocument(page, expectedId) {
+  const next = page.locator('#document-list article.next-document');
+  await expect(next).toHaveCount(1);
+  if (expectedId) await expect(next).toHaveAttribute('data-document-id', expectedId);
+  await expect(page.locator('#document-list .doc-actions button.primary')).toHaveCount(1);
+  await expect(next.locator('.doc-actions button.primary')).toBeVisible();
+}
+
 async function startDirectCase(page, claimType = '住院醫療') {
   await page.goto('/?service=mock#triage');
-  await page.getByRole('button', { name: '開始搜尋', exact: true }).click();
+  await page.getByRole('button', { name: '選擇理賠類型', exact: true }).click();
   await expect(page).toHaveURL(/#search$/);
   await page.getByRole('button', { name: claimType, exact: true }).click();
   await page.getByLabel('事故原因', { exact: true }).selectOption('illness');
@@ -75,20 +100,31 @@ test.afterEach(async ({ page }) => {
 
 test('首頁雙入口、官方來源與原型聲明可操作', async ({ page }, testInfo) => {
   await page.goto('/?service=mock#triage');
-  await expect(page.getByRole('button', { name: '開始使用', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: '開始搜尋', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '描述我的狀況', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '選擇理賠類型', exact: true })).toBeVisible();
+  // 初始化會同步更新服務說明；等入口可操作後才測試該收合區，避免驗到載入中的舊節點。
+  await expect(page.getByRole('button', { name: '描述我的狀況', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: '選擇理賠類型', exact: true })).toBeEnabled();
   const official = page.getByRole('link', { name: /官方/ }).first();
   await expect(official).toHaveAttribute('href', /^https:\/\/life\.cardif\.com\.tw\//);
-  await expect(page.getByText(/展示原型|概念原型|黑客松/).first()).toBeVisible();
+  await expect(page.locator('#viewTriage .mode-indicator')).toHaveText('模擬展示');
+  await expect(page.getByText('請使用虛構資料。初步檢查不代表理賠核准。', { exact: true })).toBeVisible();
+  const service = page.locator('#viewTriage details.service-info');
+  await expect(service).toHaveJSProperty('open', false);
+  await service.getByText('服務說明', { exact: true }).click();
+  await expect(service.locator('.mode-label')).toBeVisible();
+  await expect(service.locator('.mode-label')).toContainText('Mock');
+  await expect(service.getByText(/不代送申請/)).toBeVisible();
+  await service.getByText('服務說明', { exact: true }).click();
   await assertNoHorizontalOverflow(page);
   await page.screenshot({ path: testInfo.outputPath('landing.png'), fullPage: true });
-  await page.getByRole('button', { name: '開始使用', exact: true }).click();
+  await page.getByRole('button', { name: '描述我的狀況', exact: true }).click();
   await expect(page.getByLabel('描述就醫情況', { exact: true })).toBeVisible();
 });
 
 test('AI 引導確認類型後進入共用工作區並取得準備摘要', async ({ page }, testInfo) => {
   await page.goto('/?service=mock#triage');
-  await page.getByRole('button', { name: '開始使用', exact: true }).click();
+  await page.getByRole('button', { name: '描述我的狀況', exact: true }).click();
   await page.getByLabel('描述就醫情況', { exact: true }).fill('我上星期車禍住院三天，沒有接受手術，想準備理賠文件。');
   await page.getByRole('button', { name: '送出描述', exact: true }).click();
   await expect(page.getByRole('button', { name: '確認並建立清單', exact: true })).toBeVisible();
@@ -116,6 +152,168 @@ test('資訊不足會先追問而不直接建立文件清單', async ({ page }) 
   await expect(page.getByRole('button', { name: '確認並建立清單', exact: true })).toBeVisible();
 });
 
+test('切換理賠類型保留六項條件草稿，修改條件後清單重新計算', async ({ page }) => {
+  await page.goto('/?service=mock#search');
+  await expect(page.getByLabel('事故原因', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: '住院醫療', exact: true }).click();
+  const values = [
+    ['事故原因', 'accident'], ['是否接受手術', 'yes'], ['收據用途', 'actual'],
+    ['預計給付方式', 'remittance'], ['是否首次申請癌症／重大疾病', 'yes'],
+    ['診斷書是否載明手術部位及方式', 'no'],
+  ];
+  for (const [label, value] of values.slice(0, 3)) {
+    await page.getByLabel(label, { exact: true }).selectOption(value);
+  }
+  const advanced = page.locator('details.advanced-options');
+  if (!await advanced.evaluate((element) => element.open)) {
+    await advanced.locator('summary').click();
+  }
+  for (const [label, value] of values.slice(3)) {
+    await page.getByLabel(label, { exact: true }).selectOption(value);
+  }
+  for (const type of ['防癌或重大疾病', '醫療門診', '住院醫療']) {
+    await page.getByRole('button', { name: type, exact: true }).click();
+    for (const [label, value] of values) {
+      await expect(page.getByLabel(label, { exact: true })).toHaveValue(value);
+    }
+    await expect(page.locator('details.advanced-options')).toHaveJSProperty('open', true);
+  }
+  await page.getByRole('button', { name: '建立文件清單', exact: true }).click();
+  await expect(page.locator('article[data-document-id="surgery"]')).toContainText('尚未準備');
+  await openCaseOptions(page);
+  await page.getByRole('button', { name: '修改案件條件', exact: true }).click();
+  for (const [label, value] of values) {
+    await expect(page.getByLabel(label, { exact: true })).toHaveValue(value);
+  }
+  await page.getByLabel('是否接受手術', { exact: true }).selectOption('no');
+  await page.getByRole('button', { name: '建立文件清單', exact: true }).click();
+  await expect(page.locator('article[data-document-id="surgery"]')).toContainText('已確認不適用');
+  await assertNoHorizontalOverflow(page);
+});
+
+test('跳至主要內容維持目前流程路由並將焦點移至對應主內容', async ({ page }) => {
+  const skipToMain = async (route, selector) => {
+    const link = page.getByRole('link', { name: '跳至主要內容', exact: true });
+    await link.focus();
+    await expect(link).toBeVisible();
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(new RegExp(`#${route}$`));
+    await expect(page.locator(selector)).toBeFocused();
+    await expect(page.locator(selector)).toBeVisible();
+  };
+  await page.goto('/?service=mock#triage');
+  await expect(page.getByRole('button', { name: '描述我的狀況', exact: true })).toBeEnabled();
+  await skipToMain('triage', '#home-main-content');
+  await page.getByRole('button', { name: '描述我的狀況', exact: true }).click();
+  await expect(page.getByLabel('描述就醫情況', { exact: true })).toBeVisible();
+  await skipToMain('assistant', '#main-content');
+  await page.getByRole('button', { name: '返回首頁', exact: true }).first().click();
+  await page.getByRole('button', { name: '選擇理賠類型', exact: true }).click();
+  await expect(page.getByRole('button', { name: '住院醫療', exact: true })).toBeVisible();
+  await skipToMain('search', '#main-content');
+  await page.getByRole('button', { name: '住院醫療', exact: true }).click();
+  await page.getByRole('button', { name: '建立文件清單', exact: true }).click();
+  await expect(page.getByRole('heading', { name: '文件準備工作區', exact: true })).toBeVisible();
+  await skipToMain('workspace', '#main-content');
+  await page.getByRole('button', { name: '查看準備摘要', exact: true }).click();
+  await expect(page.getByRole('heading', { name: '送件前準備摘要', exact: true })).toBeVisible();
+  await skipToMain('summary', '#main-content');
+});
+
+test('首頁建立第二筆案件重新選類型與六項未知條件，編輯第一案仍保留原值', async ({ page }) => {
+  await page.goto('/?service=mock#triage');
+  await page.getByRole('button', { name: '選擇理賠類型', exact: true }).click();
+  await page.getByRole('button', { name: '住院醫療', exact: true }).click();
+  const previous = [
+    ['事故原因', 'accident'], ['是否接受手術', 'no'], ['收據用途', 'daily'],
+    ['預計給付方式', 'other'], ['是否首次申請癌症／重大疾病', 'no'],
+    ['診斷書是否載明手術部位及方式', 'yes'],
+  ];
+  for (const [label, value] of previous.slice(0, 3)) {
+    await page.getByLabel(label, { exact: true }).selectOption(value);
+  }
+  await page.locator('details.advanced-options > summary').click();
+  for (const [label, value] of previous.slice(3)) {
+    await page.getByLabel(label, { exact: true }).selectOption(value);
+  }
+  await page.getByRole('button', { name: '建立文件清單', exact: true }).click();
+  await expect(page.getByRole('heading', { name: '文件準備工作區', exact: true })).toBeVisible();
+  await openCaseOptions(page);
+  await page.getByRole('button', { name: '修改案件條件', exact: true }).click();
+  for (const [label, value] of previous) {
+    await expect(page.getByLabel(label, { exact: true })).toHaveValue(value);
+  }
+  await page.getByRole('button', { name: '建立文件清單', exact: true }).click();
+  await expect(page.getByRole('heading', { name: '文件準備工作區', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '返回首頁', exact: true }).first().click();
+  await page.getByRole('button', { name: '選擇理賠類型', exact: true }).click();
+  await expect(page).toHaveURL(/#search$/);
+  for (const type of ['住院醫療', '醫療門診', '防癌或重大疾病']) {
+    await expect(page.getByRole('button', { name: type, exact: true })).toHaveAttribute('aria-pressed', 'false');
+  }
+  await expect(page.getByLabel('事故原因', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '建立文件清單', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: '醫療門診', exact: true }).click();
+  for (const [label] of previous) {
+    await expect(page.getByLabel(label, { exact: true })).toHaveValue('unknown');
+  }
+  const advanced = page.locator('details.advanced-options');
+  await expect(advanced).toHaveJSProperty('open', false);
+  await advanced.locator('summary').click();
+  for (const [label] of previous.slice(3)) {
+    await expect(page.getByLabel(label, { exact: true })).toBeVisible();
+    await expect(page.getByLabel(label, { exact: true })).toHaveValue('unknown');
+  }
+  await page.getByRole('button', { name: '建立文件清單', exact: true }).click();
+  await expect(page.getByRole('heading', { name: '文件準備工作區', exact: true })).toBeVisible();
+  await expect(page.getByText('醫療門診', { exact: true }).first()).toBeVisible();
+  await openCaseOptions(page);
+  await page.getByRole('button', { name: '修改案件條件', exact: true }).click();
+  for (const [label] of previous) {
+    await expect(page.getByLabel(label, { exact: true })).toHaveValue('unknown');
+  }
+});
+
+test('摘要列印生命週期暫開條件並恢復原收合狀態，列印媒體呈現內容', async ({ page }) => {
+  await startDirectCase(page);
+  await page.getByRole('button', { name: '查看準備摘要', exact: true }).click();
+  await expect(page.getByRole('heading', { name: '送件前準備摘要', exact: true })).toBeVisible();
+  const conditions = page.locator('details.summary-conditions');
+  const text = conditions.getByText('部分條件尚不明確，請修改條件或向官方洽詢。', { exact: true });
+  const printEvent = (name) => page.evaluate((eventName) => window.dispatchEvent(new Event(eventName)), name);
+  await expect(conditions).toHaveJSProperty('open', false);
+  await expect(text).not.toBeVisible();
+  await printEvent('beforeprint');
+  await expect(conditions).toHaveJSProperty('open', true);
+  await expect(text).toBeVisible();
+  await printEvent('beforeprint');
+  await printEvent('afterprint');
+  await expect(conditions).toHaveJSProperty('open', false);
+  await expect(text).not.toBeVisible();
+  await conditions.locator('summary').click();
+  await expect(conditions).toHaveJSProperty('open', true);
+  await printEvent('beforeprint');
+  await printEvent('beforeprint');
+  await printEvent('afterprint');
+  await expect(conditions).toHaveJSProperty('open', true);
+  await expect(text).toBeVisible();
+  await conditions.locator('summary').click();
+  // 僅驗 DOM 事件與瀏覽器列印媒體，不呼叫 window.print 或系統印表機。
+  try {
+    await printEvent('beforeprint');
+    await page.emulateMedia({ media: 'print' });
+    await expect(conditions).toHaveJSProperty('open', true);
+    await expect(text).toBeVisible();
+    await expect(page.getByRole('table')).toBeVisible();
+    await expect(page).toHaveURL(/#summary$/);
+  } finally {
+    await page.emulateMedia({ media: 'screen' });
+    await printEvent('afterprint');
+  }
+  await expect(conditions).toHaveJSProperty('open', false);
+  await expect(text).not.toBeVisible();
+});
+
 test('送出引導後返回首頁，延遲回覆不會覆蓋目前畫面', async ({ page }) => {
   // 暫停計時器，確保導覽發生在 Mock 回覆之前，再推進兩段服務延遲。
   await page.clock.install({ time: new Date('2026-10-17T03:00:00Z') });
@@ -129,7 +327,7 @@ test('送出引導後返回首頁，延遲回覆不會覆蓋目前畫面', async
   await expect(page).toHaveURL(/#triage$/);
   await page.clock.runFor(1000);
   await expect(page).toHaveURL(/#triage$/);
-  await expect(page.getByRole('button', { name: '開始使用', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '描述我的狀況', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: '讓我們協助您的理賠流程', exact: true })).not.toBeVisible();
 });
 
@@ -161,15 +359,31 @@ test('上傳與 Mock 缺漏分析可預覽文件、查看問題並人工確認',
   await expect(dialog.locator('#analysis-results').getByText(/疑似|缺漏|待確認|需.*確認/).first()).toBeVisible();
   await expect(dialog.getByRole('button', { name: '我已人工確認', exact: true }).first()).toBeVisible();
   await expect(dialog.locator('img, object, iframe, canvas').first()).toBeVisible();
-  await dialog.getByRole('button', { name: '查看欄位提醒 1', exact: true }).click();
+  const marker = dialog.getByRole('button', { name: '查看欄位提醒 1', exact: true });
+  const findingId = await marker.getAttribute('data-finding');
+  const finding = dialog.locator(`[data-finding-id="${findingId}"]`);
+  await expect(finding.locator('details.finding-details')).toHaveJSProperty('open', false);
+  await marker.click();
+  await expect(finding).toHaveClass(/selected/);
   await expect(dialog.locator('[data-finding-id].selected')).toHaveCount(1);
+  await expect(finding.locator('details.finding-details')).toHaveJSProperty('open', true);
+  await expect(finding).toBeFocused();
+  await expect(finding).toBeInViewport({ ratio: 0.5 });
   await assertNoHorizontalOverflow(page);
   await page.screenshot({ path: testInfo.outputPath('ocr-findings.png'), fullPage: true });
   await dialog.getByRole('button', { name: '我已人工確認', exact: true }).first().click();
   await expect(dialog.getByText(/已人工確認|已確認/).first()).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(dialog).not.toBeVisible();
-  await expect(page.locator('article[data-document-id]').first()).toContainText(/需要補充|待確認|已上傳|初步檢查|已確認/);
+  const article = page.locator('article[data-document-id]').first();
+  await expect(article).toContainText(/需要補充|待確認|已上傳|初步檢查|已確認/);
+  await expect(article.getByRole('button', { name: '上傳與檢查', exact: true })).toHaveCount(0);
+  const result = article.getByRole('button', { name: '查看檢查結果', exact: true });
+  await expect(result).toBeFocused();
+  await result.press('Enter');
+  await expect(page.getByRole('dialog').locator('#analysis-results')).toContainText('模擬');
+  await page.keyboard.press('Escape');
+  await expect(result).toBeFocused();
 });
 
 test('Mock 完整文件只顯示初步檢查結果', async ({ page }) => {
@@ -278,9 +492,10 @@ test('重新整理保留案件，清除後移除準備資料', async ({ page }) 
   await expect(page.getByRole('heading', { name: '文件準備工作區', exact: true })).toBeVisible();
   await expect(page.locator(`article[data-document-id="${id}"]`)).toBeVisible();
   await expect(page.getByText('醫療門診', { exact: true }).first()).toBeVisible();
+  await openCaseOptions(page);
   page.on('dialog', (dialog) => dialog.accept());
   await page.getByRole('button', { name: '清除測試案件', exact: true }).click();
-  await expect(page.getByRole('button', { name: '開始使用', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '描述我的狀況', exact: true })).toBeVisible();
   await page.reload();
   await expect(page.getByRole('button', { name: '繼續準備', exact: true })).toHaveCount(0);
 });
@@ -289,13 +504,29 @@ test('文件準備狀態可更新、保留並反映於摘要', async ({ page }) 
   await startDirectCase(page);
   const required = page.locator('article[data-document-id]').first();
   const requiredId = await required.getAttribute('data-document-id');
+  await expectSingleNextDocument(page, requiredId);
+  await openDocumentDetails(required);
   await expect(required.getByRole('option', { name: '我已確認此條件不適用', exact: true })).toHaveCount(0);
   await required.getByRole('combobox').selectOption('uploaded');
   await expect(page.locator(`article[data-document-id="${requiredId}"]`)).toContainText('已上傳／自行備妥');
+  await expectSingleNextDocument(page);
+  await expect(page.locator('article.next-document')).not.toHaveAttribute('data-document-id', requiredId);
   const conditional = page.locator('article[data-document-id]').filter({ hasText: '條件式' }).first();
   const conditionalId = await conditional.getAttribute('data-document-id');
+  await openDocumentDetails(conditional);
   await conditional.getByRole('combobox').selectOption('not_applicable');
   await expect(page.locator(`article[data-document-id="${conditionalId}"]`)).toContainText('已確認不適用');
+  const remainingIds = await page.locator('article[data-document-id]').evaluateAll((articles) =>
+    articles.map((article) => article.dataset.documentId));
+  for (const id of remainingIds.filter((id) => id !== requiredId && id !== conditionalId)) {
+    const article = page.locator(`article[data-document-id="${id}"]`);
+    await openDocumentDetails(article);
+    await article.getByRole('combobox').selectOption('uploaded');
+    await expect(article).toContainText('已上傳／自行備妥');
+  }
+  await expect(page.locator('#document-list article.next-document')).toHaveCount(0);
+  await expect(page.locator('#document-list .doc-actions button.primary')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '查看準備摘要', exact: true })).toHaveClass(/primary/);
   await page.reload();
   await expect(page.locator(`article[data-document-id="${requiredId}"]`)).toContainText('已上傳／自行備妥');
   await page.getByRole('button', { name: '查看準備摘要', exact: true }).click();
@@ -305,6 +536,8 @@ test('文件準備狀態可更新、保留並反映於摘要', async ({ page }) 
 
 test('工作區問答附官方來源並保留資格不確定性', async ({ page }) => {
   await startDirectCase(page);
+  await expect(page.getByLabel('詢問文件準備問題', { exact: true })).not.toBeVisible();
+  await page.getByRole('button', { name: '開啟助手', exact: true }).click();
   await page.getByLabel('詢問文件準備問題', { exact: true }).fill('我一定可以獲賠多少錢？');
   await page.getByRole('button', { name: '送出問題', exact: true }).click();
   const log = page.getByRole('log', { name: '工作區對話', exact: true });
@@ -325,12 +558,30 @@ test('惡意輸入以純文字顯示，不執行 HTML 事件', async ({ page }) 
 
 test('助手收合不阻礙文件操作，且鍵盤可關閉檢查視窗', async ({ page }) => {
   await startDirectCase(page);
-  await page.getByRole('button', { name: '隱藏助手', exact: true }).click();
   const openAssistant = page.getByRole('button', { name: '開啟助手', exact: true });
   await expect(openAssistant).toBeVisible();
+  await expect(openAssistant).toHaveAttribute('aria-expanded', 'false');
+  await expect(openAssistant).toHaveAttribute('aria-controls', 'workspace-assistant');
+  await expect(page.locator('#workspace-assistant')).not.toBeVisible();
   await openAssistant.focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('button', { name: '隱藏助手', exact: true })).toBeVisible();
+  const hideAssistant = page.getByRole('button', { name: '隱藏助手', exact: true });
+  await expect(hideAssistant).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.getByLabel('詢問文件準備問題', { exact: true })).toBeVisible();
+  await hideAssistant.press('Enter');
+  await expect(openAssistant).toHaveAttribute('aria-expanded', 'false');
+  const article = page.locator('article[data-document-id]').first();
+  const details = article.locator('details.document-details');
+  const disclosure = details.locator('summary');
+  await expect(details).toHaveJSProperty('open', false);
+  await disclosure.focus();
+  await page.keyboard.press('Enter');
+  await expect(details).toHaveJSProperty('open', true);
+  await expect(article.getByRole('combobox')).toBeVisible();
+  await expect(details.getByRole('link').first()).toHaveAttribute('href', /^https:\/\/life\.cardif\.com\.tw\//);
+  await disclosure.press('Space');
+  await expect(details).toHaveJSProperty('open', false);
+  await expect(article.getByRole('combobox')).not.toBeVisible();
   const upload = page.locator('article[data-document-id]').first().getByRole('button', { name: '上傳與檢查', exact: true });
   await upload.focus();
   await page.keyboard.press('Enter');
@@ -343,8 +594,8 @@ test('助手收合不阻礙文件操作，且鍵盤可關閉檢查視窗', async
 
 test('首頁與文件工作區符合基本 WCAG A / AA 自動檢查', async ({ page }) => {
   await page.goto('/?service=mock#triage');
-  await expect(page.getByRole('button', { name: '開始使用', exact: true })).toBeEnabled();
-  await expect(page.getByRole('button', { name: '開始搜尋', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: '描述我的狀況', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: '選擇理賠類型', exact: true })).toBeEnabled();
   await waitForEntryMotion(page);
   const landing = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
   expect(landing.violations.map(({ id, nodes }) => ({ id, nodes: nodes.map(({ target, failureSummary }) => ({ target, failureSummary })) }))).toEqual([]);

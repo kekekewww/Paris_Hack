@@ -1,5 +1,15 @@
 # 本機容器驗收
 
+## 2026-10-19 新版介面產物
+
+`docker build --progress plain -t cardif-claim-preparation:ux-20261019 .` 實際exit0；image ID為 `sha256:b25049ed997c4d2167562056356dbed1d464cb8112918740d3cde3fc3c3130af`。映像內實際確認含「描述我的狀況」新版入口，UID10001／rootfs唯讀／capdropALL／no-new-privileges，無.env／.git／tests／demo／docs。沒有傳入金鑰或改動後端依賴。
+
+以專用 `paris-claim-ux-20261019` container、`paris_claim_ux_20261019` volume、loopback8004運行，等HTTP ready後執行同一 `scripts/smoke_api.py --include-ocr`：**60 checks PASS、cleanup=VERIFIED_DELETED、exit0**。清晰圖為真rapidocr、模糊圖quality_precheck／未OCR／uncertain、mixed以pdf_text與第2頁品質提示。再以該容器實跑新版快速選擇門診／清晰PNG／保存／摘要瀏覽器 **1/1 PASS（11.9秒）**，console／pageerror0。證據在 `.local/ui-simplification/container-browser-results`。
+
+核對container映像與volume識別後，只清除此專用container／volume，保留image與公開8002。本輪後端／權限設定未改；下方重啟持續性及其他10/17結果保留為歷史，沒有將其當作新版再次執行。建置工具的Git metadata擷取警告不影響exit0，映像識別以上述digest為準。
+
+以下為10/17版本歷史；目前新版UI完整驗收另見[介面報告](UI_SIMPLIFICATION.md)。
+
 日期：2026-10-17（臺灣）。結果：**實際映像建置、本機容器運行、HTTP／真實 OCR、資料持續性與基本執行限制均通過**。此結果不代表公開 HTTPS 或外部生成式 LLM 驗收通過。
 
 ## 建置與識別
