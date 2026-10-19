@@ -1,42 +1,46 @@
 # 開發任務
 
-更新日期：2026-10-19（臺灣）。主要規範為 `AGENTS.md` 與 `PROJECT_PLAN.md`。**原訂MVP的Phase 1／2／3已完成；OpenRouter真實模型、本機、容器及公開HTTPS驗收通過。免費容量限制與額外CLI失敗仍完整記錄，不宣稱正式商用或持續可用。**
+更新日期：2026-10-19（臺灣）。主要規範為 `AGENTS.md` 與 `PROJECT_PLAN.md`。**本輪連續追問修復已發布且三尺寸驗證通過；前輪MVP曾完成真模型驗收。新程序真模型重驗仍因上游429受阻，當前P2／P3整體gate重開為BLOCKED，不將歷史成功冒充本輪通過。**
 
-使用者授權的OpenRouter免費路由已啟用；OpenAI／Gemini維持暫緩，兩家可選供應商不阻擋原訂MVP。既有Mock及本機規則保留，各自標示模式，不冒充外部模型。最新完整結果見[OpenRouter報告](docs/OPENROUTER_ACCEPTANCE.md)。
+使用者回報的「你好→我出車禍了→沒有住院」重複追問已修復；ASSISTANT-LOOP-20261019 DONE。ASSISTANT-LIVE-20261019受免費供應商限流BLOCKED，原真模型及公開完整斷言保留。
+
+使用者授權的OpenRouter免費路由已啟用；OpenAI／Gemini維持暫緩，兩家可選供應商不阻擋原訂MVP。既有Mock及本機規則保留，各自標示模式，不冒充外部模型。目前結果見[追問修復報告](docs/ASSISTANT_FOLLOWUP.md)，前輪模型連通證據見[歷史報告](docs/OPENROUTER_ACCEPTANCE.md)。
 
 | ID | 階段 | 工作 | 優先 | 狀態 | 相依 | 驗收條件 | 驗證證據／外部依賴 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| ASSISTANT-LIVE-20261019 | 2／3 | 真模型／AI標示與公開完整重驗 | P0 | BLOCKED | 上游免費路由容量 | 原斷言不變，真回覆200及引用／AI短標通過 | 本輪兩次實際模型請求限流；原完整HTTP亦未過；金鑰狀態GET200且usage0不能替代模型成功 |
+| ASSISTANT-LOOP-20261019 | 1／2／3 | 逐輪追問、回覆來源短標與新舊引導畫面 | P0 | DONE | 使用者確切三句 | 不重問已否定住院、不推定門診；獨立確認才建立；三尺寸與公開回歸 | 後端347／前端56、最終Mock87、API27、最終容器followup12及公開6；三尺寸目視通過；[報告](docs/ASSISTANT_FOLLOWUP.md) |
 | P1-01 | 1 | 原型盤點、保留與基準截圖 | P0 | DONE | 無 | 完整檢查與可恢復原設計 | 原1598行HTML、備份與基準截圖；最終原檔／備份SHA再次一致；[盤點](docs/PROTOTYPE_AUDIT.md) |
-| P1-02 | 1 | ES Modules、Mock、API Contract | P0 | DONE | P1-01 | 服務可替換、狀態語意分離 | 原Phase1單元20/20；最新單元36/36、Mock87/87；[契約](docs/API_CONTRACT.md)不變 |
+| P1-02 | 1 | ES Modules、Mock、API Contract | P0 | DONE | P1-01 | 服務可替換、狀態語意分離 | 本輪單元56、Mock87；[契約](docs/API_CONTRACT.md)未變，原20/36等數字為歷史 |
 | P1-03 | 1 | 原設計首頁與雙入口 | P0 | DONE | P1-02 | 兩路徑可完整操作 | 三尺寸完整Mock及真API流程通過，品牌與原始設計延續 |
-| P1-04 | 1 | 引導、追問、確認與重試 | P0 | DONE | P1-02 | 不確定先追問，確認才更新 | 最新三尺寸先選再建立、改選不寫案、重述清選取、重試及reload回歸通過；[引導修正](docs/GUIDED_CHOICE.md) |
+| P1-04 | 1 | 引導、追問、確認與重試 | P0 | DONE | P1-02 | 依已知事實追問，確認才更新 | 本輪雙服務三尺寸12及公開6通過，否定住院不推門診；[本輪修復](docs/ASSISTANT_FOLLOWUP.md) |
 | P1-05 | 1 | 類別與條件直接選擇 | P0 | DONE | P1-02 | 三類別可建立案件 | Mock與真API直接選擇、條件更新與摘要通過 |
 | P1-06 | 1 | 清單、狀態、來源與助手 | P0 | DONE | P1-04、P1-05 | 狀態可管理、保存，來源可追溯 | 重新整理／清除／收合／來源／人工確認皆經端到端驗證 |
-| P1-07 | 1 | 上傳、預覽與Mock分析 | P0 | DONE | P1-06 | 檔案限制、位置與人工確認 | 最新Mock87、PDF2與競態回歸通過；真分析另列P2-06 |
+| P1-07 | 1 | 上傳、預覽與Mock分析 | P0 | DONE | P1-06 | 檔案限制、位置與人工確認 | 本輪Mock87與API27回歸；專用PDF2／競態為前輪證據，不冒稱本輪重跑 |
 | P1-08 | 1 | 摘要、下載與送件指引 | P0 | DONE | P1-06 | 可下載摘要且不宣稱核准 | 實際讀取下載內容；官方指引由來源服務提供；受控外部故障後仍可用 |
 | P1-09 | 1 | 響應式、動畫、鍵盤與狀態 | P0 | DONE | P1-03至08 | 390／768／1440可完成操作 | 最新Mock各29/29、引導／首頁／工作區axe及非預期console／pageerror斷言通過；保留鍵盤、焦點與reduced-motion |
-| P1-10 | 1 | Phase 1驗收 | P0 | DONE | P1-09 | 通過才開後端 | 原63/63及20/20通過後開後端；最新Mock87/87、1.9分鐘；[原閘門](docs/PHASE1_ACCEPTANCE.md)與[最新修正](docs/GUIDED_CHOICE.md) |
-| P2-01 | 2 | FastAPI、模型、錯誤與健康檢查 | P0 | DONE | P1-10 | 本機契約與真HTTP可驗 | 最終後端293/293；既有真API27/27與新容器56checks／真模型live1均通過；前輪core49、190與60checks為歷史 |
+| P1-10 | 1 | Phase 1驗收 | P0 | DONE | P1-09 | 通過才開後端 | 原63及20通過後開後端；本輪最終Mock87／1.8分鐘，雙服務三尺寸追問12及公開6；[原閘門](docs/PHASE1_ACCEPTANCE.md)與[本輪修復](docs/ASSISTANT_FOLLOWUP.md) |
+| P2-01 | 2 | FastAPI、模型、錯誤與健康檢查 | P0 | DONE | P1-10 | 本機契約與真HTTP可驗 | 本輪後端347、真API27及最終追問容器12；core49／190／293等為歷史 |
 | P2-02 | 2 | 官方來源registry | P0 | DONE | P1-10 | URL／版本／頁碼／引用可追溯 | 11來源、9文件、22規則、8知識；來源及host一致；[來源紀錄](docs/OFFICIAL_SOURCES.md) |
 | P2-03 | 2 | 三類文件規則引擎 | P0 | DONE | P2-02 | 條件式／unknown不誤判免附 | core49、全190與真API條件更新通過；review_required仍人工確認 |
-| P2-04 | 2 | 真實外部LLM驗證 | P0 | DONE | 後端安全配置與授權 | 真provider request、引用及失敗恢復 | OpenRouter實際回答與cost0、真未授權拒絕；本機三尺寸、容器及公開live通過；429／timeout保留；[報告](docs/OPENROUTER_ACCEPTANCE.md) |
-| P2-04A | 2 | LLM client／傳輸邊界 | P0 | DONE | P2-01、P2-05 | 結構、來源、逾時與錯誤處理 | 新OpenRouter103／後端全293通過；當次ID白名單、零費用metadata及配置驗證狀態；generic契約保留 |
+| P2-04 | 2 | 當前版本／程序真實外部LLM重驗 | P0 | BLOCKED | OpenRouter免費容量 | 真模型成功、引用及AI標示 | 前輪真成功保留；本輪探測與公開live均503 LLM_RATE_LIMITED，無新模型成功，不以有效key或health替代 |
+| P2-04A | 2 | LLM client／傳輸邊界 | P0 | DONE | P2-01、P2-05 | 結構、來源、逾時與錯誤處理 | 本輪AI270（新54＋原113＋OpenRouter103）／全347；真模型重驗另列BLOCKED |
 | P2-05 | 2 | 官方RAG／引用／無依據處理 | P0 | DONE | P2-02 | 真本機檢索與保守回答 | AI113、全190與真HTTP通過；grounded_rules不是生成式LLM |
-| P2-06 | 2 | 真PDF／圖片OCR與品質前檢 | P0 | DONE | P2-01 | 品質、欄位、逐頁位置及真HTTP | 最終後端293及新容器56checks真OCR通過；前輪OCR28／29.44秒、全190、品質6、API27與image60為歷史；未明例外及本輪bad allocation仍列限制 |
+| P2-06 | 2 | 真PDF／圖片OCR與品質前檢 | P0 | DONE | P2-01 | 品質、欄位、逐頁位置及真HTTP | 本輪後端347、API27無OCR失敗；原28／60／56smoke為歷史，未明例外仍列限制 |
 | P2-07 | 2 | owner隔離、保存、刪除與隱私 | P0 | DONE | P2-01 | 24h TTL、不存raw、正確清除 | core49、全190、真API／容器隔離與刪除404；只支援單worker／單副本 |
-| P2-08 | 2 | 本機HTTP／PDF預覽整合 | P0 | DONE | P2本機核心 | grounded_rules＋實際OCR端到端 | 最新API27/27、1.9分鐘、各9/9，選取期間0 PATCH／analysis、獨立建立才1次正確PATCH；Mock87／PDF2／G1與真OCR回歸通過 |
-| P2-09 | 2 | Phase 2整體驗收 | P0 | DONE | P2-04 | 包含真外部LLM的全部閘門 | 官方規則／RAG／實際OCR／API加真OpenRouter引用、拒答及錯誤恢復通過；容量限制明列，不以額外三類CLI失敗冒稱全通過 |
-| P3-01 | 3 | 本機整合、回歸與安全測試 | P0 | DONE | P2本機核心、P2-08 | 本機實際流程與失敗恢復 | 本輪後端293／前端36、真模型三尺寸成功證據、容器56＋live1及公開23＋live1；API27為本輪ID profile前，Mock87／PDF2／G1與190／容器60為前輪歷史 |
+| P2-08 | 2 | 本機HTTP／PDF預覽整合 | P0 | DONE | P2本機核心 | grounded_rules＋實際OCR端到端 | 本輪同版backend/UI真API27／1.7分鐘與最終雙服務追問12通過；外部模型另列阻礙 |
+| P2-09 | 2 | 當前版本Phase 2整體重驗 | P0 | BLOCKED | P2-04 | 包含真模型的全部當前gate | 本機及對話修復已通過；新程序provider真重驗因上游429受阻 |
+| P3-01 | 3 | 本機整合、回歸與安全測試 | P0 | DONE | P2本機核心、P2-08 | 本機實際流程與失敗恢復 | 本輪後端347／前端56／Mock87／API27／最終容器12／公開引導6；不含受限流阻擋的真模型驗收 |
 | P3-02 | 3 | A–H合成展示與mixed情境 | P1 | DONE | P2-08 | 本機流程、缺漏／模糊／無來源／受控故障 | 9合成檔、原8檔hash未變；G1證明PDF受控失敗後案件摘要可用；不代表官方真故障 |
 | P3-03 | 3 | 本機安全與可靠性檢查 | P0 | DONE | P2本機核心 | 檔案、來源、注入、隔離及保守品質處理 | 全套與最終runtime已過；保留冷啟／單工／未明歷史例外限制，不宣稱正式安全認證 |
 | P3-03A | 3 | 依賴與源碼基本檢查 | P0 | DONE | 鎖定依賴 | 已知漏洞及依賴一致性有證據 | Python33/33、0known／0skip；npm88依賴0；pip check一致，源碼scan無token、原HTML hash一致；[證據](docs/DEPENDENCY_AUDIT.md) |
-| P3-04 | 3 | 臨時HTTPS展示部署驗收 | P1 | DONE | P3-04A至C | 本機及公開HTTPS展示實測 | 本輪公開HTTP23及真模型live1／27.8秒通過；前輪引導browser3／51.6秒保留於[歷史驗收](docs/GUIDED_CHOICE.md)，目前結果見[本輪報告](docs/OPENROUTER_ACCEPTANCE.md) |
-| P3-04A | 3 | Docker設定與最終image build | P1 | DONE | P2本機核心 | 多階段建置、鎖定依賴與資產 | openrouter-20261019實際build exit0，image 95758438…；[完整識別與結果](docs/OPENROUTER_ACCEPTANCE.md) |
-| P3-04B | 3 | 最終版本本機容器 | P0 | DONE | P3-04A | 真API／OCR、權限、volume及重啟 | 新映像56checks真API／OCR、真模型browser1／18.2秒、restart同案及刪除404；UID10001／唯讀／capdrop／私有檔排除；專用資源已清 |
-| P3-04C | 3 | Quick Tunnel公開HTTPS展示 | P1 | DONE | P3-04B、使用者授權 | TLS、Secure cookie、隔離與公開真模型流程 | OpenRouter公開live1／27.8秒、HTTP23checks通過，configured／verified true；原網址保留，非固定或常駐部署 |
+| P3-04 | 3 | 當前臨時HTTPS完整重驗 | P1 | BLOCKED | P3-04C | 包含真模型的公開完整原斷言 | 修復已發布且公開6通過；原模型live與完整HTTP因上游限流未過，不以舊23取代 |
+| P3-04A | 3 | 新修復Docker設定與映像 | P1 | DONE | 凍結source | 真build與同版前端產物 | 最終followup-20261019，image6e858e79…實build；前端同份產物已發布；完整ID見[報告](docs/ASSISTANT_FOLLOWUP.md) |
+| P3-04B | 3 | 新修復容器／API／OCR回歸 | P0 | DONE | P3-04A | 本機真API/OCR與連續追問 | 同backend/UI首映像API27、最終映像followup12；UID10001／唯讀／capdrop等設定保留。未宣稱本輪重跑restart或smoke60 |
+| P3-04C | 3 | 公開HTTPS當前完整重驗 | P1 | BLOCKED | P2-04 | 保留原真模型verified及安全套件 | 新公開引導三尺寸6/6通過；真模型live FAIL／原23套件在模型verified斷言FAIL，後續檢查未跑，不宣稱全套過 |
 | P3-05 | 3 | provider、品質與模擬標示 | P0 | DONE | P2-08 | 不冒充模型辨識或外部驗證 | Mock、grounded_rules與外部provider各自標示；verified只在同配置真成功後成立、重啟清除，不是即時readiness；OCR仍初檢非核准 |
 | P3-06 | 3 | 文件、限制及驗收報告 | P0 | DONE | 已有本機證據與外部阻礙 | 重現方式、歷程與續作資訊完整 | README／架構／來源／LLM／展示／限制／容器／依賴與[最終報告](docs/FINAL_ACCEPTANCE.md)齊全，無待執行本機驗收 |
-| P3-GATE | 3 | Phase 3／原訂MVP最終gate | P0 | DONE | P2-09 | 包含真外部LLM的全部必要整體gate | 新模型本機／容器／公開整合與安全、回歸、交付紀錄完成；[最新最終報告](docs/OPENROUTER_ACCEPTANCE.md)，已知限制不隱藏 |
+| P3-GATE | 3 | 當前版本最終整體gate | P0 | BLOCKED | P2-09 | 不放寬真模型／公開必要斷言 | 原公開完整腳本保留模型verified=true要求，當前該項FAIL；前輪23 PASS為歷史，非本輪結果 |
 | OPS-20261019 | 3 | 重新啟動展示伺服器與Quick Tunnel | P0 | DONE | 使用者要求、現有建置 | 新HTTPS首頁／API、案件隔離及實際OCR流程 | HTTP11項＋公開桌面門診1/1（18.1秒）；console0，測試案件已清除；新網址與程序見[續作狀態](STATUS.md) |
 | UX-20261019 | 1／3 | 減少文字與視覺雜訊、突出下一步 | P0 | DONE | 既有前後端 | 漸進揭露、三尺寸視覺／Mock／API回歸、誠實模式與來源 | 單元33/33、Mock75/75、PDF2/2、API27/27、G1/1；公開HTTP22及瀏覽器3/3；三尺寸截圖與文字量測、axe／console均通過；[完整紀錄](docs/UI_SIMPLIFICATION.md) |
 | KEY-20261019 | 2 | 三家供應商設定預留與保護檢查（歷史） | P1 | DONE | 當時使用者暫緩建立金鑰 | 當時空白欄位與建置保護 | 當時三家key空白，合成值掃207檔零洩漏，runtime為grounded_rules／false／false；新授權後OpenRouter已啟用／真驗，範本仍無key；[現況](docs/PROVIDER_SETUP.md) |

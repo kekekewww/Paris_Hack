@@ -1,5 +1,7 @@
 # 模型供應商設定狀態
 
+> 最新連續追問修復已發布（2026-10-19），後端347／前端56、Mock87／API27、最終容器追問12／公開6通過。但本輪真模型回503限流，原公開完整腳本在模型verified斷言失敗；當前整體gate保持BLOCKED。以下OpenRouter成功與程序為前輪歷史，最新以[追問修復報告](ASSISTANT_FOLLOWUP.md)為準。
+
 更新日期：2026-10-19（臺灣）。使用者已明確授權安全保存提供的 OpenRouter 金鑰，並且只允許 `openrouter/free`。這項新授權取代先前「暫不建立金鑰」對 OpenRouter 的限制；OpenAI 與 Google AI Studio／Gemini 仍暫緩，沒有因此啟用。
 
 ## 目前設定與驗證

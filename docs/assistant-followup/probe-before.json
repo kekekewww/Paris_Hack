@@ -1,0 +1,64 @@
+{
+  "phase": "before",
+  "origin": "https://retirement-trim-reported-jesus.trycloudflare.com",
+  "steps": [
+    {
+      "step": 1,
+      "status": 200,
+      "provider": "grounded_rules",
+      "response_type": "clarification",
+      "missing_information": [
+        "care_setting"
+      ],
+      "claim_unselected": true,
+      "proposals": 0,
+      "old_repeated_prompt": true
+    },
+    {
+      "step": 2,
+      "status": 200,
+      "provider": "grounded_rules",
+      "response_type": "clarification",
+      "missing_information": [
+        "care_setting"
+      ],
+      "claim_unselected": true,
+      "proposals": 0,
+      "old_repeated_prompt": true
+    },
+    {
+      "step": 3,
+      "status": 200,
+      "provider": "grounded_rules",
+      "response_type": "clarification",
+      "missing_information": [
+        "care_setting"
+      ],
+      "claim_unselected": true,
+      "proposals": 0,
+      "old_repeated_prompt": true
+    }
+  ],
+  "model_requests": 1,
+  "raw_prompts_saved": false,
+  "cookies_saved": false,
+  "health": {
+    "llm_provider": "openai_compatible",
+    "llm_configured": true,
+    "llm_verified": true
+  },
+  "actual_model_probe": {
+    "http_status": 503,
+    "error_code": "LLM_RATE_LIMITED"
+  },
+  "cleanup": [
+    {
+      "deleted": true,
+      "missing": true
+    },
+    {
+      "deleted": true,
+      "missing": true
+    }
+  ]
+}

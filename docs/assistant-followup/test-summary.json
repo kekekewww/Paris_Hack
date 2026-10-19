@@ -1,0 +1,154 @@
+{
+  "date": "2026-10-19",
+  "status": "GUIDANCE_FIX_VERIFIED; LIVE_MODEL_REVERIFICATION_BLOCKED",
+  "scope": "Contextual rule followups, response provenance, fresh intake display; not full generative intake",
+  "public_url": "https://retirement-trim-reported-jesus.trycloudflare.com/?service=api",
+  "red": {
+    "direct_public_repeated_rule_replies": 3,
+    "public_browser_expected_failures": 2,
+    "unit_history": "RED/GREEN retained in .local; 333/50/54 earlier GREEN not final"
+  },
+  "backend": {
+    "total": 347,
+    "seconds": 38.07,
+    "warnings": 1,
+    "related_ai": 270,
+    "followup_cases": 54,
+    "external_calls": 0
+  },
+  "frontend": {
+    "total": 56,
+    "milliseconds": 605.586
+  },
+  "mock_regression": {
+    "initial_passed": 84,
+    "initial_failed": 3,
+    "reason": "Old fixed clarification wording assertion; replaced by visible guidance plus explicit empty-case/clarification/no-suggestions/no-updates assertions",
+    "final_passed": 87,
+    "seconds_approx": 108
+  },
+  "api_regression": {
+    "passed": 27,
+    "seconds_approx": 102,
+    "profile": "grounded_rules; final backend and UI in first image before final Mock-only unknown-diagnosis guard",
+    "image": "sha256:6e6b9ebe98007141194ed1af831d7e0e3a6dcb7a9ff7cea3d0689fdbe69ad2c6"
+  },
+  "final_image": {
+    "tag": "cardif-claim-preparation:followup-20261019",
+    "id": "sha256:6e858e7909ded431ab4bfe41911c93c15054942a5ce6bb3d009d0e104d7a57ef",
+    "build": "PASS",
+    "uid": 10001,
+    "read_only": true,
+    "cap_drop": [
+      "ALL"
+    ],
+    "no_new_privileges": true,
+    "secret_in_build": false
+  },
+  "followup_browser": {
+    "final_local_passed": 12,
+    "seconds": 36.5,
+    "public_api_passed": 6,
+    "public_seconds": 33.3,
+    "dimensions": [
+      1440,
+      768,
+      390
+    ],
+    "model_calls": 0,
+    "unexpected_console_errors": 0,
+    "case_cleanup": true,
+    "visual_inspection": "3 sizes passed; CSS/design retained"
+  },
+  "public_model": {
+    "status": "FAIL",
+    "http_status": 503,
+    "error_code": "LLM_RATE_LIMITED",
+    "tests_failed": 1,
+    "actual_model_requests": 1,
+    "ai_label_assertion_reached": false,
+    "secondary_network_console_errors": 1,
+    "assertions_kept": true,
+    "mock_success_substituted": false
+  },
+  "public_full_http": {
+    "status": "FAIL",
+    "script": ".local/openrouter-20261019/verify-public.mjs",
+    "script_unchanged": true,
+    "failed_assertion": "OpenRouter actual process verified",
+    "remaining_checks_executed": false,
+    "new_23_checks_pass_claim": false,
+    "previous_pass": "docs/openrouter/public-http.json belongs to the previous version/process"
+  },
+  "key_status": {
+    "limit": 0.1,
+    "limit_remaining": 0.1,
+    "usage": 0,
+    "free_model_daily_requests": {
+      "used": 16,
+      "limit": 1000,
+      "remaining": 984
+    },
+    "model_requests": 0,
+    "observed_usage_zero": true,
+    "status": "PASS",
+    "private_checks": [
+      {
+        "path": "/.local/secrets/.env.openrouter",
+        "status": 403,
+        "expected": 403,
+        "secret_absent": true
+      },
+      {
+        "path": "/@fs/D:/Developing/Paris/.local/secrets/.env.openrouter",
+        "status": 403,
+        "expected": 403,
+        "secret_absent": true
+      },
+      {
+        "path": "/.local/secrets/.env.openrouter",
+        "status": 404,
+        "expected": 404,
+        "secret_absent": true
+      }
+    ]
+  },
+  "provider_boundary": {
+    "intake_and_safety": "grounded_rules",
+    "supported_document_questions": "openai_compatible / openrouter/free",
+    "raw_user_questions_sent": false,
+    "raw_files_sent": false,
+    "free_guards_unchanged": true
+  },
+  "current_phase_gates": {
+    "P2_04": "BLOCKED for current process re-verification by upstream 429",
+    "P2_09": "BLOCKED",
+    "P3_GATE": "BLOCKED",
+    "prior_openrouter_real_success": "Retained historical evidence; not erased or reused as new pass"
+  },
+  "independent_review": "Original P2 findings fixed with RED/GREEN; no remaining findings in reviewed scope",
+  "source_hashes": {
+    "backend/app/ai/providers.py": "8dffea4ec3f1b0d9ef3f21d5fb15099a8a0cbd2cc3bbcf9bbf5cb231bfb6bf61",
+    "src/app.js": "9f4093d7ef6659891ebe0b8dfb51b82fe010c58d52c750108ba5256dc73370b0",
+    "src/components.js": "af3deee2937010a043da537a3349c88a4fb3ad2559cfcdc54f92d0054a254067",
+    "src/services/mock-claim-service.js": "1534bf19afc07e3f34f6f73c7ca2facbb957b51b47bbb26ed428f5655f6837df"
+  },
+  "cleanup": {
+    "image_retained": "cardif-claim-preparation:followup-20261019",
+    "public_parent_retained": 65932,
+    "removed_volume": "paris_claim_followup_20261019",
+    "private_key_retained": true,
+    "public_listener_retained": 59552,
+    "status": "PASS",
+    "removed_container": "paris-claim-followup-20261019",
+    "tunnel_retained": 36692,
+    "unrelated_services_modified": false
+  },
+  "known_limits": [
+    "Rule intake remains limited language parsing, not unrestricted LLM conversation",
+    "Free upstream rate limit/capacity; this turn both actual model probes failed and are retained",
+    "Single worker/single replica, temporary tunnel, historical OCR limits remain"
+  ],
+  "secrets_committed": false,
+  "cookies_in_shared_evidence": false
+}

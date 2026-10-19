@@ -83,18 +83,71 @@ function buildChecklist(registry, item, previous = []) {
 }
 
 function inferDescription(messages) {
-  const text = messages.join('，');
-  const unknownAdmission = /(?:不知道|不確定|不清楚|有沒有|是否|可能|疑似).{0,5}住院|住院.{0,12}(?:不知道|不確定|不清楚)/.test(text);
-  const noAdmission = /(?:沒有|未曾|未|沒|不是|不曾).{0,3}住院/.test(text);
-  const inpatient = /住院|入院/.test(text) && !unknownAdmission && !noAdmission;
-  const unknownCancer = /(?:不知道|不確定|不清楚|有沒有|是否|可能|疑似|未確診|沒有確診).{0,5}(?:癌|重大疾病)|(?:癌症|重大疾病).{0,12}(?:不知道|不確定|不清楚|未確診|沒有確診)/.test(text);
-  const noCancer = /(?:沒有|不是|非|未罹患).{0,3}(?:癌|重大疾病)/.test(text);
-  const critical = /癌症|罹癌|重大疾病/.test(text) && !unknownCancer && !noCancer;
-  const outpatient = /門診|看診/.test(text) && !/(?:沒有|不是|未|沒).{0,2}(?:門診|看診)/.test(text);
-  const accident = /車禍|意外|摔倒|跌倒/.test(text) && !/(?:沒有|不是|非).{0,3}(?:車禍|意外|摔倒|跌倒)/.test(text);
-  const illness = /疾病|生病|肺炎|感染|癌症|罹癌|腫瘤/.test(text) && !/(?:不確定|不知道).{0,5}(?:疾病|生病|肺炎|感染|癌症)/.test(text);
-  const surgery = /(?:沒有|未|沒|不需|無).{0,2}手術/.test(text) ? 'no' : /手術/.test(text) && !/(?:不確定|不知道|是否|有沒有).{0,3}手術/.test(text) ? 'yes' : 'unknown';
-  return { claim_type_id: critical ? 'critical_illness' : inpatient ? 'inpatient' : outpatient ? 'outpatient' : null, conditions: { cause: accident ? 'accident' : illness ? 'illness' : 'unknown', surgery, receipt_type: 'unknown' } };
+  let care = null, critical = 'unknown', noAdmission = false, described = false, topic = null, emergency = false;
+  let cause = 'unknown', surgery = 'unknown';
+  // Update only the facts actually mentioned in each turn. Old uncertainty must
+  // not override a later answer, and absence of admission never proves a visit.
+  const statusFor = (text, terms) => {
+    if (!new RegExp(terms).test(text)) return null;
+    if (/不知道|不確定|不清楚|不一定|有沒有|是否|是不是|會不會|嗎|可能|疑似|擔心|擔憂|害怕|很怕|怕是|未確診|沒(?:有)?確診|(?:不能|無法)確診/.test(text)) return 'unknown';
+    const negative = `(?:沒有|尚未|還沒|未曾|不是|不曾|不需要|不需|不用|未|沒|無|非)(?:去|到|接受|安排|需要|做|進行|實際|罹患|曾|過|是|再|任何|就)*(?:(?:住院|入院|門診|急診|看診|就醫)(?:或|和|及|以及|跟|、))*(?:${terms})`;
+    if (new RegExp(negative).test(text)) return 'no';
+    return /預計|打算|準備|將要|將去|要去|需要|應該|建議|明天|下週/.test(text) ? 'unknown' : 'yes';
+  };
+  for (const message of messages) {
+    const currentVisit = [...message.matchAll(/這次|本次|此次/g)].at(-1);
+    if (currentVisit) {
+      care = null; critical = 'unknown'; noAdmission = false; described = false; topic = null; emergency = false;
+      cause = 'unknown'; surgery = 'unknown';
+    }
+    const currentText = currentVisit ? message.slice(currentVisit.index + currentVisit[0].length) : message;
+    for (const text of currentText.split(/[，,。；;！!\n]|但|可是|更正|後來/).filter(Boolean)) {
+      if (/車禍|意外|摔倒|跌倒|疾病|生病|受傷|肺炎|感染|癌|重大疾病|住院|入院|門診|急診|看診|就醫|手術/.test(text)) described = true;
+      if (/(?:尚未|還未|還沒(?:有)?|沒有|未曾|不曾|沒|未)(?:曾經|去)?(?:就醫|就診|看(?:過)?醫[生師])/.test(text)) {
+        care = null; critical = 'unknown'; surgery = 'unknown'; emergency = false;
+      }
+      const accident = statusFor(text, '車禍|意外|摔倒|跌倒');
+      const illness = statusFor(text, '疾病|生病|肺炎|感染|癌症|罹癌|腫瘤');
+      if (accident) cause = accident === 'yes' ? 'accident' : 'unknown';
+      if (illness) cause = illness === 'yes' ? 'illness' : 'unknown';
+      const cancer = statusFor(text, '癌症|罹癌|重大疾病');
+      const admission = statusFor(text, '住院|入院');
+      let visit = statusFor(text, '門診|急診|看診');
+      if (visit === 'yes' && statusFor(text, '急診') === 'yes' && statusFor(text, '門診|看診') !== 'yes'
+        && !/(?:去過|到過|有去|已去|已經去|去|到|只有)\s*急診|急診\s*(?:就醫|看診)/.test(text)) visit = 'unknown';
+      const operation = statusFor(text, '手術');
+      if (cancer) { critical = cancer; topic = 'cancer'; }
+      if (admission) {
+        noAdmission = admission === 'no';
+        if (admission === 'yes') care = 'inpatient';
+        else if (admission === 'unknown' || care === 'inpatient') care = null;
+        topic = 'care';
+      }
+      if (visit) {
+        if (visit === 'yes') { care = 'outpatient'; emergency = statusFor(text, '急診') === 'yes'; }
+        else if ((visit === 'unknown' && admission !== 'yes') || care === 'outpatient') care = null;
+        topic = 'care';
+      }
+      if (admission === 'yes' && visit === 'yes' && text.search(/住院|入院/) > text.search(/門診|急診|看診/)) care = 'inpatient';
+      if (!admission && !visit && /就醫/.test(text) && statusFor(text, '就醫') !== 'yes') {
+        care = null;
+        noAdmission = statusFor(text, '就醫') === 'no';
+        topic = 'care';
+      }
+      if (operation) { surgery = operation; topic = 'surgery'; }
+      if (!cancer && !admission && !visit && !operation && /不知道|不確定|不清楚|不一定/.test(text)) {
+        if (topic === 'cancer') critical = 'unknown';
+        else if (topic === 'surgery') surgery = 'unknown';
+        else care = null;
+      }
+    }
+  }
+  const question = !described
+    ? '您好，請描述這次發生的事情或就醫情況，我會依您提供的資訊協助確認文件準備方向。'
+    : noAdmission
+      ? '這次沒有住院，請問有到急診或門診就醫，還是尚未就醫？未住院不代表一定是門診。'
+      : '這次是否已住院，或有到急診／門診就醫？若尚未就醫也請告訴我，我會依實際情況協助整理。';
+  return { proposal: { claim_type_id: critical === 'yes' ? 'critical_illness' : care, conditions: { cause, surgery, receipt_type: 'unknown' } }, question, emergency };
 }
 
 function answerMessage(registry, item, message, documentId) {
@@ -104,15 +157,15 @@ function answerMessage(registry, item, message, documentId) {
     return { ...base, response_type: 'uncertain', message: '目前無法確認個別保單的理賠資格或給付金額，也不能核准理賠。請查閱保單條款或聯繫官方客服 0800-012-899；此助手僅協助文件準備。' };
   }
   if (!item.claim_type_id) {
-    const proposal = inferDescription([...item.messages.filter(entry => entry.role === 'user').map(entry => entry.content), message]);
+    const { proposal, question, emergency } = inferDescription([...item.messages.filter(entry => entry.role === 'user').map(entry => entry.content), message]);
     if (!proposal.claim_type_id) {
-      return { ...base, response_type: 'clarification', message: '請先確認這次是住院、只有門診，或已由醫師確診癌症／重大疾病？如果還不確定，可以先查閱就醫資料；我不會據此推定理賠資格。', missing_information: ['care_setting'] };
+      return { ...base, response_type: 'clarification', message: question, missing_information: ['care_setting'] };
     }
     const type = registry.claim_types.find(entry => entry.claim_type_id === proposal.claim_type_id);
     return {
       ...base,
       response_type: 'claim_suggestion',
-      message: `依您描述的就醫情形，可以先檢視「${type.label}」的文件資訊。這只是準備方向，請確認類別與條件後再建立清單，給付仍須依保單與官方審核。`,
+      message: `依您描述的就醫情形，可以先檢視「${type.label}」的文件資訊。${proposal.claim_type_id === 'outpatient' && emergency ? '急診是否適用仍須依個別保單並向官方確認。' : ''}這只是準備方向，請確認類別與條件後再建立清單，給付仍須依保單與官方審核。`,
       suggested_claim_types: [{ id: type.claim_type_id, title: type.label, description: '請以實際就醫資料、保單與官方審核確認適用性。' }],
       missing_information: Object.entries(proposal.conditions).filter(([, value]) => value === 'unknown').map(([field]) => field),
       proposed_case_updates: proposal,

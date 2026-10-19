@@ -1,0 +1,11 @@
+{
+  "status": "FAIL",
+  "http_status": 503,
+  "error_code": "LLM_RATE_LIMITED",
+  "tests_failed": 1,
+  "actual_model_requests": 1,
+  "ai_label_assertion_reached": false,
+  "secondary_network_console_errors": 1,
+  "assertions_kept": true,
+  "mock_success_substituted": false
+}

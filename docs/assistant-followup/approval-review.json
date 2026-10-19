@@ -1,0 +1,9 @@
+{
+  "status": "REJECTED",
+  "action": "Downgrade model verification assertion from verified=true to boolean type check",
+  "reason": "自動審核認定會弱化有意義的模型驗收斷言",
+  "rejected_command_executed": false,
+  "original_assertion_retained": true,
+  "original_script_executed_and_failed": true,
+  "workaround_used": false
+}

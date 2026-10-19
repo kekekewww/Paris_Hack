@@ -1,0 +1,8 @@
+{
+  "http_status": 200,
+  "llm_provider": "openai_compatible",
+  "llm_configured": true,
+  "llm_verified": false,
+  "ocr_provider": "pymupdf+rapidocr",
+  "model_request_sent": false
+}

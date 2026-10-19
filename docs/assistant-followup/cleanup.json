@@ -1,0 +1,11 @@
+{
+  "image_retained": "cardif-claim-preparation:followup-20261019",
+  "public_parent_retained": 65932,
+  "removed_volume": "paris_claim_followup_20261019",
+  "private_key_retained": true,
+  "public_listener_retained": 59552,
+  "status": "PASS",
+  "removed_container": "paris-claim-followup-20261019",
+  "tunnel_retained": 36692,
+  "unrelated_services_modified": false
+}

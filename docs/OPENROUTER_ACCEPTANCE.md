@@ -1,5 +1,7 @@
 # OpenRouter 免費路由整合驗收
 
+> 最新連續追問修復已發布（2026-10-19），後端347／前端56、Mock87／API27、最終容器追問12／公開6通過。但本輪真模型回503限流，原公開完整腳本在模型verified斷言失敗；當前整體gate保持BLOCKED。以下OpenRouter成功與程序為前輪歷史，最新以[追問修復報告](ASSISTANT_FOLLOWUP.md)為準。
+
 日期：2026-10-19（臺灣）。狀態：**原訂MVP驗收完成，已知限制保留**。使用者授權的`openrouter/free`已安全設定並啟用於[公開展示](https://retirement-trim-reported-jesus.trycloudflare.com/?service=api)。Phase 1／2／3原型閘門已完成；這不表示正式上線、持續可用或理賠核准。OpenAI／Gemini仍暫緩。
 
 ## 設定與資料邊界

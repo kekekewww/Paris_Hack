@@ -6,7 +6,8 @@ export const isReady = d => ['uploaded','precheck_passed','not_applicable'].incl
 export function officialUrl(value){try{const u=new URL(value);return u.protocol==='https:'&&u.hostname==='life.cardif.com.tw'&&!u.username&&!u.password?u.href:null}catch{return null}}
 export function sourceLink(source,label){const url=officialUrl(source?.official_url);return url?`<a href="${escape(url)}" target="_blank" rel="noopener noreferrer">${escape(label||source.title||'官方來源')} ↗</a>`:'<span class="muted">來源待確認，請查閱官方理賠頁面。</span>'}
 export function references(refs=[]){return `<div class="references">${refs.map(s=>typeof s==='object'?sourceLink(s):'').join('')}</div>`}
-export function messages(items=[]){return items.map(m=>`<div class="bubble ${m.role==='user'?'user':''}"><div class="speaker">${m.role==='user'?'您':'理賠準備助手'}</div><div>${escape(m.content||m.message||m.text||'')}</div>${m.role!=='user'?references(m.response?.source_references||m.source_references||[]):''}</div>`).join('')}
+function messageProvider(m){const provider=m.response?.provider||m.provider;if(m.response?.is_simulated===true||m.is_simulated===true||provider==='mock')return '模擬';if(provider==='grounded_rules')return '規則引導';if(provider==='openai_compatible')return 'AI回覆';return '來源未標示'}
+export function messages(items=[]){return items.map(m=>`<div class="bubble ${m.role==='user'?'user':''}"><div class="speaker">${m.role==='user'?'您':`理賠準備助手 <span class="message-provider">${messageProvider(m)}</span>`}</div><div>${escape(m.content||m.message||m.text||'')}</div>${m.role!=='user'?references(m.response?.source_references||m.source_references||[]):''}</div>`).join('')}
 export function breadcrumbs(route){return `<nav aria-label="準備流程" class="breadcrumbs"><a href="#triage">首頁</a><span aria-hidden="true">›</span><span class="${['assistant','search'].includes(route)?'active':''}">01 確認需求</span><span aria-hidden="true">›</span><span class="${route==='workspace'?'active':''}">02 準備文件</span><span aria-hidden="true">›</span><span class="${route==='summary'?'active':''}">03 送件前摘要</span></nav>`}
 
 export function serviceInfo(mode,health){
@@ -19,7 +20,7 @@ export function serviceInfo(mode,health){
       description='目前以官方資料檢索與規則整理回答，未啟用生成式 LLM。文件檢查依實際擷取或 OCR 結果處理。';
     }else if(health.llm_configured){
       label='API · 生成式模型已設定';
-      description=health.llm_verified?'已完成實際請求驗證，回答仍須依官方來源與保單確認。':'尚未完成實際請求驗證；設定存在不代表模型服務已驗證。';
+      description='有依據的文件問答使用模型；類型釐清與安全回覆採規則。'+(health.llm_verified?'已完成過往實際請求驗證，回答仍須依官方來源與保單確認。':'尚未完成實際請求驗證；設定存在不代表模型服務已驗證。');
     }else{
       label='API · 對話服務尚未設定';
       description='尚未完成對話模型設定與驗證。服務失敗不會自動切換至規則引導或模擬服務。';
@@ -48,6 +49,7 @@ export function guidedChoices(c,claimTypes=Object.entries(types).map(([id,title]
   return {caseId:c.id,responseKey:`${c.id||''}:${last.id||lastIndex}:${entries.length}`,response,suggested,other,catalog};
 }
 export function guided(c,mode,{claimTypes,selectedType=null,busy=false,pending=false}={}){
+  if(c?.claim_type_id||(c?.entry_path&&c.entry_path!=='guided'))c=null;
   const choices=pending?null:guidedChoices(c,claimTypes);
   const selected=choices?.catalog.some(t=>t.id===selectedType)?selectedType:null;
   const option=t=>`<label class="guided-type-option"><input type="radio" name="guided-claim-type" value="${escape(t.id)}" aria-label="${escape(t.title)}"${selected===t.id?' checked':''}${busy?' disabled':''}><span>${escape(t.title)}</span></label>`;

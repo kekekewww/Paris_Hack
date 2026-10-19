@@ -161,6 +161,7 @@ test('真實免費模型、引導選擇、PDF、錯誤重試、保守拒答與�
   const picker = page.locator('fieldset.guided-type-picker');
   const build = page.getByRole('button', { name: '建立文件清單', exact: true });
   await expect(picker).toBeVisible();
+  await expect(page.locator('#guided-thread .bubble:not(.user) .speaker .message-provider').last()).toHaveText('規則引導');
   await expect(picker.locator('input[name="guided-claim-type"]:checked')).toHaveCount(0);
   await expect(build).toBeDisabled();
   const beforeChoice = await getCase(page, initial.id);
@@ -278,6 +279,7 @@ test('真實免費模型、引導選擇、PDF、錯誤重試、保守拒答與�
   expect(result.case.messages.length).toBe(beforeFailure.messages.length + 2);
   const latestAnswer = thread.locator('.bubble:not(.user)').last();
   await expect.poll(async () => (await latestAnswer.textContent()).includes(answer.message), { message: '工作區最新回答必須顯示真 API 回覆；失敗輸出不含原始對話' }).toBe(true);
+  await expect(latestAnswer.locator('.speaker .message-provider')).toHaveText('AI回覆');
   await expect(page.getByRole('alert')).toHaveCount(0);
   for (const reference of answer.source_references) {
     expect(await latestAnswer.locator('a').evaluateAll((links, href) => links.some((link) => link.href === href), reference.official_url), '最新回答必須顯示自己的官方來源連結').toBe(true);

@@ -36,3 +36,7 @@
 27. 免費路由實測曾429、推理耗盡1800 token產生空content及35秒逾時；不放寬引用或付費fallback。先以minimal reasoning降低負擔，再將OpenRouter內部回覆限為當次retrieval白名單的1–3個唯一證據ID，由後端還原全部原文／引用；generic相容服務原契約不變。TDD先5fail後103pass／全293pass，真實模型與網站驗證另行取得，不以離線state模擬代替。
 28. 最終原型gate依真模型、本機響應式、既有API／實際OCR、新容器與公開HTTPS逐項驗收後結案；三尺寸首次2pass1fail與平板重驗分開記錄，額外重大疾病CLI受429仍保留FAIL。一次上游容量失敗不改為假成功，也不擴張成所有功能未完成。OpenAI／Gemini屬使用者暫緩的可選provider，不阻擋已具真OpenRouter的原訂MVP。
 29. llm_verified為單程序／同配置歷史真成功證據，不是即時readiness；只在metadata、ID、最終response全驗過且預設真transport後成立，配置觀察變更／重啟清除。公開版原URL與DB保留，僅核對後重啟8002，8003及專用Docker測試資源清除。歷史OCR bad allocation無證明根因修復，持續列限制。
+
+30. 使用者三句公開重現全為grounded_rules固定分類追問，OpenRouter既有baseline早退使其不送模型；前輪真連通涵蓋有依據文件問答，沒有實作所有訊息生成式對話。本輪只修負向／未知事實追問及新舊intake顯示，逐則標示來源與折疊揭露混合分流，不擴私密資料外送或LLM schema。急診只可作待保單／官方確認的導航候選，非官方保障結論。
+31. 限定source review發現的否定／未確診／本次重設回歸均先RED後修，最終後端347、前端56及三尺寸對話／Mock／API通過。舊Mock固定generic文案測試調整為新clarification與更強空案／無提案／無更新斷言，84pass3fail與最終87pass分開保存。
+32. 新程序真模型請求受429，原完整公開腳本仍要求verified=true而失敗。自動審核拒絕降為布林型別檢查後未執行被拒命令，維持原標準並記BLOCKED；前輪成功不充當本輪成功。對話bug修復DONE／當前真模型整體重驗BLOCKED分開記錄，免費上游恢復才可結當前gate。

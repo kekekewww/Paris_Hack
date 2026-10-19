@@ -1,0 +1,9 @@
+{
+  "status": "FAIL",
+  "script": ".local/openrouter-20261019/verify-public.mjs",
+  "script_unchanged": true,
+  "failed_assertion": "OpenRouter actual process verified",
+  "remaining_checks_executed": false,
+  "new_23_checks_pass_claim": false,
+  "previous_pass": "docs/openrouter/public-http.json belongs to the previous version/process"
+}

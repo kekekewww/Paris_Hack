@@ -1,6 +1,8 @@
 # 已知限制
 
-更新日期：2026-10-19（臺灣）。本文記錄目前功能邊界；Phase 2、Phase 3 與部署驗收狀態請以 [STATUS.md](../STATUS.md) 及實際測試報告為準。使用者本次已授權 OpenRouter，僅允許 `openrouter/free`；OpenAI／Gemini 仍暫緩。本輪 OpenRouter 實際串接與 Phase 2／3 原型範圍整體驗收已完成，結果見 [OpenRouter 紀錄](OPENROUTER_ACCEPTANCE.md) 及 [供應商設定](PROVIDER_SETUP.md)；這不代表固定部署或商業級服務已驗收。
+> 最新連續追問修復已發布（2026-10-19），後端347／前端56、Mock87／API27、最終容器追問12／公開6通過。但本輪真模型回503限流，原公開完整腳本在模型verified斷言失敗；當前整體gate保持BLOCKED。以下OpenRouter成功與程序為前輪歷史，最新以[追問修復報告](ASSISTANT_FOLLOWUP.md)為準。
+
+更新日期：2026-10-19（臺灣）。本文記錄目前功能邊界；Phase 2、Phase 3 與部署驗收狀態請以 [STATUS.md](../STATUS.md) 及實際測試報告為準。使用者本次已授權 OpenRouter，僅允許 `openrouter/free`；OpenAI／Gemini 仍暫緩。前輪 OpenRouter 實際串接曾完成 Phase 2／3 原型範圍整體驗收；當前重驗因限流BLOCKED，結果見 [OpenRouter 紀錄](OPENROUTER_ACCEPTANCE.md) 及 [供應商設定](PROVIDER_SETUP.md)；這不代表固定部署或商業級服務已驗收。
 
 ## 服務與 AI
 

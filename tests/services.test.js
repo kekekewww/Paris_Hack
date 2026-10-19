@@ -76,6 +76,226 @@ test('guided intake asks when unknown and proposes a class without committing it
   assert.ok(updated.documents.length);
 });
 
+test('a guided greeting invites an incident description without guessing a claim class', async () => {
+  const service = makeMock();
+  const item = await service.createCase({ entry_path: 'guided' });
+  const { case: current, response } = await service.sendMessage(item.id, '你好');
+  assert.equal(response.response_type, 'clarification');
+  assert.match(response.message, /描述|說說/);
+  assert.match(response.message, /發生|情況/);
+  assert.doesNotMatch(response.message, /癌症|重大疾病|只有門診/);
+  assert.deepEqual(response.suggested_claim_types, []);
+  assert.deepEqual(response.proposed_case_updates, {});
+  assert.equal(current.claim_type_id, null);
+  assert.deepEqual(current.documents, []);
+});
+
+test('accident intake narrows the question after admission is explicitly denied', async () => {
+  const service = makeMock();
+  const item = await service.createCase({ entry_path: 'guided' });
+  await service.sendMessage(item.id, '你好');
+  const accident = await service.sendMessage(item.id, '我出車禍了');
+  assert.equal(accident.response.response_type, 'clarification');
+  assert.match(accident.response.message, /是否|有沒有/);
+  assert.match(accident.response.message, /住院|就醫/);
+  assert.deepEqual(accident.response.suggested_claim_types, []);
+  const denied = await service.sendMessage(item.id, '沒有住院');
+  assert.equal(denied.response.response_type, 'clarification');
+  for (const setting of ['急診', '門診']) assert.ok(denied.response.message.includes(setting));
+  assert.match(denied.response.message, /未就醫|還沒.*就醫|尚未.*就醫/);
+  assert.doesNotMatch(denied.response.message, /癌症|重大疾病/);
+  assert.deepEqual(denied.response.suggested_claim_types, []);
+  assert.deepEqual(denied.response.proposed_case_updates, {});
+  assert.equal(denied.case.claim_type_id, null);
+});
+
+test('an affirmative emergency or outpatient visit permits only an uncommitted outpatient suggestion', async () => {
+  for (const message of ['已到急診就醫，沒有住院', '只有急診，沒有住院', '沒有住院，只有門診']) {
+    const service = makeMock();
+    const item = await service.createCase({ entry_path: 'guided' });
+    const { case: current, response } = await service.sendMessage(item.id, message);
+    assert.equal(response.response_type, 'claim_suggestion', message);
+    assert.deepEqual(response.suggested_claim_types.map(type => type.id), ['outpatient'], message);
+    assert.equal(response.proposed_case_updates.claim_type_id, 'outpatient', message);
+    assert.equal(current.claim_type_id, null, message);
+    assert.deepEqual(current.documents, [], message);
+  }
+});
+
+test('negated, future and uncertain care settings never imply an outpatient visit', async () => {
+  for (const message of ['沒有住院', '不需住院', '沒有門診，也沒去急診', '沒有住院，也沒有門診或急診', '我還沒去看診', '不確定是門診還是急診', '可能有門診或急診', '不確定是否有門診或急診', '不知道有沒有去急診', '是否需要門診', '可能要去急診', '還沒去急診', '未曾看診', '我沒有就醫']) {
+    const service = makeMock();
+    const item = await service.createCase({ entry_path: 'guided' });
+    const { response } = await service.sendMessage(item.id, message);
+    assert.equal(response.response_type, 'clarification', message);
+    assert.deepEqual(response.suggested_claim_types, [], message);
+    assert.deepEqual(response.proposed_case_updates, {}, message);
+  }
+});
+
+test('a shared negation applies to every coordinated care setting', async () => {
+  for (const message of ['沒有住院或門診', '沒有住院、門診或急診']) {
+    const service = makeMock();
+    const item = await service.createCase({ entry_path: 'guided' });
+    const { response } = await service.sendMessage(item.id, message);
+    assert.equal(response.response_type, 'clarification', message);
+    assert.deepEqual(response.suggested_claim_types, [], message);
+  }
+});
+
+test('uncertain, explicitly denied and recommended admission is not a completed hospital stay', async () => {
+  for (const message of ['不一定有住院', '我沒有實際住院', '醫師說應該住院，但目前在家']) {
+    const service = makeMock();
+    const item = await service.createCase({ entry_path: 'guided' });
+    const { response } = await service.sendMessage(item.id, message);
+    assert.equal(response.response_type, 'clarification', message);
+    assert.deepEqual(response.suggested_claim_types, [], message);
+  }
+});
+
+test('an emergency navigation candidate explicitly leaves applicability to the policy and official confirmation', async () => {
+  const service = makeMock();
+  const item = await service.createCase({ entry_path: 'guided' });
+  const { case: current, response } = await service.sendMessage(item.id, '已到急診就醫，沒有住院');
+  assert.equal(response.proposed_case_updates.claim_type_id, 'outpatient');
+  assert.match(response.message, /急診.*個別保單.*官方確認/);
+  assert.equal(response.requires_human_review, true);
+  assert.equal(current.claim_type_id, null);
+  assert.deepEqual(current.documents, []);
+});
+
+test('a later explicit admission resolves old uncertainty without losing accident or surgery context', async () => {
+  const service = makeMock();
+  const item = await service.createCase({ entry_path: 'guided' });
+  await service.sendMessage(item.id, '我出車禍，沒有手術，不確定有沒有住院');
+  const { response } = await service.sendMessage(item.id, '確認了，我已住院三天');
+  assert.equal(response.response_type, 'claim_suggestion');
+  assert.equal(response.proposed_case_updates.claim_type_id, 'inpatient');
+  assert.equal(response.proposed_case_updates.conditions.cause, 'accident');
+  assert.equal(response.proposed_case_updates.conditions.surgery, 'no');
+});
+
+test('a current care correction supersedes the previous unconfirmed suggestion', async () => {
+  // An explicit 本次 starts a new encounter; ordinary corrections retain
+  // unrelated facts from the same encounter.
+  for (const [previous, correction, wanted, expectedSurgery] of [
+    ['因為肺炎住院三天，沒有手術', '更正，我沒有住院，只去急診', 'outpatient', 'no'],
+    ['我只有門診，沒有手術', '後來已入院三天', 'inpatient', 'no'],
+    ['我住院三天，沒有手術', '更正，本次只有門診', 'outpatient', 'unknown'],
+  ]) {
+    const service = makeMock();
+    const item = await service.createCase({ entry_path: 'guided' });
+    await service.sendMessage(item.id, previous);
+    const { case: current, response } = await service.sendMessage(item.id, correction);
+    assert.equal(response.response_type, 'claim_suggestion', correction);
+    assert.equal(response.proposed_case_updates.claim_type_id, wanted, correction);
+    assert.equal(response.proposed_case_updates.conditions.surgery, expectedSurgery, correction);
+    assert.equal(current.claim_type_id, null, correction);
+  }
+});
+
+test('a latest denial or uncertainty withdraws a previous care suggestion', async () => {
+  for (const [previous, correction] of [
+    ['我住院三天', '更正，我沒有住院'],
+    ['我住院三天', '更正，我不確定有沒有住院'],
+    ['我只有門診', '更正，本次就醫方式還不確定'],
+    ['我只有門診', '更正，這次還沒去就醫'],
+  ]) {
+    const service = makeMock();
+    const item = await service.createCase({ entry_path: 'guided' });
+    await service.sendMessage(item.id, previous);
+    const { response } = await service.sendMessage(item.id, correction);
+    assert.equal(response.response_type, 'clarification', correction);
+    assert.deepEqual(response.suggested_claim_types, [], correction);
+    assert.deepEqual(response.proposed_case_updates, {}, correction);
+  }
+});
+
+test('a current cancer diagnosis can resolve old uncertainty and can be withdrawn by a later correction', async () => {
+  const service = makeMock();
+  const item = await service.createCase({ entry_path: 'guided' });
+  await service.sendMessage(item.id, '疑似癌症，還沒有確診');
+  const diagnosed = await service.sendMessage(item.id, '醫師已確診癌症');
+  assert.equal(diagnosed.response.proposed_case_updates.claim_type_id, 'critical_illness');
+  const corrected = await service.sendMessage(item.id, '更正，目前還未確診癌症');
+  assert.equal(corrected.response.response_type, 'clarification');
+  assert.deepEqual(corrected.response.suggested_claim_types, []);
+});
+
+test('worry about cancer is not evidence of a confirmed diagnosis', async () => {
+  for (const message of ['我擔心是癌症', '我會不會是癌症', '我怕是癌症']) {
+    const service = makeMock();
+    const item = await service.createCase({ entry_path: 'guided' });
+    const { case: current, response } = await service.sendMessage(item.id, message);
+    assert.equal(response.response_type, 'clarification', message);
+    assert.deepEqual(response.suggested_claim_types, [], message);
+    assert.deepEqual(response.proposed_case_updates, {}, message);
+    assert.equal(current.claim_type_id, null, message);
+    assert.deepEqual(current.documents, [], message);
+  }
+});
+
+test('a no-medical-care correction withdraws the earlier cancer candidate', async () => {
+  const service = makeMock();
+  const item = await service.createCase({ entry_path: 'guided' });
+  const diagnosed = await service.sendMessage(item.id, '已由醫師確診癌症');
+  assert.equal(diagnosed.response.proposed_case_updates.claim_type_id, 'critical_illness');
+  const { case: current, response } = await service.sendMessage(item.id, '更正，我尚未就醫');
+  assert.equal(response.response_type, 'clarification');
+  assert.deepEqual(response.suggested_claim_types, []);
+  assert.deepEqual(response.proposed_case_updates, {});
+  assert.equal(current.claim_type_id, null);
+  assert.deepEqual(current.documents, []);
+});
+
+for (const message of ['還不能確診癌症', '無法確診癌症']) {
+  test(`an unavailable diagnosis remains unknown after no medical care: ${message}`, async () => {
+    const service = makeMock();
+    const item = await service.createCase({ entry_path: 'guided' });
+    await service.sendMessage(item.id, '尚未就醫');
+    const { case: current, response } = await service.sendMessage(item.id, message);
+    assert.equal(response.response_type, 'clarification');
+    assert.deepEqual(response.suggested_claim_types, []);
+    assert.deepEqual(response.proposed_case_updates, {});
+    assert.equal(current.claim_type_id, null);
+    assert.deepEqual(current.documents, []);
+  });
+}
+
+test('an explicit current visit clears old disease, surgery and admission facts before new navigation', async () => {
+  const service = makeMock();
+  const item = await service.createCase({ entry_path: 'guided' });
+  const prior = await service.sendMessage(item.id, '我因肺炎住院並做過手術');
+  assert.equal(prior.response.proposed_case_updates.claim_type_id, 'inpatient');
+  assert.equal(prior.response.proposed_case_updates.conditions.cause, 'illness');
+  assert.equal(prior.response.proposed_case_updates.conditions.surgery, 'yes');
+  const changed = await service.sendMessage(item.id, '本次是車禍，沒有住院');
+  assert.equal(changed.response.response_type, 'clarification');
+  assert.deepEqual(changed.response.proposed_case_updates, {});
+  const { case: current, response } = await service.sendMessage(item.id, '有去急診');
+  assert.equal(response.proposed_case_updates.claim_type_id, 'outpatient');
+  assert.equal(response.proposed_case_updates.conditions.cause, 'accident');
+  assert.equal(response.proposed_case_updates.conditions.surgery, 'unknown');
+  assert.equal(current.claim_type_id, null);
+  assert.deepEqual(current.documents, []);
+});
+
+test('a bare emergency term needs an affirmative visit before becoming a navigation candidate', async () => {
+  const service = makeMock();
+  const item = await service.createCase({ entry_path: 'guided' });
+  await service.sendMessage(item.id, '我出車禍了');
+  await service.sendMessage(item.id, '沒有住院');
+  const bare = await service.sendMessage(item.id, '急診');
+  assert.equal(bare.response.response_type, 'clarification');
+  assert.deepEqual(bare.response.suggested_claim_types, []);
+  assert.deepEqual(bare.response.proposed_case_updates, {});
+  const { case: current, response } = await service.sendMessage(item.id, '有去急診');
+  assert.equal(response.proposed_case_updates.claim_type_id, 'outpatient');
+  assert.match(response.message, /急診.*個別保單.*官方確認/);
+  assert.equal(current.claim_type_id, null);
+  assert.deepEqual(current.documents, []);
+});
+
 test('negative and uncertain clinical descriptions do not become an inpatient suggestion', async () => {
   const service = makeMock();
   for (const message of ['沒有住院，只有門診', '不知道有沒有住院', '不是住院']) {

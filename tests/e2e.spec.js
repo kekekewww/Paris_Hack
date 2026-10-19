@@ -181,7 +181,16 @@ test('資訊不足會先追問而不直接建立文件清單', async ({ page }) 
   await page.goto('/?service=mock#assistant');
   await page.getByLabel('描述就醫情況', { exact: true }).fill('我想申請理賠，不知道怎麼開始。');
   await page.getByRole('button', { name: '送出描述', exact: true }).click();
-  await expect(page.getByRole('log', { name: '引導對話', exact: true }).getByText(/請先確認.*住院.*門診/)).toBeVisible();
+  await expect(page.getByRole('log', { name: '引導對話', exact: true }).getByText(/請描述.*就醫情況/)).toBeVisible();
+  const clarification = await page.evaluate(() => {
+    const id = sessionStorage.getItem('cardif-active-mock-v1');
+    return JSON.parse(sessionStorage.getItem('cardif-claim-demo-cases-v1') || '{}')[id];
+  });
+  expect(clarification.claim_type_id).toBeNull();
+  expect(clarification.documents).toEqual([]);
+  expect(clarification.messages.at(-1).response.response_type).toBe('clarification');
+  expect(clarification.messages.at(-1).response.suggested_claim_types).toEqual([]);
+  expect(clarification.messages.at(-1).response.proposed_case_updates).toEqual({});
   await expect(page.locator('fieldset.guided-type-picker')).toHaveCount(0);
   await expect(page.getByRole('button', { name: '建立文件清單', exact: true })).toHaveCount(0);
   await page.getByLabel('描述就醫情況', { exact: true }).fill('因為疾病住院三天，沒有接受手術。');

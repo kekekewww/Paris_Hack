@@ -11,6 +11,8 @@ test-results-demo/
 playwright-report-demo/
 test-results-openrouter/
 playwright-report-openrouter/
+test-results-followup/
+playwright-report-followup/
 .playwright-mcp/
 .env
 .env.*

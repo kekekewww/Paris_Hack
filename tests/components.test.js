@@ -192,3 +192,45 @@ test('clarification, confirmed cases, and invalid guided selections cannot silen
   assert.ok(!invalid.includes(' checked'));
   assert.match(invalid,/<button[^>]*data-action="build-guided-checklist"[^>]*disabled/);
 });
+
+test('re-entering guided after confirmation shows a blank intake without changing the saved case',()=>{
+  const c={id:'saved-guided',entry_path:'guided',claim_type_id:'inpatient',documents:[sampleDocument('application')],messages:[{role:'user',content:'舊案件合成訊息'},{role:'assistant',content:'舊案件已確認的準備方向',response:{provider:'grounded_rules',suggested_claim_types:['inpatient']}}]};
+  const html=guided(c,'mock',{claimTypes});
+  assert.ok(!html.includes('舊案件合成訊息'));
+  assert.ok(!html.includes('舊案件已確認的準備方向'));
+  assert.ok(html.includes('先從您的情況開始'));
+  assert.ok(!html.includes('name="guided-claim-type"'));
+  assert.equal(c.id,'saved-guided');
+  assert.equal(c.claim_type_id,'inpatient');
+  assert.equal(c.messages.length,2);
+  const unconfirmed=guided({...c,claim_type_id:null,documents:[]},'mock',{claimTypes});
+  assert.ok(unconfirmed.includes('舊案件合成訊息'));
+});
+
+test('each assistant reply identifies its own actual provider without inferring AI from the current service',()=>{
+  for(const [response,label] of [
+    [{provider:'grounded_rules',is_simulated:false},'規則引導'],
+    [{provider:'openai_compatible',is_simulated:false},'AI回覆'],
+    [{provider:'mock',is_simulated:true},'模擬'],
+    [{provider:'openai_compatible',is_simulated:true},'模擬'],
+    [{provider:'unconfigured_llm',is_simulated:false},'來源未標示'],
+    [{},'來源未標示'],
+  ]){
+    const html=messages([{role:'assistant',content:'合成回覆',response}]);
+    assert.ok(html.includes(`<span class="message-provider">${label}</span>`));
+    if(label!=='AI回覆')assert.ok(!html.includes('>AI回覆<'));
+  }
+  const legacy=messages([{role:'assistant',content:'舊格式合成回覆',provider:'grounded_rules'}]);
+  assert.ok(legacy.includes('<span class="message-provider">規則引導</span>'));
+  const user=messages([{role:'user',content:'合成使用者訊息',response:{provider:'openai_compatible'}}]);
+  assert.ok(!user.includes('message-provider'));
+});
+
+test('configured model disclosure distinguishes grounded document answers from rule based intake',()=>{
+  for(const verified of [false,true]){
+    const html=shell('',{mode:'api',health:{llm_provider:'openai_compatible',llm_configured:true,llm_verified:verified}});
+    assert.ok(html.includes('有依據的文件問答使用模型'));
+    assert.ok(html.includes('類型釐清與安全回覆採規則'));
+    assert.ok(html.includes(verified?'已完成過往實際請求驗證':'尚未完成實際請求驗證'));
+  }
+});

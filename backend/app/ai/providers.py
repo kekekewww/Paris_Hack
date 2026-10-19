@@ -76,11 +76,13 @@ def validate_assistant_response(payload: dict, retriever: OfficialRetriever) -> 
     return deepcopy(payload)
 
 
-UNCERTAINTY = re.compile(r"不確定|不知道|不清楚|有沒有|是否|可能|疑似|懷疑|尚未|還沒|未確診|沒有確診|待確認|打算|預計|將會|下[週周月次]|未來|如果|假設|計畫|(?:不能|無法)排除")
+UNCERTAINTY = re.compile(r"不確定|不知道|不清楚|有沒有|是否|是不是|會不會|可能|疑似|懷疑|擔心|擔憂|害怕|很怕|怕是|尚未|還沒|未確診|沒有確診|(?:不能|無法)確診|待確認|打算|預計|準備去|要去|將會|明天|後天|下[週周月次]|未來|如果|假設|計畫|(?:不能|無法)排除")
 # Bind negation to the event itself. An unrelated symptom's negation earlier
 # in the clause (e.g. 沒有咳嗽也有住院) must not negate the admission.
-NEGATION = re.compile(r"(?:沒有|不是|未曾|不曾|未罹患|不用|不必|無需|不需|已排除|排除|無|沒|未|非)(?:曾經|需要|接受|進行|做過|做|發生|患有|罹患|辦理|有)?\s*$")
-POST_NEGATION = re.compile(r"^\s*(?:已經|已|確定)?(?:沒有|未|沒)(?:做|進行|接受|施行|實施|辦理)|^\s*(?:已經|已)排除")
+NEGATION = re.compile(r"(?:沒有|不是|未曾|不曾|未罹患|不需要|不用|不必|無需|不需|已排除|排除|無|沒|未|非)(?:實際)?(?:曾經|需要|接受|進行|做過|做|發生|患有|罹患|辦理|有|看過|看|去過|到過|到|去(?:看(?:過)?)?|掛)?\s*$")
+POST_NEGATION = re.compile(r"^\s*(?:也)?(?:已經|已|確定)?(?:沒有|未|沒)(?:做|進行|接受|施行|實施|辦理|看過|看|去過|去|掛)|^\s*(?:已經|已)排除")
+SHARED_CARE_NEGATION = re.compile(r"(?:沒有|沒|未曾|不曾)(?:實際)?\s*(?:(?:住院|入院|門診|急診)[、或及與和]\s*)+$")
+NO_MEDICAL_CARE = re.compile(r"(?:尚未|還未|還沒(?:有)?|沒有|未曾|不曾|沒|未)(?:曾經|去)?(?:就醫|就診|看(?:過)?醫[生師])")
 
 
 def _event_text(text: str) -> str:
@@ -90,7 +92,7 @@ def _event_text(text: str) -> str:
     return text[markers[-1].end():] if markers else text
 
 
-def _mention_state(text: str, pattern: str, *, surgery=False) -> bool | None:
+def _mention_state(text: str, pattern: str, *, surgery=False, care=False) -> bool | None:
     state = None
     for clause in re.split(r"[，,。；;！？?!\n]|但是|但|而是|只有", text):
         clause = re.sub(r"不是(?:沒|沒有)(住院|入院)", r"已\1", clause)
@@ -100,27 +102,70 @@ def _mention_state(text: str, pattern: str, *, surgery=False) -> bool | None:
             nearby = before + match.group() + after
             if UNCERTAINTY.search(nearby) or (surgery and re.search(r"會|需要|安排|預定|準備|尚未|還未", before)):
                 state = None
-            elif NEGATION.search(before) or POST_NEGATION.search(after):
+            elif NEGATION.search(before) or POST_NEGATION.search(after) or (care and SHARED_CARE_NEGATION.search(before)):
                 state = False
-            elif re.search(r"不確定|不知道|不清楚|還沒|未確診|沒有確診", after):
+            elif care and re.search(r"不一定|應該|需要|準備|預定|安排|(?:將|會|要)\s*$", before):
+                state = None  # A question or planned admission is not a completed visit.
+            elif re.search(r"不確定|不知道|不清楚|還沒|未確診|沒有確診", after) or re.match(r"\s*(?:嗎|呢)", after):
                 state = None
             else:
                 state = True
     return state
 
 
-def infer_description(messages: list[str]) -> dict:
+def _description_state(messages: list[str]) -> dict:
     text = _event_text("，".join(messages))
-    inpatient = _mention_state(text, r"住院|入院")
-    outpatient = _mention_state(text, r"門診|看診")
-    critical = _mention_state(text, r"癌症|罹癌|重大疾病")
+    no_care = list(NO_MEDICAL_CARE.finditer(text))
+    # A later correction such as 尚未就醫 clears earlier care assertions, while
+    # retaining the event cause. Subsequent completed care can establish facts.
+    care_text = text[no_care[-1].end():] if no_care else text
+    inpatient = _mention_state(care_text, r"住院|入院", care=True)
+    outpatient = _mention_state(care_text, r"門診|看診", care=True)
+    emergency = _mention_state(care_text, r"急診", care=True)
+    if emergency is True and not re.search(r"(?:去過|到過|有去|已去|已經去|去|到|只有)\s*急診|急診\s*(?:就醫|看診)", care_text):
+        emergency = None
+    critical = _mention_state(care_text, r"癌症|罹癌|重大疾病")
+    confirmed_diagnosis = critical is True and bool(re.search(
+        r"(?:(?:醫師|醫生).{0,4}|已(?:經)?(?:由醫師|由醫生)?)確診.{0,6}(?:癌症|罹癌|重大疾病)", care_text))
+    not_yet_care = bool(no_care) and not confirmed_diagnosis and not any(value is True for value in (inpatient, outpatient, emergency))
+    if not_yet_care:
+        critical = None
     accident = _mention_state(text, r"車禍|意外|摔倒|跌倒")
     illness = _mention_state(text, r"疾病|生病|肺炎|感染|癌症|罹癌|腫瘤")
-    surgery = _mention_state(text, r"手術|開刀", surgery=True)
+    surgery = _mention_state(care_text, r"手術|開刀", surgery=True)
+    return {"text": text, "inpatient": inpatient, "outpatient": outpatient, "emergency": emergency,
+            "critical": critical, "accident": accident, "illness": illness, "surgery": surgery,
+            "admission_mentioned": bool(re.search(r"住院|入院", care_text)), "not_yet_care": not_yet_care}
+
+
+def infer_description(messages: list[str]) -> dict:
+    state = _description_state(messages)
+    accident, illness, surgery = state["accident"], state["illness"], state["surgery"]
     # A possible cancer mention cannot imply confirmed disease cause.
     cause = "accident" if accident is True and illness is not True else "illness" if illness is True and accident is not True else "unknown"
-    return {"claim_type_id": "critical_illness" if critical is True else "inpatient" if inpatient is True else "outpatient" if outpatient is True else None,
+    return {"claim_type_id": "critical_illness" if state["critical"] is True else "inpatient" if state["inpatient"] is True else "outpatient" if state["outpatient"] is True or state["emergency"] is True else None,
             "conditions": {"cause": cause, "surgery": "yes" if surgery is True else "no" if surgery is False else "unknown", "receipt_type": "unknown"}}
+
+
+def _guided_clarification(state: dict, message: str) -> str:
+    if state["not_yet_care"]:
+        return "了解，您目前尚未就醫，我先不推定理賠類型。之後若有就醫，再依本次門診、急診或住院紀錄確認文件；是否適用仍須依保單及官方確認。"
+    if state["inpatient"] is False:
+        if state["outpatient"] is False and state["emergency"] is False:
+            return "已了解本次沒有住院，也沒有門診或急診紀錄。是否有其他本次就醫資料，或目前尚未就醫？我先保留類型未知。"
+        if state["outpatient"] is False:
+            return "已了解本次沒有住院，也沒有看門診。請問是否曾到急診就醫，或目前尚未就醫？"
+        if state["emergency"] is False:
+            return "已了解本次沒有住院，也沒有去急診。請問是否曾看門診，或目前尚未就醫？"
+        return "已了解本次沒有住院。請問是否曾到急診或門診就醫，還是目前尚未就醫？"
+    if state["admission_mentioned"]:
+        return "本次住院情形還不確定，我先保留未知。請核對本次就醫紀錄；目前能確認是否曾到門診或急診就醫嗎？"
+    if state["accident"] is True:
+        event = "車禍" if "車禍" in state["text"] else "意外"
+        return f"了解，您提到本次發生{event}。請問目前是否已就醫，以及有沒有住院？我會依實際就醫情形協助確認文件。"
+    if re.fullmatch(r"\s*(?:你好|您好|哈囉|嗨|hello|hi)[！!~～。，,.\s]*", message, re.I):
+        return "您好，我可以協助整理理賠文件。請先簡單描述本次發生的情況，以及目前是否已就醫，我會再逐步確認。"
+    return "請簡單描述本次發生的情況，以及已知的就醫紀錄，例如門診、急診或住院。不確定的部分可以先保留未知，我不會推定診斷或理賠資格。"
 
 
 def _base(message: str = "", response_type: str = "answer", references=None) -> dict:
@@ -171,15 +216,18 @@ class GroundedRulesProvider:
             if not scope_source:
                 return _base("目前缺少可查核的官方分類來源，不能據此建立類別提案。請稍後重試或向官方確認。", "uncertain")
             prior = [item["content"] for item in case.get("messages", []) if item.get("role") == "user" and isinstance(item.get("content"), str)]
-            proposal = infer_description(prior + [message])
+            descriptions = prior + [message]
+            state = _description_state(descriptions)
+            proposal = infer_description(descriptions)
             if not proposal["claim_type_id"]:
-                answer = _base("請先確認本次是已住院、只有門診，或已由醫師確診癌症／重大疾病？不確定時可先核對就醫資料，我不會推定理賠資格。", "clarification", scope_refs)
+                answer = _base(_guided_clarification(state, message), "clarification", scope_refs)
                 answer["missing_information"] = ["care_setting"]
                 return answer
             claim = retriever.claim_types.get(proposal["claim_type_id"])
             if not claim:
                 return _base("目前沒有可查核的分類資料，請向官方確認。", "uncertain")
-            answer = _base(f"依您描述的本次就醫情形，可先檢視「{claim['label']}」的文件資訊。請確認類別與條件後再建立清單，是否符合給付仍依保單及官方審核。此回覆由本機規則產生，未使用外部 LLM。", "claim_suggestion", scope_refs)
+            emergency_note = "急診是否適用仍待個別保單及官方確認。" if state["emergency"] is True and proposal["claim_type_id"] == "outpatient" else ""
+            answer = _base(f"依您描述的本次就醫情形，可先檢視「{claim['label']}」的文件資訊。{emergency_note}請確認類別與條件後再建立清單，是否符合給付仍依保單及官方審核。此回覆由本機規則產生，未使用外部 LLM。", "claim_suggestion", scope_refs)
             answer["suggested_claim_types"] = [{"id": claim["claim_type_id"], "title": claim["label"], "description": "請以本次就醫資料、個別保單與官方審核確認適用性。"}]
             answer["missing_information"] = [key for key, value in proposal["conditions"].items() if value == "unknown"]
             answer["proposed_case_updates"] = proposal
