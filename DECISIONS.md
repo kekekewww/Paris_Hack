@@ -31,3 +31,8 @@
 23. 無key完整重驗以f41d74d產品版本執行：後端190、前端33、Mock75、API27、PDF2、G1、公開HTTP22／browser3、容器60／browser1與restart保存皆過；來源11及依賴重掃亦通過。只更新.env.example預留欄位及文件，不增加SDK或串接邏輯；既有映像產品未變，重用映像驗收而不無謂重build。合成key canary隔離build207檔零洩漏，runtime保持grounded_rules。實際金鑰、供應商參數、模型回覆與整體P2／P3gate仍未完成，結果不混稱。
 24. 依使用者回饋，將guided候選的「確認並建立清單」拆為具名原生radio選型與獨立「建立文件清單」。即使單一建議也不預選；選取僅前端狀態，不呼叫updateCase。其他既有類型放於可展開區，與真正建議分開，不虛構相關性；維持單一類型／單一清單及既有API契約。重述／新回覆清選取，busy與重試採案件／回覆／選取快照防舊狀態，沿用品牌與克制排版。
 25. 本次引導修正在原產品先取得單元及瀏覽器RED，再完成獨立選型及快照隔離；source freeze後單元36／Mock87／API27及公開HTTP23／browser3均過，才以新版原始碼建立guided-20261019映像並實測60checks／新引導／restart。前輪後端190、來源與依賴保持歷史證據，不因UI更新冒稱重跑。正式dist與展示連結已更新；測試程序／容器／volume核對身分清除，公開服務保留；金鑰與真LLM仍依使用者決定暫緩。
+26. 使用者最新提供並授權使用OpenRouter金鑰，指定openrouter/free；此授權取代該供應商先前暫緩，OpenAI／Gemini仍暫緩。金鑰只保存在.local/secrets/.env.openrouter，ACL限制目前Windows使用者，Git及Docker排除且Vite禁止供應env檔，不在紀錄重述值。沿用httpx與evidence-only資料邊界，固定免費router、零價格限制及無付費fallback；實際回覆須驗model、usage.cost及來源內容後才算真驗證。初次真請求已200／cost0，不因單次探測就宣稱網站整合或整體gate完成。
+
+27. 免費路由實測曾429、推理耗盡1800 token產生空content及35秒逾時；不放寬引用或付費fallback。先以minimal reasoning降低負擔，再將OpenRouter內部回覆限為當次retrieval白名單的1–3個唯一證據ID，由後端還原全部原文／引用；generic相容服務原契約不變。TDD先5fail後103pass／全293pass，真實模型與網站驗證另行取得，不以離線state模擬代替。
+28. 最終原型gate依真模型、本機響應式、既有API／實際OCR、新容器與公開HTTPS逐項驗收後結案；三尺寸首次2pass1fail與平板重驗分開記錄，額外重大疾病CLI受429仍保留FAIL。一次上游容量失敗不改為假成功，也不擴張成所有功能未完成。OpenAI／Gemini屬使用者暫緩的可選provider，不阻擋已具真OpenRouter的原訂MVP。
+29. llm_verified為單程序／同配置歷史真成功證據，不是即時readiness；只在metadata、ID、最終response全驗過且預設真transport後成立，配置觀察變更／重啟清除。公開版原URL與DB保留，僅核對後重啟8002，8003及專用Docker測試資源清除。歷史OCR bad allocation無證明根因修復，持續列限制。

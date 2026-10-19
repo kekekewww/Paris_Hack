@@ -1,0 +1,33 @@
+{
+  "blurred_analysis": {
+    "analysis_status": "uncertain",
+    "extracted_fields_count": 0,
+    "findings_count": 1,
+    "provider": "quality_precheck",
+    "quality_findings_count": 1
+  },
+  "checks": 56,
+  "claim_types_count": 3,
+  "cleanup": "VERIFIED_DELETED",
+  "code": "OK",
+  "conversation": "SKIPPED_PROVIDER_NOT_GROUNDED",
+  "documents_count": 8,
+  "image_ocr": {
+    "findings_count": 2,
+    "provider": "rapidocr"
+  },
+  "llm_provider": "openai_compatible",
+  "mixed_quality_analysis": {
+    "analysis_status": "uncertain",
+    "extracted_fields_count": 6,
+    "findings_count": 2,
+    "provider": "pdf_text",
+    "quality_findings_count": 1
+  },
+  "ocr_provider": "pymupdf+rapidocr",
+  "pdf_analysis": {
+    "findings_count": 4,
+    "provider": "pdf_text"
+  },
+  "status": "PASS"
+}

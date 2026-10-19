@@ -1,0 +1,100 @@
+{
+  "date": "2026-10-19",
+  "status": "PASS_WITH_DOCUMENTED_LIMITATIONS",
+  "scope": "Original MVP; actual OpenRouter integration, preserved frontend and Mock service; no official claim submission or production certification",
+  "phase_1": "DONE",
+  "phase_2": "DONE",
+  "phase_3": "DONE",
+  "backend": {
+    "openrouter": 103,
+    "total": 293,
+    "seconds": 49.01,
+    "warnings": 1,
+    "warning": "Existing Starlette/httpx deprecation"
+  },
+  "frontend": {
+    "unit": 36,
+    "product_source_unchanged": true
+  },
+  "api_regression": {
+    "passed": 27,
+    "seconds": 132,
+    "profile": "grounded_rules, before ID-only change; unchanged API/OCR behavior"
+  },
+  "local_live": {
+    "first_run": {
+      "passed": 2,
+      "failed": 1,
+      "seconds": 53.6,
+      "failure": "tablet: real upstream LLM_RATE_LIMITED"
+    },
+    "tablet_retest": {
+      "passed": 1,
+      "failed": 0,
+      "seconds": 13.7
+    },
+    "model_calls_per_test": 1,
+    "controlled_503_is_not_real_provider_evidence": true
+  },
+  "docker": {
+    "tag": "cardif-claim-preparation:openrouter-20261019",
+    "image_id": "sha256:95758438118303dc1fd828cdec72a0d43c0011c593ad53239d44a2693565a6c7",
+    "build": "PASS",
+    "smoke_checks": 56,
+    "smoke_external_conversation": "SKIPPED_PROVIDER_NOT_GROUNDED, covered separately by actual live browser",
+    "live_browser": {
+      "passed": 1,
+      "seconds": 18.2
+    },
+    "restart_persistence": "PASS",
+    "uid": 10001,
+    "read_only": true,
+    "cap_drop": [
+      "ALL"
+    ],
+    "no_new_privileges": true,
+    "private_files_absent": true
+  },
+  "public": {
+    "origin": "https://retirement-trim-reported-jesus.trycloudflare.com",
+    "live_browser": {
+      "passed": 1,
+      "seconds": 27.8
+    },
+    "http_security_checks": 23,
+    "llm_provider": "openai_compatible",
+    "llm_configured": true,
+    "llm_verified": true,
+    "worker_count": 1
+  },
+  "model": {
+    "requested": "openrouter/free",
+    "base_url": "https://openrouter.ai/api/v1",
+    "price_limits": 0,
+    "allow_fallbacks": false,
+    "reasoning_effort": "minimal",
+    "max_completion_tokens": 1800,
+    "timeout_seconds": 35,
+    "observed_key_usage": 0,
+    "observed_key_limit": 0.1,
+    "raw_files_sent": false,
+    "user_questions_sent": false
+  },
+  "extra_cli_coverage": {
+    "inpatient": "real validated zero-cost answer",
+    "outpatient": "real validated zero-cost answer",
+    "critical_illness": "BLOCKED by upstream LLM_RATE_LIMITED in full run and scoped retry; no fabricated success",
+    "full_three_type_cli": "FAIL, retained as extra coverage; no complete PASS claim"
+  },
+  "limitations": [
+    "Free router capacity, rate limits and timeouts remain external dependencies; no automatic or paid fallback",
+    "Historical OCR bad allocation root cause unknown; exact retest and final complete suite passed without OCR code change",
+    "Single worker / single replica, temporary tunnel, synthetic demo only",
+    "OpenAI and Gemini remain deferred optional providers"
+  ],
+  "original_design_sha256": "59a6fd5053e9811560823b3f12637ef0c7bbe7f3aa2fd9a1abe1ea90fad1c8a1",
+  "secret_files_committed": false,
+  "raw_model_responses_saved": false,
+  "cookies_saved": false,
+  "independent_review": "No P0/P1/P2 findings in final ID-only source delta"
+}

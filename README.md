@@ -9,19 +9,23 @@
 | 模式 | 對話 | 文件檢查 | 保存方式 |
 | --- | --- | --- | --- |
 | `?service=mock` | 固定展示邏輯，有模擬標示 | 完整／缺漏／模糊的指定情境 | 分頁 sessionStorage；不存原檔 |
-| `?service=api` | 預設真實本機官方檢索／規則 `grounded_rules`；可選外部 client 尚待真 API 驗證 | PDF 文字擷取／本機 RapidOCR；品質不足先提示重傳 | SQLite 結構化結果；不持久保存原檔或抽取全文 |
+| `?service=api` | 預設真實本機官方檢索／規則 `grounded_rules`；已實測可選 OpenRouter 免費模型 | PDF 文字擷取／本機 RapidOCR；品質不足先提示重傳 | SQLite 結構化結果；不持久保存原檔或抽取全文 |
 
-`grounded_rules` **不是生成式 LLM**。外部 `openai_compatible` client 已實作並有離線 HTTP transport 測試，真實模型 API 驗證仍為 **BLOCKED**；目前先使用本機模式完成其餘流程。Health 的 `llm_configured` 只表示必要設定齊備，`llm_verified` 保持 `false`，不能把設定存在或離線測試當作真實連線成功。外部設定缺漏或請求失敗會明確報錯，不會以 Mock 冒充成功。API 分析會保留簽名等人工覆核事項，完整合成文件仍可能顯示「需要補充或人工確認」。
+`grounded_rules` **不是生成式 LLM**。使用者本次已授權提供的 OpenRouter 金鑰，僅允許 `openrouter/free`，透過既有 `openai_compatible` Adapter 完成多次真實請求與零費用驗證；OpenAI／Gemini 仍暫緩。雲端只收到公開官方證據，不送使用者問題、病歷、對話歷史或檔案；模型只選證據 ID，伺服器重建完整段落與引用。外部失敗明確報錯，不自動重試、不改用付費模型，也不回退 Mock／本機假成功。API 分析仍保留簽名等人工覆核事項，完整合成文件可能顯示「需要補充或人工確認」。
 
-Phase 1 已通過，證據見 [前端驗收報告](docs/PHASE1_ACCEPTANCE.md)。Phase 2 整合驗證與後續交付仍以實際驗收紀錄為準；這份 README 不代表外部部署或所有階段已完成。
+Health 的 `llm_configured` 只表示設定齊備；`llm_verified=true` 只表示同一程序、同一配置曾有通過驗證的真實請求，重啟或配置變更即失效。它不保證即時可用；免費服務實測也曾回 429、503 或逾時。本輪已完成 OpenRouter 實際串接、公開驗證及原型範圍的整體驗收，詳見 [OpenRouter 驗收紀錄](docs/OPENROUTER_ACCEPTANCE.md)。OpenAI／Gemini 是可選後續項目，不阻擋本次 MVP。
 
-2026-10-19 已更新 [Quick Tunnel 臨時 HTTPS 展示](https://retirement-trim-reported-jesus.trycloudflare.com/?service=api)。最新公開 HTTP 23 項與瀏覽器流程 3/3 通過，涵蓋兩入口、真實圖片 OCR、PDF 與摘要。電腦與隧道必須保持執行；設定、歷史驗收及限制見 [臨時展示紀錄](docs/QUICK_TUNNEL.md)。
+Phase 1 證據見 [前端驗收報告](docs/PHASE1_ACCEPTANCE.md)；本輪 Phase 2／3 原型範圍的整合與交付驗收見 [OpenRouter 驗收紀錄](docs/OPENROUTER_ACCEPTANCE.md)。固定網域、常駐部署與商業級保險服務驗收不在本次 MVP 範圍。
 
-前輪[介面簡化](docs/UI_SIMPLIFICATION.md)已通過三尺寸視覺、33項單元、Mock 75項、PDF 2項、真API 27項與故障恢復1項。工作區同情境可見文字減少45.7%，只突出下一份文件；來源、案件管理與助手採漸進揭露。外部生成式LLM仍依使用者決定稍後設定。
+2026-10-19 的 [Quick Tunnel 臨時 HTTPS 展示](https://retirement-trim-reported-jesus.trycloudflare.com/?service=api) 已更新為本次 OpenRouter 版本，公開 HTTP 23 項及真實模型瀏覽器流程 1/1（27.8 秒）通過。電腦、本機應用與隧道必須保持執行；本輪結果見 [OpenRouter 驗收](docs/OPENROUTER_ACCEPTANCE.md)，設定與歷史驗收見 [臨時展示紀錄](docs/QUICK_TUNNEL.md)。
 
-前輪[無金鑰完整重驗收](docs/ACCEPTANCE_NO_KEYS_20261019.md)亦通過：後端190、前端33、Mock75、真API27、PDF2、公開及容器流程、來源11項與依賴掃描均有新實測。使用者最新選擇「暫不建立金鑰」；[三家供應商](docs/PROVIDER_SETUP.md)只預留空白後端欄位，OpenRouter記錄指定模型openrouter/free，沒有啟用或完成真LLM串接。
+前輪[介面簡化](docs/UI_SIMPLIFICATION.md)已通過三尺寸視覺、33項單元、Mock 75項、PDF 2項、真API 27項與故障恢復1項。工作區同情境可見文字減少45.7%，只突出下一份文件；來源、案件管理與助手採漸進揭露。當時外部 LLM 依使用者決定稍後設定。
+
+前輪[無金鑰完整重驗收](docs/ACCEPTANCE_NO_KEYS_20261019.md)亦通過：後端190、前端33、Mock75、真API27、PDF2、公開及容器流程、來源11項與依賴掃描均有實測。這份歷史報告當時依「暫不建立金鑰」執行；本次新授權只解除 OpenRouter 限制，OpenAI／Gemini 仍暫緩。[目前供應商狀態](docs/PROVIDER_SETUP.md)
 
 最新[引導確認修正](docs/GUIDED_CHOICE.md)已發布：送出描述後先選一種類型，再按「建立文件清單」；單一建議也不預選，點選／改選不寫入案件。單元36、三尺寸Mock87、真API27、PDF2／G1、公開與新版Docker皆已實際回歸。
+
+本次 OpenRouter 相關後端測試103項與完整後端293項通過。本機真模型 UI 首輪2項通過、平板1項因限流失敗，平板獨立重驗1項通過，沒有合併宣稱單次3/3。新版 Docker 真 OCR smoke 56項、重啟保存與真模型瀏覽器1項亦通過；多次推論 cost 為0，免費容量仍有限。重大疾病額外 CLI 探測兩輪遇429，保留為擴充覆蓋限制，不宣稱三類模型探測全部通過。完整結果見 [OpenRouter 驗收紀錄](docs/OPENROUTER_ACCEPTANCE.md)。
 
 ## 本機啟動（PowerShell）
 
@@ -52,11 +56,11 @@ $env:SESSION_COOKIE_SECURE = 'false'
 
 macOS／Linux 對應命令為 `python3.12 -m venv .venv`、`.venv/bin/python -m pip ...` 與 `.venv/bin/python -m uvicorn ...`；使用 `export` 設定相同環境變數。
 
-## 可選外部模型（稍後設定）
+## 可選 OpenRouter 免費模型
 
-後端支援 `LLM_PROVIDER=openai_compatible`，`LLM_BASE_URL` 預設 `https://api.openai.com/v1`。`LLM_API_KEY` 與 `LLM_MODEL` 在範例保持空白；外部模式兩者必填，模型沒有預設值。這些變數只能注入後端，不可放入 `VITE_` 或前端程式。Docker Compose 只將它們交給應用執行環境，不作為前端建置參數或寫入映像。
+本次使用 `LLM_PROVIDER=openai_compatible`、固定 `LLM_BASE_URL=https://openrouter.ai/api/v1` 與 `LLM_MODEL=openrouter/free`。已授權的 key 保存在後端私有 `.local/secrets/.env.openrouter`，啟動時明確映射至 canonical `LLM_API_KEY`；後端不會自行掃描其他 env 檔。`LLM_TIMEOUT_SECONDS=35`，OpenRouter 最高允許40秒。秘密值只能注入後端，不可放入 `VITE_`、前端程式、Docker build args 或映像；公開範本保持空白金鑰。
 
-設定與驗收邊界見 [LLM 整合說明](docs/LLM_INTEGRATION.md)。目前不執行真實模型請求；有授權且安全設定完成後，仍需另做真實請求與失敗恢復驗證，才能解除 LLM 驗收阻礙。預設 `grounded_rules` 不需要金鑰，可繼續其餘展示與測試。
+請求固定 `provider.max_price` 物件的 prompt／completion／request／image 四項為0，並設定 `require_parameters=true`、`allow_fallbacks=false`、`reasoning.effort=minimal` 與 `max_completion_tokens=1800`；不自動重試、不改用其他模型。金鑰資訊實際 GET 查核顯示限制US$0.10、當時usage為0；推論仍逐次驗證實際模型、用量、零費用與官方證據。設定與驗收邊界見 [LLM 整合說明](docs/LLM_INTEGRATION.md)。預設 `grounded_rules` 不需要金鑰；OpenAI／Gemini 尚未啟用或驗證。
 
 ## 檢查與測試
 
@@ -82,11 +86,13 @@ npm run test:api
 
 測試後關閉此終端機，避免測試環境變數影響日常展示。若要使用其他獨立服務，可用 `CLAIM_API_BASE_URL`、`CLAIM_API_SERVER_COMMAND`，並同步設定該服務正確的 origin；已有 8000 服務時 Playwright 會重用，不能假定測試設定已更改它的資料庫或配額。
 
-健康檢查可使用 `Invoke-RestMethod http://127.0.0.1:8000/api/v1/health`。成功只表示 API 存活，請同時核對 `service_mode`、`llm_provider`、`llm_configured`、`llm_verified` 與 `ocr_provider`，並以實際合成文件完成上傳檢查；此版本的 `llm_verified=false` 不因設定齊備而改變。
+健康檢查可使用 `Invoke-RestMethod http://127.0.0.1:8000/api/v1/health`。成功只表示 API 存活，請同時核對 `service_mode`、`llm_provider`、`llm_configured`、`llm_verified` 與 `ocr_provider`，並以實際合成文件完成上傳檢查。`llm_verified` 只記錄同程序、同配置的過往真實成功；health 不發送推論請求，也不保證此刻有免費容量。
 
-已啟動的本機 API 也可執行 `.venv/Scripts/python.exe scripts/smoke_api.py --include-ocr`。腳本只接受 loopback 網址，以合成 PDF／PNG 真正呼叫 API、核對來源與隔離，最後刪除自己建立的案件；不呼叫外部付費模型。容器改用 `--base-url http://127.0.0.1:8001` 等實際本機埠。
+已啟動的本機 API 也可執行 `.venv/Scripts/python.exe scripts/smoke_api.py --include-ocr`。腳本只接受 loopback 網址，以合成 PDF／PNG 真正呼叫 API、核對來源與隔離，最後刪除自己建立的案件。它使用既有後端設定；若已啟用 OpenRouter，有依據的對話可能消耗免費請求配額，不改用付費模型。容器改用 `--base-url http://127.0.0.1:8001` 等實際本機埠。
 
 展示前先等 health 成功，再執行上述合成文件 smoke。Health 不代表圖片模型已暖機；本機容器實測曾首次圖片請求超出 45 秒，安全回 `OCR_TIMEOUT`，模型載入後重試 39 項通過。保留此限制，先確認已保存狀態再重試，不將超時當成檢查通過。
+
+本次完整測試也曾出現 OCR `bad allocation`；該單項重驗與最終293項通過，但尚無根因已修復的證據，限制仍見 [已知限制](docs/KNOWN_LIMITATIONS.md)。
 
 ## 容器與文件
 
@@ -94,7 +100,7 @@ Docker Compose 預設只將服務綁定到 `127.0.0.1:8000`，SQLite 使用具�
 
 - [API 契約](docs/API_CONTRACT.md)：方法、欄位、來源及錯誤語意。
 - [架構](docs/ARCHITECTURE.md)、[官方來源查核](docs/OFFICIAL_SOURCES.md)。
-- [LLM 整合與真實驗證阻礙](docs/LLM_INTEGRATION.md)。
+- [LLM 整合與驗證狀態](docs/LLM_INTEGRATION.md)、[OpenRouter 本次驗收](docs/OPENROUTER_ACCEPTANCE.md)。
 - [展示腳本](docs/DEMO.md)、[已知限制](docs/KNOWN_LIMITATIONS.md)。
 - [實際整合驗收](docs/API_INTEGRATION_ACCEPTANCE.md)、[容器驗收](docs/CONTAINER_ACCEPTANCE.md)、[依賴掃描](docs/DEPENDENCY_AUDIT.md)、[獨立審查](docs/FINAL_REVIEW.md)。
 - [最終驗收與待辦阻礙](docs/FINAL_ACCEPTANCE.md)。

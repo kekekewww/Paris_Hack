@@ -1,0 +1,27 @@
+{
+  "scope": "real service/actual OpenRouter requests; synthetic cases and public official evidence only",
+  "requested_model": "openrouter/free",
+  "checks": [
+    "key authenticated",
+    "fresh process unverified",
+    "real unauthorized request safely rejected",
+    "credential absent from public error"
+  ],
+  "completions": [],
+  "raw_files_sent": false,
+  "user_messages_sent": false,
+  "claim_scope": "critical_illness",
+  "key_before": {
+    "limit": 0.1,
+    "limit_remaining": 0.1,
+    "usage": 0,
+    "free_model_daily_requests": {
+      "used": 13,
+      "limit": 1000,
+      "remaining": 987
+    }
+  },
+  "real_failure_code": "LLM_PROVIDER_ERROR",
+  "status": "FAIL",
+  "error_code": "LLM_RATE_LIMITED"
+}

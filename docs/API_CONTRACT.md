@@ -38,7 +38,7 @@ API 建構參數為 `{ baseUrl = '/api/v1', timeout = 15000, messageTimeout = 50
 
 真實後端會以 `claim_session` 的 HttpOnly、SameSite=Strict cookie 識別匿名 owner；adapter 使用同源 cookie，不在 JSON 或 JavaScript 暴露 token。HTTPS 須配置 Secure cookie。不同 owner、已刪除或到期案件均回 `404 CASE_NOT_FOUND`。案件自建立起固定保留 24 小時，每 owner 最多 20 件，每案最多 100 回成功對話。API 回應 `Cache-Control: no-store`；跨來源需符合明確 allowlist，不能只更改前端 `baseUrl` 連外。
 
-真實 health 的 `llm_configured` 只代表外部模式必填設定齊備，`llm_verified` 在本版固定為 false；health 不發送模型請求。預設 `grounded_rules` 不使用生成式模型，兩個旗標均為 false。對話與分析仍以每次回應的 `provider`／`is_simulated` 為準。
+真實 health 的 `llm_configured` 只代表外部模式必填設定齊備；health 本身不發送模型請求。OpenRouter免費路由只有在本後端程序、同一配置使用真實預設transport，且模型、明確零費用、token、逐字證據及引用全部驗證成功後，`llm_verified` 才為 true。重新啟動、停用或觀察到配置變更會清除，不靠環境旗標或離線fixture設為 true；它表示本程序曾驗證成功，不保證目前容量或持續可用。其他尚未實測的相容服務保持未驗證。預設 `grounded_rules` 不使用生成式模型，兩個旗標均為 false。對話與分析仍以每次回應的 `provider`／`is_simulated` 為準。
 
 ## 案件與條件
 

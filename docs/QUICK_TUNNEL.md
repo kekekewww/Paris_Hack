@@ -1,5 +1,7 @@
 # Cloudflare Quick Tunnel 臨時展示
 
+> 最新OpenRouter交付（2026-10-19）：真實免費路由已啟用，原訂MVP的P2／P3整體gate已通過。最終後端293、本機三尺寸成功證據（原2pass1fail＋平板重驗1pass）、容器56checks真OCR／live1／restart及公開live1／HTTP23均完成。免費限流與額外CLI未通過仍保留，完整結果以[OpenRouter驗收](OPENROUTER_ACCEPTANCE.md)為準。以下舊版「未驗證／BLOCKED」為當時歷史，已由新授權與實測取代。
+
 > 最新引導修正（2026-10-19）：先以具名radio選類型、再獨立建立清單，已發布。單元36、三尺寸Mock87、PDF2、真API27、G1、公開HTTP23／browser3（51.6秒）及新版容器60checks／引導browser1（11.3秒）與真restart均通過。[完整報告](GUIDED_CHOICE.md)含新版映像、截圖與去敏感結果；下方先前輪次保留為歷史，不混稱目前版本。外部LLM仍未驗證。
 
 > 本輪無金鑰完整續驗：相同公開網址HTTP22 checks與瀏覽器3/3（36.4秒）再次通過，測試案件清除，服務維持運行；無外部模型請求。下方46.8秒為前一輪UI驗收歷史，最新完整結果見[續驗報告](ACCEPTANCE_NO_KEYS_20261019.md)。

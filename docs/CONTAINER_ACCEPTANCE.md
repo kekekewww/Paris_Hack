@@ -1,5 +1,7 @@
 # 本機容器驗收
 
+> 最新OpenRouter交付（2026-10-19）：真實免費路由已啟用，原訂MVP的P2／P3整體gate已通過。最終後端293、本機三尺寸成功證據（原2pass1fail＋平板重驗1pass）、容器56checks真OCR／live1／restart及公開live1／HTTP23均完成。免費限流與額外CLI未通過仍保留，完整結果以[OpenRouter驗收](OPENROUTER_ACCEPTANCE.md)為準。以下舊版「未驗證／BLOCKED」為當時歷史，已由新授權與實測取代。
+
 > 最新引導修正（2026-10-19）：先以具名radio選類型、再獨立建立清單，已發布。單元36、三尺寸Mock87、PDF2、真API27、G1、公開HTTP23／browser3（51.6秒）及新版容器60checks／引導browser1（11.3秒）與真restart均通過。[完整報告](GUIDED_CHOICE.md)含新版映像、截圖與去敏感結果；下方先前輪次保留為歷史，不混稱目前版本。外部LLM仍未驗證。
 
 > 2026-10-19無金鑰續驗：重用下述b25049ed映像，另建隔離容器完成60checks、瀏覽器1/1（9.6秒），並真restart確認案件完全一致、刪除404；權限與私有檔檢查通過，測試容器／volume已清。未改產品或宣稱重新build，新證據見[本輪報告](ACCEPTANCE_NO_KEYS_20261019.md)。

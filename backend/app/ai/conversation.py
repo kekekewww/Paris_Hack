@@ -4,22 +4,26 @@ from __future__ import annotations
 import os
 
 from .providers import AIError, GroundedRulesProvider, UnavailableLLMProvider, validate_assistant_response
-from .openai_compatible import OpenAICompatibleProvider, OpenAICompatibleSettings
+from .openai_compatible import OpenAICompatibleProvider, OpenAICompatibleSettings, verification_snapshot
 from .retrieval import OfficialRetriever
 
 
 def provider_status() -> dict:
     mode = os.getenv("LLM_PROVIDER", "grounded_rules").strip().lower()
     if mode in ("", "grounded_rules"):
+        verification_snapshot(None)
         return {"llm_provider": "grounded_rules", "llm_configured": False, "llm_verified": False}
     if mode == "openai_compatible":
         try:
-            OpenAICompatibleSettings.from_environment()
+            settings = OpenAICompatibleSettings.from_environment()
             configured = True
+            verified = verification_snapshot(settings) is not None
         except AIError:
             configured = False
-        # Configuration is not evidence that a real model request was verified.
-        return {"llm_provider": mode, "llm_configured": configured, "llm_verified": False}
+            verified = False
+            verification_snapshot(None)
+        return {"llm_provider": mode, "llm_configured": configured, "llm_verified": verified}
+    verification_snapshot(None)
     return {"llm_provider": "unconfigured_llm", "llm_configured": False, "llm_verified": False}
 
 

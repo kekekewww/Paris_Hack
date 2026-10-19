@@ -1,82 +1,94 @@
 # LLM Adapter 與實際驗證狀態
 
-更新日期：2026-10-17（臺灣）。
+更新日期：2026-10-19（臺灣）。使用者本次已授權提供的 OpenRouter 金鑰，僅允許 `openrouter/free`；OpenAI 與 Google AI Studio／Gemini 仍暫緩。OpenRouter 已完成多次真實請求及零費用、實際模型與官方證據驗證；本機、容器、公開版本及 Phase 2／3 原型範圍的整體驗收已完成，結果見 [OpenRouter 驗收紀錄](OPENROUTER_ACCEPTANCE.md)。OpenAI／Gemini 是可選後續項目，不阻擋本次 MVP。
 
-> 2026-10-19 續驗：使用者要求預留 OpenAI、Google AI Studio 與 OpenRouter（openrouter/free），隨後明確選擇「暫不建立金鑰」。三家欄位保持空白且不連動現有Adapter，不宣稱已完成原生或相容串接；詳見[供應商設定狀態](PROVIDER_SETUP.md)。本輪完整後端離線重驗與非LLM流程另見[驗收紀錄](ACCEPTANCE_NO_KEYS_20261019.md)，以下原101項描述為早期歷史。
-
-本輪完整後端190/190中，AI測試實際113項；仍是本機規則／檢索與離線傳輸邊界，不含任何真實模型請求。
-
-**Adapter 程式與離線 HTTP transport tests 已完成；真實 provider requests 因尚未配置／授權 credential 仍為 BLOCKED。** 本輪沒有建立、挪用或讀出既有金鑰，也沒有送出任何真實模型 API 請求。不可將下列離線測試列為外部 LLM 整合驗收通過。
+本次 OpenRouter 相關後端測試 **103 項**、完整後端 **293 項**通過。本機真模型 UI 首輪2項通過、平板1項因限流失敗（整輪53.6秒），平板獨立重驗1項通過（13.7秒），沒有合併宣稱單次3/3。新版 Docker 真 OCR smoke 56項、重啟保存及真模型瀏覽器1項（18.2秒）通過；公開 HTTP 23項及真模型瀏覽器1項（27.8秒）亦通過。這些離線測試與真實請求分別記錄，不以 fixture、設定存在或本機規則代替外部驗證。先前 [無金鑰驗收](ACCEPTANCE_NO_KEYS_20261019.md) 的後端 190 項／AI 113 項，以及更早的 AI 101 項，保留為歷史證據；其中「尚未授權、未發送真實請求」只描述當時狀態，已由本次 OpenRouter 新授權取代。
 
 ## 已實作的範圍
 
 - 預設 `grounded_rules`：執行本機官方資料檢索與確定性規則，不使用 LLM，回覆 `provider: grounded_rules`、`is_simulated: false`。
-- 可選 `openai_compatible`：以後端 `httpx.AsyncClient` 呼叫設定服務的 `/chat/completions`，使用 Bearer 驗證及 `response_format: {type: json_object}`。模型必須由操作者明確指定，程式沒有預選模型。
-- `UnavailableLLMProvider` 保留：不支援的 provider 或缺少必要設定會產生明確錯誤。外部請求失敗時不回退成本機規則或 Mock 成功結果。
-- 所有分類、條件提案、文件要求、案件及文件狀態仍由確定性規則與 API 處理；模型沒有任何修改案件或送件工具。
+- 可選 `openai_compatible`：使用既有後端 `httpx.AsyncClient` 呼叫 `/chat/completions`，不新增供應商 SDK。OpenRouter 使用此 Adapter 的免費專用設定；一般相容設定仍保留，但不代表 OpenAI／Gemini 已完成真實串接。
+- 不支援的 provider、缺少必要設定及外部請求失敗都明確報錯，不隱形回退成本機規則、Mock 或其他模型。
+- 分類、條件提案、文件要求、案件及文件狀態仍由確定性規則與 API 處理；模型沒有修改案件或送件工具。
 
-此實作依 [OpenAI Chat Completions 參考文件](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create) 與 [Structured Outputs 說明](https://developers.openai.com/api/docs/guides/structured-outputs) 使用 JSON mode，另在伺服器驗證完整結構。JSON mode 本身不代表內容符合專案的引用與安全要求。
+JSON mode 只約束輸出格式，不能取代伺服器的證據、來源、用量與費用驗證。[OpenRouter Chat API](https://openrouter.ai/docs/api/api-reference/chat/create-a-chat-completion)
 
-## 後端環境變數
+## 後端設定與免費費用界線
 
-| 變數 | 預設／要求 | 說明 |
-|---|---|---|
-| `LLM_PROVIDER` | `grounded_rules` | 只有明確改為 `openai_compatible` 才選用外部 adapter |
-| `LLM_BASE_URL` | `https://api.openai.com/v1` | 受信任的後端部署設定；必須是 HTTPS 公開網域，不可含帳密、查詢參數、fragment 或 IP 位址 |
-| `LLM_API_KEY` | 無預設，外部模式必填 | 只能留在後端環境；不沿用 `OPENAI_API_KEY`，不讀取其他 env 檔，不送往前端 |
-| `LLM_MODEL` | 無預設，外部模式必填 | 由操作者指定可使用且支援所需參數的模型 |
+OpenRouter 金鑰保存在私有 `.local/secrets/.env.openrouter`，啟動時明確映射至 canonical `LLM_API_KEY`；應用不會掃描或自動載入其他 env 檔，也不沿用其他供應商金鑰。秘密值不出現在文件、前端、Git、Docker build args、映像或日誌。詳見 [供應商設定](PROVIDER_SETUP.md)。
 
-範本應保留空白金鑰及模型，預設仍為本機模式：
+| 變數 | 本次 OpenRouter 設定 | 邊界 |
+| --- | --- | --- |
+| `LLM_PROVIDER` | `openai_compatible` | 僅明確設定才使用外部 Adapter；預設範本仍為本機模式 |
+| `LLM_BASE_URL` | `https://openrouter.ai/api/v1` | OpenRouter 僅接受這個 canonical 官方端點，不接受其他路徑、別名或覆寫 |
+| `LLM_API_KEY` | 後端啟動環境安全注入 | 不提供範例值，不放入 `VITE_` 或前端程式 |
+| `LLM_MODEL` | `openrouter/free` | 不接受其他請求模型、付費模型或 auto router |
+| `LLM_TIMEOUT_SECONDS` | `35` | OpenRouter 整體請求上限可設定，但不得超過 40 秒 |
 
-```dotenv
-LLM_PROVIDER=grounded_rules
-LLM_BASE_URL=https://api.openai.com/v1
-LLM_API_KEY=
-LLM_MODEL=
-```
+固定請求參數：
 
-部署環境負責將值注入後端 process。前端不得使用 `VITE_` 或其他方式公開這些值。本輪沒有修改任何真實 env 檔；未取得授權前也不切換執行環境至真實外部模式。
+~~~json
+{
+  "model": "openrouter/free",
+  "response_format": {"type": "json_object"},
+  "stream": false,
+  "max_completion_tokens": 1800,
+  "reasoning": {"effort": "minimal"},
+  "provider": {
+    "require_parameters": true,
+    "allow_fallbacks": false,
+    "max_price": {
+      "prompt": 0,
+      "completion": 0,
+      "request": 0,
+      "image": 0
+    }
+  }
+}
+~~~
 
-服務網址只由部署環境決定，使用者問題、文件及檢索內容均無法改變服務位置。程式拒絕明顯內部／IP 網址、禁止重新導向，並忽略 proxy 環境設定。部署者仍應以網路出口政策限制核准供應商；本機語法驗證不等同 DNS 或正式網路政策驗收。
+`max_price` 是價格硬篩選物件；四項零價格、固定免費 router 與不提供其他模型共同限制本次請求費用。`require_parameters=true` 要求供應商支援所需參數，`allow_fallbacks=false` 禁止供應商備援；請求不自動重試，也沒有付費或 Mock fallback。[官方路由與價格設定](https://openrouter.ai/docs/guides/routing/provider-selection)
 
-## 模型的證據與輸出邊界
+實際金鑰資訊 GET 查核顯示限制 US$0.10、當時 usage 為 0；本次多次推論的實際 `usage.cost` 均為 0。這些是已觀察結果，不能保證免費供應商日後持續有容量。實測亦出現 429、503 與逾時；重大疾病額外 CLI 真模型探測兩輪因429未完成，保留為擴充覆蓋的外部限制，不宣稱三類模型探測全部通過。完整紀錄見 [OpenRouter 驗收](OPENROUTER_ACCEPTANCE.md)。
 
-1. 先執行本機官方規則。引導分類、追問、保障／金額／資格問題、安全拒答及無支持內容不會呼叫模型；這些回覆仍清楚標為 `grounded_rules`。
-2. 只有已受本機資料支持的文件準備回答會進入外部 adapter。傳送內容只有本次檢索的標題、完整段落、來源 ID 與頁碼，不含原始醫療文件、案件物件、使用者對話歷史或來源 URL。
-3. 模型只能選取完整、原樣的已查核段落，不能自由增加敘述或省略條件。這是保守的證據整理模式，尚未實作任意自然語言改寫的語意事實查核。
-4. 模型 JSON 只能包含 `explanations`、`source_references`、空白的 `proposed_case_updates`。每個説明項目須對應本次 evidence ID，文字須等於該完整段落。
-5. 引用必須精確等於所選段落的來源 ID／頁碼。即使來源在全域 registry 中存在，若不是本次所選證據也不能引用。URL 由伺服器從已查核 registry 還原，模型不可生成網址。
-6. 任何增刪條件、虛構資格或金額、未知引用、URL、案件更新、非 JSON、截斷及拒答回應均拒絕，不把它們包裝成成功結果。
+服務網址只能由後端部署設定決定，使用者問題、文件與檢索內容無法改變目的地。程式禁止重新導向並忽略 proxy 環境設定；本機 URL 驗證不等同正式網路出口或 DNS 政策驗收。
 
-執行時只有 HTTP 成功且全部驗證通過，才回 `provider: openai_compatible`。離線測試會檢查同一回傳形狀，但 fixture 產生的回覆不構成真實模型結果或真實服務驗證。
+## OpenRouter 的證據與輸出邊界
 
-## 健康檢查與錯誤
+1. 先執行本機官方規則。引導分類、追問、保障／金額／資格問題、安全拒答與無支持內容不呼叫模型；回覆清楚標為 `grounded_rules`。
+2. 只有已受本機資料支持的文件準備回答進入外部 Adapter。雲端只收到公開官方證據的 `id`、`title`、`text`，不送使用者問題、病歷、原始上傳檔、案件物件、對話歷史或來源 URL。
+3. OpenRouter 模型只能以 `{"evidence_ids":["id"]}` 選回本次 1 至 3 個不重複證據 ID；不得輸出其他鍵、自由文字、網址、來源或案件更新。
+4. 伺服器依所選 ID 重建完整 canonical 段落與官方來源／頁碼／URL，保留條件及不確定性；模型不負責改寫官方內容，也不能自行省略部分段落。
+5. 未知、重複、超量或不屬於本次檢索的 ID，以及非 JSON、截斷、拒答、工具呼叫或額外生成欄位，一律拒絕。
+6. 對外聊天 API 保留既有回傳形狀；實際模型與 token／cost 留在後端去敏感驗證紀錄，不附加到案件回覆。
 
-`provider_status()` 不會送出任何外部請求，也不回傳金鑰、模型名稱或服務網址。
+一般非 OpenRouter 的相容設定保留原有完整段落比對及引用驗證，不等同本次 ID-only wire schema。兩者都必須通過最終 `validate_assistant_response`，才能回 `provider: openai_compatible`、`is_simulated: false`。
 
-- 預設：`llm_provider: grounded_rules`、`llm_configured: false`、`llm_verified: false`。
-- 已選外部但缺 key／model 或設定無效：`llm_configured: false`，對話回 503，不隱形回退。
-- 外部設定齊全：`llm_configured: true`，仍為 `llm_verified: false`。此值只表示必要設定齊備，不證明憑證有效、模型可用或已完成正式驗收。
-- 本版的 `llm_verified` 保持 false，不因離線 fixture、健康檢查或環境變數而變成已驗證。
+## 真實模型、用量與健康狀態
+
+OpenRouter 回應必須提供具體實際 `model`，不能只有 `openrouter/free` 等 router 別名。`usage.prompt_tokens`、`completion_tokens`、`total_tokens` 必須為有效正整數、總數相符，completion 不得超過 1800；`usage.cost` 必須是有限數值且恰為 0。缺失、錯型或非零費用不當作成功。
+
+OpenRouter 現行 API 自動回傳 usage，不需要已棄用的 `usage.include`。實際供應模型可能隨免費容量改變，不能以請求的 router 名稱冒充固定模型。[官方 Usage Accounting](https://openrouter.ai/docs/cookbook/administration/usage-accounting)、[Free Models Router](https://openrouter.ai/docs/cookbook/get-started/free-models-router-playground)
+
+`provider_status()` 不送出外部請求，也不公開金鑰、模型名稱或服務網址：
+
+- 預設本機模式：`llm_configured=false`、`llm_verified=false`。
+- 外部模式缺少 key／model 或設定不合法：`llm_configured=false`，對話明確報錯。
+- 設定齊全但此程序尚無成功真請求：`llm_configured=true`、`llm_verified=false`。
+- 只有預設真實 transport 的 HTTP、具體模型、零費用、證據及最終回覆驗證全部通過，才記錄本程序同一配置的 `llm_verified=true`；MockTransport、離線 fixture 與本機規則回覆不能建立這項紀錄。
+- 程序重啟、停用外部模式或觀察到配置變更會使舊驗證失效。`llm_verified` 是過往成功證據，不是即時 readiness；之後仍可能限流、故障或逾時。
+
+## 錯誤、隱私與剩餘驗收
 
 | HTTP | code | 行為 |
-|---|---|---|
+| --- | --- | --- |
 | 503 | `LLM_NOT_CONFIGURED` | 外部 key／model 缺少 |
 | 503 | `INVALID_LLM_CONFIG` | 網址、模型或逾時設定無效 |
 | 503 | `LLM_TIMEOUT` | 單次及整體請求逾時 |
-| 503 | `LLM_PROVIDER_ERROR` | 網路、HTTP 錯誤或重新導向 |
-| 503 | `INVALID_LLM_RESPONSE` | 內容、格式、引用或更新提案未通過驗證 |
+| 503 | `LLM_RATE_LIMITED` | 免費供應商回 429；顯示稍後重試，不自動重試 |
+| 503 | `LLM_PROVIDER_ERROR` | 網路、其他 HTTP 錯誤或重新導向 |
+| 503 | `INVALID_LLM_RESPONSE` | 模型、用量、費用、ID 或回覆驗證未通過 |
 
-請求上限 20 秒，回應上限 64 KiB。供應商原始錯誤內容、請求 prompt、Authorization header 及原始模型回覆均不寫入專案紀錄或回傳使用者。`store: false` 是送出的請求參數，不能在未查核供應商條款前宣稱其資料保留政策已通過驗證。
+OpenRouter 內部預設 35 秒且最多 40 秒，低於後端對話路由 45 秒；前端對話逾時 50 秒。回應上限仍為 64 KiB。供應商原始錯誤 body、請求 prompt、Authorization 與原始模型回覆不寫入專案紀錄或回傳使用者。`store:false` 等請求參數不代表供應商資料保留政策已通過查核；目前的隱私界線是僅外送公開官方證據。
 
-## 離線測試與仍待完成的驗收
-
-執行：
-
-```powershell
-.venv\Scripts\python.exe -m pytest backend\tests\test_ai.py -q --basetemp=.local/pytest/ai-unique
-```
-
-本輪結果：**101 項 AI 測試通過**，其中 65 項涵蓋本機 RAG／規則，36 項涵蓋 adapter 邊界與離線情境。外部傳輸測試使用 [HTTPX MockTransport](https://www.python-httpx.org/advanced/transports/#mock-transports)，驗證實際 HTTP client 所組合的方法、路徑、JSON、記憶體中的合成測試用 Authorization、逾時、大小限制及失敗處理；不連線至任何模型服務。
-
-尚待取得明確授權並安全配置供應商、模型與憑證後，才能執行真實 request、核對實際模型能力／參數與引用、測試失敗恢復及前端串接，並另行保存不含敏感內容的驗證結果。完成前，Phase 2 的真實 LLM 驗收必須維持 BLOCKED。
+離線測試涵蓋固定端點與免費參數、ID-only 選取、實際模型／用量／費用、逾時、限流、不重試、不 fallback、配置隔離及 health 紀錄；使用 [HTTPX MockTransport](https://www.python-httpx.org/advanced/transports/#mock-transports) 的結果不列作真實 API 成功。本輪真實請求、前端、容器與公開版本已完成原型範圍的必要驗收，結果見 [OpenRouter 驗收紀錄](OPENROUTER_ACCEPTANCE.md)；固定部署、商業級保險服務及額外模型覆蓋不包含於此次完成範圍。

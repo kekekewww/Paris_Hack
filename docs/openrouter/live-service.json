@@ -1,0 +1,49 @@
+{
+  "scope": "real service/actual OpenRouter requests; synthetic cases and public official evidence only",
+  "requested_model": "openrouter/free",
+  "checks": [
+    "key authenticated",
+    "fresh process unverified",
+    "real unauthorized request safely rejected",
+    "credential absent from public error",
+    "inpatient: actual external answer",
+    "inpatient: supported references, no case writes",
+    "inpatient: validated zero cost metadata",
+    "inpatient: same-process verified",
+    "outpatient: actual external answer",
+    "outpatient: supported references, no case writes",
+    "outpatient: validated zero cost metadata",
+    "outpatient: same-process verified"
+  ],
+  "completions": [
+    {
+      "model": "liquid/lfm-2.5-2.6b:free",
+      "cost": 0,
+      "prompt_tokens": 341,
+      "completion_tokens": 588,
+      "total_tokens": 929
+    },
+    {
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "cost": 0,
+      "prompt_tokens": 653,
+      "completion_tokens": 1060,
+      "total_tokens": 1713
+    }
+  ],
+  "raw_files_sent": false,
+  "user_messages_sent": false,
+  "key_before": {
+    "limit": 0.1,
+    "limit_remaining": 0.1,
+    "usage": 0,
+    "free_model_daily_requests": {
+      "used": 9,
+      "limit": 1000,
+      "remaining": 991
+    }
+  },
+  "real_failure_code": "LLM_PROVIDER_ERROR",
+  "status": "FAIL",
+  "error_code": "LLM_RATE_LIMITED"
+}

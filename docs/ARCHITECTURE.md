@@ -55,9 +55,9 @@ HTTP adapter 僅允許同源相對路徑，預設 `/api/v1`，攜帶同源 cooki
 
 可選的 `openai_compatible` 已實作於 `backend/app/ai/openai_compatible.py`，以後端 HTTP client 呼叫 `/chat/completions`。後端設定 `LLM_BASE_URL` 預設為 `https://api.openai.com/v1`；`LLM_API_KEY`、`LLM_MODEL` 都無預設，外部模式必填，且不預選模型。缺少必要設定或設定無效會回 503，不支援的模式仍走 `UnavailableLLMProvider`。外部失敗不回退成本機規則或 Mock 成功結果。
 
-外部 Adapter 先套用本機規則：類別／條件提案、安全拒答及無依據問題仍由規則回答；只有有證據支持的文件準備回答會呼叫模型。傳送內容限本次檢索的標題、完整段落、來源 ID 與頁碼，不傳原始上傳文件、案件物件、使用者問題或對話歷史。模型只能選取原樣的完整證據段落，不能新增事實、生成網址或更新案件；伺服器驗證引用後從 registry 還原官方連結。
+外部 Adapter 先套用本機規則：類別／條件提案、安全拒答及無依據問題仍由規則回答；只有有證據支持的文件準備回答會呼叫模型。傳送內容限本次檢索的官方證據，不傳原始上傳文件、案件物件、使用者問題或對話歷史。OpenRouter只接收證據 ID、標題與完整段落，回覆須為本次白名單內1–3個唯一 ID；正文與全部引用由後端還原。其他相容服務保留逐字段落與來源 ID／頁碼的原契約。模型不能新增事實、生成網址或更新案件。
 
-Adapter 已通過離線 HTTP transport 測試，尚未驗證真實模型請求；Phase 2 真實 LLM 驗收仍為 BLOCKED。健康檢查不呼叫模型，`llm_configured=true` 只表示外部必要設定齊備；本版 `llm_verified` 固定為 `false`，`health.status=ok` 也不能證明外部連線通過。配置、安全邊界與測試狀態以 [LLM 整合紀錄](LLM_INTEGRATION.md) 為準。
+OpenRouter已完成真實模型、本機三尺寸、容器及公開HTTPS流程驗證；請求固定`openrouter/free`、四項價格上限0且禁用fallback。回覆須驗證實際模型、明確零費用及token用量，再通過內容驗證，才記錄同程序配置的`llm_verified=true`。重啟或觀察到配置變更會清除狀態；健康檢查不呼叫模型，verified表示過往成功而非即時readiness。免費容量限制仍會回503，不假造成功。配置與完整失敗歷程見[OpenRouter驗收](OPENROUTER_ACCEPTANCE.md)及[LLM整合紀錄](LLM_INTEGRATION.md)。
 
 回覆先通過結構與來源驗證，再由 Pydantic 及 API 檢查。引用須對應已查核來源、官方網址與有效頁碼。超出小型資料庫支持範圍時回覆不確定；資格、給付、法律或醫療結論不由準備助手推定。
 

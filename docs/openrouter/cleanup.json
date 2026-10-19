@@ -1,0 +1,14 @@
+{
+  "removed_container": "paris-claim-openrouter-20261019",
+  "stopped_test_processes": [
+    51792,
+    57912
+  ],
+  "status": "PASS",
+  "tunnel_retained": 36692,
+  "public_listener_retained": 64028,
+  "image_retained": "cardif-claim-preparation:openrouter-20261019",
+  "removed_volume": "paris_claim_openrouter_20261019",
+  "private_key_retained": true,
+  "public_parent_retained": 50120
+}
