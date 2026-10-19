@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "health": {
+    "llm_provider": "grounded_rules",
+    "llm_configured": false,
+    "llm_verified": false
+  },
+  "synthetic_provider_slots": 3,
+  "real_secrets_used": false,
+  "model_requests": 0
+}

@@ -1,5 +1,7 @@
 # 本機容器驗收
 
+> 2026-10-19無金鑰續驗：重用下述b25049ed映像，另建隔離容器完成60checks、瀏覽器1/1（9.6秒），並真restart確認案件完全一致、刪除404；權限與私有檔檢查通過，測試容器／volume已清。未改產品或宣稱重新build，新證據見[本輪報告](ACCEPTANCE_NO_KEYS_20261019.md)。
+
 ## 2026-10-19 新版介面產物
 
 `docker build --progress plain -t cardif-claim-preparation:ux-20261019 .` 實際exit0；image ID為 `sha256:b25049ed997c4d2167562056356dbed1d464cb8112918740d3cde3fc3c3130af`。映像內實際確認含「描述我的狀況」新版入口，UID10001／rootfs唯讀／capdropALL／no-new-privileges，無.env／.git／tests／demo／docs。沒有傳入金鑰或改動後端依賴。

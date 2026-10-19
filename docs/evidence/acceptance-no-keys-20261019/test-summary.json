@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-19",
+  "runtime_source_commit": "f41d74d71f6745e0fca78b1d48359a389ca75a1e",
+  "runtime_source_changed": false,
+  "backend": {
+    "skips": 0,
+    "ai": 113,
+    "seconds": 69.07,
+    "core": 49,
+    "passed": 190,
+    "failures": 0,
+    "ocr": 28
+  },
+  "frontend": {
+    "pdf_passed": 2,
+    "mock_passed": 75,
+    "unit_passed": 33,
+    "pdf_seconds": 7.4,
+    "mock_per_viewport": 25,
+    "mock_time": "1.6 minutes"
+  },
+  "actual_http": {
+    "container_browser_passed": 1,
+    "container_browser_seconds": 9.6,
+    "api_passed": 27,
+    "synthetic_cases_deleted": true,
+    "failure_scenario_passed": 1,
+    "public_browser_passed": 3,
+    "failure_scenario_seconds": 4.1,
+    "container_persistence_passed": true,
+    "public_http_checks": 22,
+    "public_browser_seconds": 36.4,
+    "container_http_checks": 60,
+    "api_time": "1.8 minutes"
+  },
+  "real_credentials_created_or_written": false,
+  "external_model_requests": 0,
+  "llm_verified": false,
+  "temporary_validation_resources_cleaned": true
+}

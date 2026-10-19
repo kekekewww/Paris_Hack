@@ -1,5 +1,7 @@
 # Cloudflare Quick Tunnel 臨時展示
 
+> 本輪無金鑰完整續驗：相同公開網址HTTP22 checks與瀏覽器3/3（36.4秒）再次通過，測試案件清除，服務維持運行；無外部模型請求。下方46.8秒為前一輪UI驗收歷史，最新完整結果見[續驗報告](ACCEPTANCE_NO_KEYS_20261019.md)。
+
 ## 目前版本：2026-10-19 介面簡化
 
 最新網址：[理賠文件準備助手](https://retirement-trim-reported-jesus.trycloudflare.com/?service=api)。新版已正式建置至 dist，公開 HTTP **22 checks PASS**、瀏覽器 **3/3 PASS（46.8秒）**，涵蓋兩入口、缺漏／清晰 PNG 真 RapidOCR、PDF／mixed 第2頁、人工確認、重新整理與摘要下載；console／pageerror0，合成測試案件均已刪除。

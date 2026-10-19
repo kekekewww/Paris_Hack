@@ -1,0 +1,39 @@
+{
+  "checked_at_utc": "2026-10-19T06:17:20.725522+00:00",
+  "scanner": "pip-audit 2.10.1",
+  "pip_audit_exit": 0,
+  "python_audited_count": 33,
+  "python_runtime_expected_count": 33,
+  "python_coverage_exact": true,
+  "python_vulnerability_count": 0,
+  "python_skipped_count": 0,
+  "python_advisories": [],
+  "npm_audit_exit": 0,
+  "npm_metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "dependencies": {
+      "prod": 2,
+      "dev": 75,
+      "optional": 68,
+      "peer": 3,
+      "peerOptional": 0,
+      "total": 88
+    }
+  },
+  "pip_check_exit": 0,
+  "inputs_unchanged": true,
+  "input_sha256_after": {
+    "backend/requirements.txt": "2eed755ebe77f68ddb9a1b4d5dbf87647141d49a3a854719cacf8939e67acb2a",
+    "backend/constraints.txt": "f3c3f8b84fc5866f794145d4232211c811bdaef912e6f2ee1162c1c8d52534b8",
+    "package.json": "e5fa4af15613bbfbe191beff36d8a83c73cf7cdf13e08b3ec95f16e384ebb46f",
+    "package-lock.json": "3a2cef9360fe41bc822ea295ccbf0eeff9eca59fe54e3dff75edb2e2e09f30f0"
+  },
+  "initial_sandbox_attempts": "Both vulnerability scans exited 1 due to DNS resolution failure; retained under sandbox-*; rerun with approved network access exited 0."
+}

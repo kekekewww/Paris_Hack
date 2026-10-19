@@ -2,6 +2,10 @@
 
 更新日期：2026-10-17（臺灣）。
 
+> 2026-10-19 續驗：使用者要求預留 OpenAI、Google AI Studio 與 OpenRouter（openrouter/free），隨後明確選擇「暫不建立金鑰」。三家欄位保持空白且不連動現有Adapter，不宣稱已完成原生或相容串接；詳見[供應商設定狀態](PROVIDER_SETUP.md)。本輪完整後端離線重驗與非LLM流程另見[驗收紀錄](ACCEPTANCE_NO_KEYS_20261019.md)，以下原101項描述為早期歷史。
+
+本輪完整後端190/190中，AI測試實際113項；仍是本機規則／檢索與離線傳輸邊界，不含任何真實模型請求。
+
 **Adapter 程式與離線 HTTP transport tests 已完成；真實 provider requests 因尚未配置／授權 credential 仍為 BLOCKED。** 本輪沒有建立、挪用或讀出既有金鑰，也沒有送出任何真實模型 API 請求。不可將下列離線測試列為外部 LLM 整合驗收通過。
 
 ## 已實作的範圍

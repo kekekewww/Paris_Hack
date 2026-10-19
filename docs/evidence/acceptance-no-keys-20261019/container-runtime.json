@@ -1,0 +1,12 @@
+{
+  "image_id": "sha256:b25049ed997c4d2167562056356dbed1d464cb8112918740d3cde3fc3c3130af",
+  "port": 8004,
+  "health": {
+    "status": "ok",
+    "service_mode": "api",
+    "llm_provider": "grounded_rules",
+    "llm_configured": false,
+    "llm_verified": false,
+    "ocr_provider": "pymupdf+rapidocr"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-19",
+  "scope": "no-keys official-source acceptance",
+  "source_count": 11,
+  "status_200": 11,
+  "verified": 11,
+  "homepage_exact_pdf_links": 10,
+  "homepage_pdf_link_count": 10,
+  "page_3_rules_verified": true,
+  "registry_unchanged": true,
+  "http_get_count": 13,
+  "total_bytes_read": 3123133,
+  "candidate_changes": [],
+  "raw_documents_saved": false,
+  "external_llm_calls": 0
+}

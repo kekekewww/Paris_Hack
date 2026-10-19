@@ -1,0 +1,10 @@
+{
+  "build_exit": 0,
+  "files_scanned": 207,
+  "synthetic_markers": 4,
+  "marker_leaks": [],
+  "template_keys_empty": true,
+  "template_defaults_grounded_rules": true,
+  "real_secrets_used": false,
+  "model_requests": 0
+}

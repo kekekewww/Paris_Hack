@@ -1,0 +1,570 @@
+{
+  "checked_at": "2026-10-19T14:15:03.952077+08:00",
+  "allowed_network_hosts": [
+    "life.cardif.com.tw"
+  ],
+  "source_count": 11,
+  "status_200": 11,
+  "readable": 11,
+  "verified": 11,
+  "total_bytes_read": 2674953,
+  "max_bytes_per_source": 1048576,
+  "max_total_bytes": 6291456,
+  "raw_bodies_persisted": false,
+  "registry_sha256_before": "6d3e80a570806de9419024c151bd14be125c9df3571995df8e2b1554f983c6ec",
+  "registry_sha256_after": "6d3e80a570806de9419024c151bd14be125c9df3571995df8e2b1554f983c6ec",
+  "results": [
+    {
+      "source_id": "cardif-claims",
+      "title": "理賠程序介紹",
+      "requested_url": "https://life.cardif.com.tw/zh/a314",
+      "previous_checked_at": "2026-10-17",
+      "checked_at": "2026-10-19T14:15:02.078777+08:00",
+      "method": "GET",
+      "redirects": [],
+      "complete_body": true,
+      "readable": true,
+      "registry_page_count": null,
+      "registry_version": null,
+      "status": 200,
+      "final_url": "https://life.cardif.com.tw/zh/a314",
+      "content_type": "text/html;charset=UTF-8",
+      "content_length": "31332",
+      "last_modified": null,
+      "etag": "\"b33f3432:dtagent10339260603164134bPRx:dtagent10339260603164134bPRx\"",
+      "bytes_read": 154480,
+      "body_sha256": "076da5fd9f37affb4c5404edbe2a9d94a4b43bdbc313f66c6bf1089fa9bc4eae",
+      "content_type_matches": true,
+      "registered_pdf_links": [
+        {
+          "source_id": "cardif-application",
+          "exact_url_present": true,
+          "path_present": true
+        },
+        {
+          "source_id": "cardif-general-documents",
+          "exact_url_present": true,
+          "path_present": true
+        },
+        {
+          "source_id": "cardif-outpatient-guide",
+          "exact_url_present": true,
+          "path_present": true
+        },
+        {
+          "source_id": "cardif-inpatient-guide",
+          "exact_url_present": true,
+          "path_present": true
+        },
+        {
+          "source_id": "cardif-critical-guide",
+          "exact_url_present": true,
+          "path_present": true
+        },
+        {
+          "source_id": "cardif-general-example",
+          "exact_url_present": true,
+          "path_present": true
+        },
+        {
+          "source_id": "cardif-outpatient-example",
+          "exact_url_present": true,
+          "path_present": true
+        },
+        {
+          "source_id": "cardif-medical-authorization",
+          "exact_url_present": true,
+          "path_present": true
+        },
+        {
+          "source_id": "cardif-accident-consent",
+          "exact_url_present": true,
+          "path_present": true
+        },
+        {
+          "source_id": "cardif-nhi-request",
+          "exact_url_present": true,
+          "path_present": true
+        }
+      ],
+      "semantic_checks": [
+        {
+          "needle": "住院醫療",
+          "present": true
+        },
+        {
+          "needle": "醫療門診",
+          "present": true
+        },
+        {
+          "needle": "防癌或重疾",
+          "present": true
+        },
+        {
+          "needle": "保險金申請書",
+          "present": true
+        },
+        {
+          "needle": "診斷書或住院證明",
+          "present": true
+        },
+        {
+          "needle": "門診收據正本",
+          "present": true
+        },
+        {
+          "needle": "病理組織檢查報告",
+          "present": true
+        },
+        {
+          "needle": "依病況",
+          "present": true
+        }
+      ],
+      "semantic_checks_passed": true,
+      "printed_versions": [],
+      "content_text_sha256": "4e251c73f0d28988cd8f8e189601026ce6b8ca13d9ff4ed5bac70ac0a7793095",
+      "verification_status": "verified"
+    },
+    {
+      "source_id": "cardif-application",
+      "title": "保險金申請書",
+      "requested_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-1.1.1.pdf/550abb13-7752-46bb-9463-24669b6fec0e?t=1704248030890",
+      "previous_checked_at": "2026-10-17",
+      "checked_at": "2026-10-19T14:15:02.079325+08:00",
+      "method": "GET",
+      "redirects": [],
+      "complete_body": true,
+      "readable": true,
+      "registry_page_count": 4,
+      "registry_version": "VIE_Claim.2024.01",
+      "status": 200,
+      "final_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-1.1.1.pdf/550abb13-7752-46bb-9463-24669b6fec0e?t=1704248030890",
+      "content_type": "application/pdf",
+      "content_length": "531760",
+      "last_modified": "Wed, 03 Jan 2024 02:13:48 GMT",
+      "etag": "\"1704248030:dtagent10339260603164134bPRx:dtagent10339260603164134bPRx\"",
+      "bytes_read": 531760,
+      "body_sha256": "85b41088a296cbc9284e5d89890350940831aa185f618c96331440cb90ab2854",
+      "content_type_matches": true,
+      "pdf_magic_matches": true,
+      "page_count": 4,
+      "page_count_matches": true,
+      "semantic_checks": [
+        {
+          "needle": "保險金申請書",
+          "present": true
+        },
+        {
+          "needle": "正本收據如有其他用途",
+          "present": true
+        },
+        {
+          "needle": "可持副本申請",
+          "present": true
+        }
+      ],
+      "semantic_checks_passed": true,
+      "printed_versions": [
+        "VIE_Claim.2024.01"
+      ],
+      "version_matches": true,
+      "content_text_sha256": "920971282e4c70d554cf9656ca9087513232672362d78a66f566c6a275113f18",
+      "verification_status": "verified"
+    },
+    {
+      "source_id": "cardif-general-documents",
+      "title": "申請一般理賠應檢附文件",
+      "requested_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-1.1.3.pdf/0d5f2ed7-bb48-4dd6-a026-b645bcac9942?t=1528974663896",
+      "previous_checked_at": "2026-10-17",
+      "checked_at": "2026-10-19T14:15:02.079868+08:00",
+      "method": "GET",
+      "redirects": [],
+      "complete_body": true,
+      "readable": true,
+      "registry_page_count": 1,
+      "registry_version": null,
+      "status": 200,
+      "final_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-1.1.3.pdf/0d5f2ed7-bb48-4dd6-a026-b645bcac9942?t=1528974663896",
+      "content_type": "application/pdf",
+      "content_length": "267787",
+      "last_modified": "Thu, 14 Jun 2018 11:11:01 GMT",
+      "etag": "\"1528974663:dtagent10339260603164134bPRx:dtagent10339260603164134bPRx\"",
+      "bytes_read": 267787,
+      "body_sha256": "8ff9b5a4d686f07f35742ecb5d7950f21466cd94221b8137235c015d515cbcdb",
+      "content_type_matches": true,
+      "pdf_magic_matches": true,
+      "page_count": 1,
+      "page_count_matches": true,
+      "semantic_checks": [
+        {
+          "needle": "申請一般理賠應檢附文件",
+          "present": true
+        },
+        {
+          "needle": "如為首次申請",
+          "present": true
+        },
+        {
+          "needle": "病理檢查報告或相關檢驗報告",
+          "present": true
+        },
+        {
+          "needle": "悉以保單條款約定為準",
+          "present": true
+        }
+      ],
+      "semantic_checks_passed": true,
+      "printed_versions": [],
+      "content_text_sha256": "3f0351acfc6393ba5d3dab2e313857e1863e4fd6c72b8db4d4b3ca5d1093151e",
+      "verification_status": "verified"
+    },
+    {
+      "source_id": "cardif-outpatient-guide",
+      "title": "健康險門診保險金申請注意須知",
+      "requested_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-3.4.pdf/10e161ca-d75d-46c0-b771-fd6e35b8d9ca?t=1762833872536",
+      "previous_checked_at": "2026-10-17",
+      "checked_at": "2026-10-19T14:15:02.768362+08:00",
+      "method": "GET",
+      "redirects": [],
+      "complete_body": true,
+      "readable": true,
+      "registry_page_count": 1,
+      "registry_version": null,
+      "status": 200,
+      "final_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-3.4.pdf/10e161ca-d75d-46c0-b771-fd6e35b8d9ca?t=1762833872536",
+      "content_type": "application/pdf",
+      "content_length": "166056",
+      "last_modified": "Tue, 11 Nov 2025 04:04:30 GMT",
+      "etag": "\"1762833872:dtagent10339260603164134bPRx:dtagent10339260603164134bPRx\"",
+      "bytes_read": 166056,
+      "body_sha256": "18c5c7c21df96dff2c74cb5a1e0f54aa7badd470199e0261a6d672e8aba33c06",
+      "content_type_matches": true,
+      "pdf_magic_matches": true,
+      "page_count": 1,
+      "page_count_matches": true,
+      "semantic_checks": [
+        {
+          "needle": "門診保險金申請注意須知",
+          "present": true
+        },
+        {
+          "needle": "勾選門診",
+          "present": true
+        },
+        {
+          "needle": "檢附存摺影本",
+          "present": true
+        }
+      ],
+      "semantic_checks_passed": true,
+      "printed_versions": [],
+      "content_text_sha256": "cf729af44ee2f49d0b4bf16fbd01173692dfdc7dd9f1b6a35d2a6913ec5056e9",
+      "verification_status": "verified"
+    },
+    {
+      "source_id": "cardif-inpatient-guide",
+      "title": "住院醫療日額申請注意須知",
+      "requested_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-3.5.pdf/55bf978e-ba97-4707-b114-3343d6979c40?t=1762833879421",
+      "previous_checked_at": "2026-10-17",
+      "checked_at": "2026-10-19T14:15:02.768362+08:00",
+      "method": "GET",
+      "redirects": [],
+      "complete_body": true,
+      "readable": true,
+      "registry_page_count": 3,
+      "registry_version": null,
+      "status": 200,
+      "final_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-3.5.pdf/55bf978e-ba97-4707-b114-3343d6979c40?t=1762833879421",
+      "content_type": "application/pdf",
+      "content_length": "223809",
+      "last_modified": "Tue, 11 Nov 2025 04:04:37 GMT",
+      "etag": "\"1762833879:dtagent10339260603164134bPRx:dtagent10339260603164134bPRx\"",
+      "bytes_read": 223809,
+      "body_sha256": "09d4048d52fe20ec47a6ac8542a3235bfca009cd77076279eabeac78472c80ef",
+      "content_type_matches": true,
+      "pdf_magic_matches": true,
+      "page_count": 3,
+      "page_count_matches": true,
+      "semantic_checks": [
+        {
+          "needle": "住院醫療日額申請注意須知",
+          "present": true
+        },
+        {
+          "needle": "診斷證明書正本",
+          "present": true
+        },
+        {
+          "needle": "沒有載明手術的部位",
+          "present": true
+        },
+        {
+          "needle": "不必再提供",
+          "present": true
+        },
+        {
+          "needle": "如果沒有手術",
+          "present": true
+        }
+      ],
+      "semantic_checks_passed": true,
+      "printed_versions": [],
+      "content_text_sha256": "d0ecce51e922eede3ddd74afa0d6faabe668c166d0000fcf72902508fff8d92f",
+      "verification_status": "verified"
+    },
+    {
+      "source_id": "cardif-critical-guide",
+      "title": "重大疾病或防癌險申請須知",
+      "requested_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-3.6.pdf/8c75510e-8c21-4f18-a013-f3d38bed38cc?t=1762833885720",
+      "previous_checked_at": "2026-10-17",
+      "checked_at": "2026-10-19T14:15:03.012456+08:00",
+      "method": "GET",
+      "redirects": [],
+      "complete_body": true,
+      "readable": true,
+      "registry_page_count": 3,
+      "registry_version": null,
+      "status": 200,
+      "final_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-3.6.pdf/8c75510e-8c21-4f18-a013-f3d38bed38cc?t=1762833885720",
+      "content_type": "application/pdf",
+      "content_length": "224371",
+      "last_modified": "Tue, 11 Nov 2025 04:04:43 GMT",
+      "etag": "\"1762833885:dtagent10339260603164134bPRx:dtagent10339260603164134bPRx\"",
+      "bytes_read": 224371,
+      "body_sha256": "392941085624630eed603526f3fb78ac562bd9c606de1a92a246f22ab236d8d6",
+      "content_type_matches": true,
+      "pdf_magic_matches": true,
+      "page_count": 3,
+      "page_count_matches": true,
+      "semantic_checks": [
+        {
+          "needle": "重大疾病或防癌險申請須知",
+          "present": true
+        },
+        {
+          "needle": "病理切片報告書",
+          "present": true
+        },
+        {
+          "needle": "沒有載明手術的部位",
+          "present": true
+        },
+        {
+          "needle": "不必再提供",
+          "present": true
+        },
+        {
+          "needle": "如果沒有手術",
+          "present": true
+        }
+      ],
+      "semantic_checks_passed": true,
+      "printed_versions": [],
+      "content_text_sha256": "63181dd5814d2e5288ae7030fc2c0af7a9cc10cf662e43e7375a684f21d45a7b",
+      "verification_status": "verified"
+    },
+    {
+      "source_id": "cardif-general-example",
+      "title": "保險金申請書（一般）填寫範例",
+      "requested_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-2.1.2.pdf/ae0d8b89-4c59-452d-b973-31a82f9dfda8?t=1704247966933",
+      "previous_checked_at": "2026-10-17",
+      "checked_at": "2026-10-19T14:15:03.064890+08:00",
+      "method": "GET",
+      "redirects": [],
+      "complete_body": true,
+      "readable": true,
+      "registry_page_count": 1,
+      "registry_version": "VIE_Claim.2024.01",
+      "status": 200,
+      "final_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-2.1.2.pdf/ae0d8b89-4c59-452d-b973-31a82f9dfda8?t=1704247966933",
+      "content_type": "application/pdf",
+      "content_length": "281742",
+      "last_modified": "Wed, 03 Jan 2024 02:12:44 GMT",
+      "etag": "\"1704247966:dtagent10339260603164134bPRx:dtagent10339260603164134bPRx\"",
+      "bytes_read": 281742,
+      "body_sha256": "c20ea2c3b5548ca5dd922eb998b899cc745424101ee009ee6d687528456e1ad8",
+      "content_type_matches": true,
+      "pdf_magic_matches": true,
+      "page_count": 1,
+      "page_count_matches": true,
+      "semantic_checks": [
+        {
+          "needle": "保險金申請書",
+          "present": true
+        },
+        {
+          "needle": "一般範例",
+          "present": true
+        }
+      ],
+      "semantic_checks_passed": true,
+      "printed_versions": [
+        "VIE_Claim.2024.01"
+      ],
+      "version_matches": true,
+      "content_text_sha256": "13078d87aa5fe62bec9abdc0ab19cee03c1f016d931ca586d943ff601f024c0e",
+      "verification_status": "verified"
+    },
+    {
+      "source_id": "cardif-outpatient-example",
+      "title": "保險金申請書（門診）填寫範例",
+      "requested_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-2.1.3.pdf/b3daf10f-977e-426b-8b3b-95fe7dc05242?t=1704247988685",
+      "previous_checked_at": "2026-10-17",
+      "checked_at": "2026-10-19T14:15:03.092892+08:00",
+      "method": "GET",
+      "redirects": [],
+      "complete_body": true,
+      "readable": true,
+      "registry_page_count": 1,
+      "registry_version": "VIE_Claim.2024.01",
+      "status": 200,
+      "final_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-2.1.3.pdf/b3daf10f-977e-426b-8b3b-95fe7dc05242?t=1704247988685",
+      "content_type": "application/pdf",
+      "content_length": "281780",
+      "last_modified": "Wed, 03 Jan 2024 02:13:06 GMT",
+      "etag": "\"1704247988:dtagent10339260603164134bPRx:dtagent10339260603164134bPRx\"",
+      "bytes_read": 281780,
+      "body_sha256": "1940bb9fd734d1bb0a14a0623814f1b07878438685faec0a4088a142582e0273",
+      "content_type_matches": true,
+      "pdf_magic_matches": true,
+      "page_count": 1,
+      "page_count_matches": true,
+      "semantic_checks": [
+        {
+          "needle": "保險金申請書",
+          "present": true
+        },
+        {
+          "needle": "門診範例",
+          "present": true
+        }
+      ],
+      "semantic_checks_passed": true,
+      "printed_versions": [
+        "VIE_Claim.2024.01"
+      ],
+      "version_matches": true,
+      "content_text_sha256": "c1207df882c9d806571bad226282d2cb334f8714352f8657d9d87673e4a773a5",
+      "verification_status": "verified"
+    },
+    {
+      "source_id": "cardif-medical-authorization",
+      "title": "病歷資料調閱授權書",
+      "requested_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-1.2.pdf/6ee6c77f-8fc7-4330-a0de-1458b0012b90?t=1509676532538",
+      "previous_checked_at": "2026-10-17",
+      "checked_at": "2026-10-19T14:15:03.356797+08:00",
+      "method": "GET",
+      "redirects": [],
+      "complete_body": true,
+      "readable": true,
+      "registry_page_count": 2,
+      "registry_version": "103.09（文件印載）",
+      "status": 200,
+      "final_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-1.2.pdf/6ee6c77f-8fc7-4330-a0de-1458b0012b90?t=1509676532538",
+      "content_type": "application/pdf",
+      "content_length": "155687",
+      "last_modified": "Fri, 03 Nov 2017 02:35:30 GMT",
+      "etag": "\"1509676532:dtagent10339260603164134bPRx:dtagent10339260603164134bPRx\"",
+      "bytes_read": 155687,
+      "body_sha256": "ed7c9527527ff67c393d82e3410ac79c6889bd7a112c16db5f76be9a2308a0c2",
+      "content_type_matches": true,
+      "pdf_magic_matches": true,
+      "page_count": 2,
+      "page_count_matches": true,
+      "semantic_checks": [
+        {
+          "needle": "病歷資料調閱授權書",
+          "present": true
+        },
+        {
+          "needle": "不得超過5年",
+          "present": true
+        },
+        {
+          "needle": "103.09",
+          "present": true
+        }
+      ],
+      "semantic_checks_passed": true,
+      "printed_versions": [],
+      "content_text_sha256": "52325c7a3daa3ddbb6735ec8bbb5c3857816d2f974da6afb51dde91984d57c21",
+      "verification_status": "verified"
+    },
+    {
+      "source_id": "cardif-accident-consent",
+      "title": "調查同意書（意外事故填寫）",
+      "requested_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-1.3.pdf/fac5596b-2002-4a40-a9d3-a68429b75b1c?t=1509676535867",
+      "previous_checked_at": "2026-10-17",
+      "checked_at": "2026-10-19T14:15:03.399462+08:00",
+      "method": "GET",
+      "redirects": [],
+      "complete_body": true,
+      "readable": true,
+      "registry_page_count": 1,
+      "registry_version": null,
+      "status": 200,
+      "final_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-1.3.pdf/fac5596b-2002-4a40-a9d3-a68429b75b1c?t=1509676535867",
+      "content_type": "application/pdf",
+      "content_length": "133972",
+      "last_modified": "Fri, 03 Nov 2017 02:35:33 GMT",
+      "etag": "\"1509676535:dtagent10339260603164134bPRx:dtagent10339260603164134bPRx\"",
+      "bytes_read": 133972,
+      "body_sha256": "58181fadc1cbbd1e0829fd02ba7f4c2b4411eb9ba61f716df89768f045876770",
+      "content_type_matches": true,
+      "pdf_magic_matches": true,
+      "page_count": 1,
+      "page_count_matches": true,
+      "semantic_checks": [
+        {
+          "needle": "調查同意書",
+          "present": true
+        }
+      ],
+      "semantic_checks_passed": true,
+      "printed_versions": [],
+      "content_text_sha256": "e18ffa58faf3c1380cf86779cfb63d197b3ff79ca6974ca32992dbb62eec18ef",
+      "verification_status": "verified"
+    },
+    {
+      "source_id": "cardif-nhi-request",
+      "title": "全民健康保險保險人提供資料申請書",
+      "requested_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-1.4.pdf/a8ffeac8-e25e-4b29-b8eb-2b280008a09f?t=1706146308458",
+      "previous_checked_at": "2026-10-17",
+      "checked_at": "2026-10-19T14:15:03.672940+08:00",
+      "method": "GET",
+      "redirects": [],
+      "complete_body": true,
+      "readable": true,
+      "registry_page_count": 1,
+      "registry_version": null,
+      "status": 200,
+      "final_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-1.4.pdf/a8ffeac8-e25e-4b29-b8eb-2b280008a09f?t=1706146308458",
+      "content_type": "application/pdf",
+      "content_length": "253509",
+      "last_modified": "Thu, 25 Jan 2024 01:31:46 GMT",
+      "etag": "\"1706146308:dtagent10339260603164134bPRx:dtagent10339260603164134bPRx\"",
+      "bytes_read": 253509,
+      "body_sha256": "dd580683abcd5771a01ee2daf6ae7c1f78a6375952dce09e9fa48569d4d5c0ba",
+      "content_type_matches": true,
+      "pdf_magic_matches": true,
+      "page_count": 1,
+      "page_count_matches": true,
+      "semantic_checks": [
+        {
+          "needle": "全民健康保險保險人提供資料申請書",
+          "present": true
+        }
+      ],
+      "semantic_checks_passed": true,
+      "printed_versions": [],
+      "content_text_sha256": "7856a5b12dbf17f6c491d09500ff22c7edb2e0f0bf34a5718f0fa26351ce47e2",
+      "verification_status": "verified"
+    }
+  ],
+  "limits": [
+    "10/17未保存完整內容hash，不能宣稱逐位元內容完全未變。",
+    "比對的是已記錄標題、頁數、版本與規則主要文字，非完整保單法律解釋或像素審核。",
+    "擷取內容僅作不可信任資料分析，不執行其中指令；未存原始PDF/HTML或填寫範例個資。"
+  ]
+}

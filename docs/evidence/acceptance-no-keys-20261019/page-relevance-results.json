@@ -1,0 +1,150 @@
+{
+  "checked_at": "2026-10-19T14:15:52.793919+08:00",
+  "purpose": "verify current surgery-rule paragraphs still occur on cited page 3",
+  "checks": [
+    {
+      "source_id": "cardif-inpatient-guide",
+      "expected_page": 3,
+      "rule_phrases_on_expected_page": true
+    },
+    {
+      "source_id": "cardif-critical-guide",
+      "expected_page": 3,
+      "rule_phrases_on_expected_page": true
+    }
+  ],
+  "results": [
+    {
+      "source_id": "cardif-inpatient-guide",
+      "title": "住院醫療日額申請注意須知",
+      "requested_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-3.5.pdf/55bf978e-ba97-4707-b114-3343d6979c40?t=1762833879421",
+      "previous_checked_at": "2026-10-17",
+      "checked_at": "2026-10-19T14:15:52.132785+08:00",
+      "method": "GET",
+      "redirects": [],
+      "complete_body": true,
+      "readable": true,
+      "registry_page_count": 3,
+      "registry_version": null,
+      "status": 200,
+      "final_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-3.5.pdf/55bf978e-ba97-4707-b114-3343d6979c40?t=1762833879421",
+      "content_type": "application/pdf",
+      "content_length": "223809",
+      "last_modified": "Tue, 11 Nov 2025 04:04:37 GMT",
+      "etag": "\"1762833879:dtagent10339260603164134bPRx:dtagent10339260603164134bPRx\"",
+      "bytes_read": 223809,
+      "body_sha256": "09d4048d52fe20ec47a6ac8542a3235bfca009cd77076279eabeac78472c80ef",
+      "content_type_matches": true,
+      "pdf_magic_matches": true,
+      "page_count": 3,
+      "page_count_matches": true,
+      "semantic_checks": [
+        {
+          "needle": "住院醫療日額申請注意須知",
+          "present": true,
+          "page_numbers": [
+            1
+          ]
+        },
+        {
+          "needle": "診斷證明書正本",
+          "present": true,
+          "page_numbers": [
+            3
+          ]
+        },
+        {
+          "needle": "沒有載明手術的部位",
+          "present": true,
+          "page_numbers": [
+            3
+          ]
+        },
+        {
+          "needle": "不必再提供",
+          "present": true,
+          "page_numbers": [
+            3
+          ]
+        },
+        {
+          "needle": "如果沒有手術",
+          "present": true,
+          "page_numbers": [
+            3
+          ]
+        }
+      ],
+      "semantic_checks_passed": true,
+      "printed_versions": [],
+      "content_text_sha256": "d0ecce51e922eede3ddd74afa0d6faabe668c166d0000fcf72902508fff8d92f",
+      "verification_status": "verified"
+    },
+    {
+      "source_id": "cardif-critical-guide",
+      "title": "重大疾病或防癌險申請須知",
+      "requested_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-3.6.pdf/8c75510e-8c21-4f18-a013-f3d38bed38cc?t=1762833885720",
+      "previous_checked_at": "2026-10-17",
+      "checked_at": "2026-10-19T14:15:52.541941+08:00",
+      "method": "GET",
+      "redirects": [],
+      "complete_body": true,
+      "readable": true,
+      "registry_page_count": 3,
+      "registry_version": null,
+      "status": 200,
+      "final_url": "https://life.cardif.com.tw/documents/418719/461809/CLAIM-3.6.pdf/8c75510e-8c21-4f18-a013-f3d38bed38cc?t=1762833885720",
+      "content_type": "application/pdf",
+      "content_length": "224371",
+      "last_modified": "Tue, 11 Nov 2025 04:04:43 GMT",
+      "etag": "\"1762833885:dtagent10339260603164134bPRx:dtagent10339260603164134bPRx\"",
+      "bytes_read": 224371,
+      "body_sha256": "392941085624630eed603526f3fb78ac562bd9c606de1a92a246f22ab236d8d6",
+      "content_type_matches": true,
+      "pdf_magic_matches": true,
+      "page_count": 3,
+      "page_count_matches": true,
+      "semantic_checks": [
+        {
+          "needle": "重大疾病或防癌險申請須知",
+          "present": true,
+          "page_numbers": [
+            1
+          ]
+        },
+        {
+          "needle": "病理切片報告書",
+          "present": true,
+          "page_numbers": [
+            3
+          ]
+        },
+        {
+          "needle": "沒有載明手術的部位",
+          "present": true,
+          "page_numbers": [
+            3
+          ]
+        },
+        {
+          "needle": "不必再提供",
+          "present": true,
+          "page_numbers": [
+            3
+          ]
+        },
+        {
+          "needle": "如果沒有手術",
+          "present": true,
+          "page_numbers": [
+            3
+          ]
+        }
+      ],
+      "semantic_checks_passed": true,
+      "printed_versions": [],
+      "content_text_sha256": "63181dd5814d2e5288ae7030fc2c0af7a9cc10cf662e43e7375a684f21d45a7b",
+      "verification_status": "verified"
+    }
+  ]
+}

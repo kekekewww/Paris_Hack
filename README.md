@@ -19,6 +19,8 @@ Phase 1 已通過，證據見 [前端驗收報告](docs/PHASE1_ACCEPTANCE.md)。
 
 本輪[介面簡化](docs/UI_SIMPLIFICATION.md)已通過三尺寸視覺、33項單元、Mock 75項、PDF 2項、真API 27項與故障恢復1項。工作區同情境可見文字減少45.7%，只突出下一份文件；來源、案件管理與助手採漸進揭露。外部生成式LLM仍依使用者決定稍後設定。
 
+後續[無金鑰完整重驗收](docs/ACCEPTANCE_NO_KEYS_20261019.md)亦通過：後端190、前端33、Mock75、真API27、PDF2、公開及容器流程、來源11項與依賴掃描均有新實測。使用者最新選擇「暫不建立金鑰」；[三家供應商](docs/PROVIDER_SETUP.md)只預留空白後端欄位，OpenRouter記錄指定模型openrouter/free，沒有啟用或完成真LLM串接。
+
 ## 本機啟動（PowerShell）
 
 需要 Node.js 22、Python 3.12，以及可用的桌面瀏覽器。先在專案根目錄執行：

@@ -27,3 +27,5 @@
 19. 依使用者明確回饋與提供的apple-design skill，延伸既有品牌而非換成Apple外觀：減少重複介紹、次要細節用原生details、預設收合助手、第一份未完成文件突出、官方空白表單保留直接入口。Mock／未OCR／待確認／非核准仍可見，工程模式集中服務說明。維持Vanilla與API契約，不新增動畫或UI依賴。
 20. 本輪自動審核因Selected model is at capacity未能執行瀏覽器檢查。所有可獨立程式／單元／隔離build先完成；新版只輸出.local/ui-simplification/dist，未覆寫公開dist。沒有把舊截圖、--list或記憶體DOM測試當成新視覺／E2E通過；待審核恢復再驗收與發布。
 21. 使用者切換模型後已恢復真瀏覽器驗收。以仍在運行的舊dist作before、Vite新版作after，等初始化／toast穩定才擷取；文字量排除收合內容與讀屏專用文字，不將不同捲動位置的dialog納入減字百分比。Mock75／PDF2與三尺寸目視通過後才更新正式dist；真API27、G1及公開HTTP22／瀏覽器3亦通過。首頁測試只修readiness與巢狀summary精準定位，保留所有聲明斷言及失敗證據。外部LLM依原決定稍後配置。
+22. 使用者要求規劃OpenAI、Google AI Studio與OpenRouter（openrouter/free）安全設定，但在憑證選擇中明確回覆「暫不建立金鑰」。本輪不建立／寫入secret、不開金鑰表單、不切換LLM_PROVIDER、不呼叫模型。僅以空白後端欄位記錄未來需求，沒有自動alias到現有LLM_API_KEY，Gemini／OpenRouter未宣稱已串接；繼續完整無key驗收，金鑰任務與整體LLMgate保留BLOCKED。
+23. 無key完整重驗以f41d74d產品版本執行：後端190、前端33、Mock75、API27、PDF2、G1、公開HTTP22／browser3、容器60／browser1與restart保存皆過；來源11及依賴重掃亦通過。只更新.env.example預留欄位及文件，不增加SDK或串接邏輯；既有映像產品未變，重用映像驗收而不無謂重build。合成key canary隔離build207檔零洩漏，runtime保持grounded_rules。實際金鑰、供應商參數、模型回覆與整體P2／P3gate仍未完成，結果不混稱。
