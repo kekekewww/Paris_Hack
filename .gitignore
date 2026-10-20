@@ -13,6 +13,7 @@ test-results-openrouter/
 playwright-report-openrouter/
 test-results-followup/
 playwright-report-followup/
+test-results-message-wait/
 .playwright-mcp/
 .env
 .env.*

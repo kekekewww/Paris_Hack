@@ -23,6 +23,7 @@ from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
 
 from .errors import ApiError
+from .message_jobs import MessageJobManager
 from .models import Analysis, AssistantResponse, Case, Conditions, CreateCase, DocumentUpdate, MessageInput, UpdateCase
 from .registry import get_source, validate_official_url
 from .rules import build_checklist, get_claim_types
@@ -31,6 +32,7 @@ from .store import CaseStore
 ROOT = Path(__file__).resolve().parents[2]
 MAX_FILE_BYTES = 10 * 1024 * 1024
 COOKIE_NAME = "claim_session"
+CONVERSATION_TIMEOUT_SECONDS = 310
 
 
 def utc_now() -> str:
@@ -172,6 +174,7 @@ def create_app() -> FastAPI:
     mimetypes.add_type("application/wasm", ".wasm")
     db_path = Path(os.getenv("CASE_DB_PATH", str(ROOT / ".local" / "cases.sqlite3")))
     store = CaseStore(db_path)
+    message_jobs = MessageJobManager()
 
     @asynccontextmanager
     async def lifespan(application):
@@ -181,17 +184,22 @@ def create_app() -> FastAPI:
             while True:
                 await asyncio.sleep(300)
                 await run_in_threadpool(store.cleanup)
+                message_jobs.cleanup()
 
         task = asyncio.create_task(janitor())
-        yield
-        task.cancel()
         try:
-            await task
-        except asyncio.CancelledError:
-            pass
+            yield
+        finally:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+            await message_jobs.shutdown()
 
     app = FastAPI(title="理賠文件準備 API", version="1.0.0", lifespan=lifespan)
     app.state.store = store
+    app.state.message_jobs = message_jobs
     # 固定數量鎖避免任意 case ID 請求耗盡記憶體；同一案件寫入保持序列。
     locks = [asyncio.Lock() for _ in range(128)]
 
@@ -220,11 +228,14 @@ def create_app() -> FastAPI:
     async def unknown_error_handler(request, error):
         return error_response("INTERNAL_ERROR", "服務暫時發生問題，請稍後重試。", 500)
 
-    def read_case(identifier, request):
-        item = store.get(identifier, request.state.owner)
+    def read_case_for_owner(identifier, owner):
+        item = store.get(identifier, owner)
         if item is None:
             raise ApiError("CASE_NOT_FOUND", "找不到此案件，請重新開始。", 404)
         return item
+
+    def read_case(identifier, request):
+        return read_case_for_owner(identifier, request.state.owner)
 
     def find_document(item, identifier):
         document = next((doc for doc in item["documents"] if doc["id"] == identifier), None)
@@ -232,10 +243,70 @@ def create_app() -> FastAPI:
             raise ApiError("DOCUMENT_NOT_FOUND", "找不到這份案件文件。", 404)
         return document
 
-    def save_case(item, request):
+    def save_case_for_owner(item, owner):
         item["updated_at"] = utc_now()
         Case.model_validate(item)
-        return store.save(item, request.state.owner)
+        return store.save(item, owner)
+
+    def save_case(item, request):
+        return save_case_for_owner(item, request.state.owner)
+
+    def prepare_message(case_id, owner, data):
+        item = read_case_for_owner(case_id, owner)
+        if data.document_id:
+            find_document(item, data.document_id)
+        if len(item["messages"]) >= 200:
+            raise ApiError("MESSAGE_LIMIT", "此案件已達 100 次對話上限，請重新建立展示案件。", 429)
+        if message_jobs.has_active(case_id, owner):
+            raise ApiError("MESSAGE_JOB_ACTIVE", "此案件已有回覆處理中，請等候目前回覆。", 409)
+        return item
+
+    async def validated_conversation_response(item, data):
+        # 同步相容端點與背景工作共用完整 schema／官方來源校驗。
+        try:
+            from .ai.conversation import respond
+            raw = await asyncio.wait_for(respond(copy.deepcopy(item), data.message, data.document_id), timeout=CONVERSATION_TIMEOUT_SECONDS)
+            response = AssistantResponse.model_validate(raw).model_dump(exclude_unset=True)
+            if response["is_simulated"]:
+                raise ApiError("INVALID_PROVIDER_RESPONSE", "真實服務不可回傳模擬結果。", 503)
+            for source in response["source_references"]:
+                validate_official_url(source["official_url"])
+                verified = get_source(source["source_id"])
+                if source["official_url"] != verified["official_url"]:
+                    raise ApiError("INVALID_PROVIDER_RESPONSE", "回答來源未通過查核。", 503)
+            return response
+        except ApiError:
+            raise
+        except (ImportError, TimeoutError):
+            raise ApiError("PROVIDER_UNAVAILABLE", "對話服務暫時無法使用，請稍後重試。", 503) from None
+        except ValidationError:
+            raise ApiError("INVALID_PROVIDER_RESPONSE", "對話服務回傳格式不正確，請稍後重試。", 503) from None
+        except Exception as error:
+            raise _public_provider_error(error) from None
+
+    async def complete_message(snapshot, owner, data):
+        # 長時間模型運算不持案件鎖，建立工作、輪詢與刪除都能立即處理。
+        response = await validated_conversation_response(snapshot, data)
+        async with lock_for(snapshot["id"]):
+            # 重新讀取並合併最新案件；案件已刪除／到期時絕不重建。
+            item = read_case_for_owner(snapshot["id"], owner)
+            if item["claim_type_id"] != snapshot["claim_type_id"] or item["conditions"] != snapshot["conditions"]:
+                raise ApiError("MESSAGE_CASE_CHANGED", "案件條件已變更，請依最新情況重新提問。", 409)
+            if data.document_id:
+                find_document(item, data.document_id)
+            timestamp = utc_now()
+            item["messages"].extend([
+                {"id": str(uuid.uuid4()), "role": "user", "content": data.message, "created_at": timestamp},
+                {"id": str(uuid.uuid4()), "role": "assistant", "content": response["message"], "response": response, "created_at": timestamp},
+            ])
+            return {"case": save_case_for_owner(item, owner), "response": response}
+
+    async def bounded_complete_message(snapshot, owner, data):
+        try:
+            # 連模型完成後的鎖等待也計入總預算，不能讓工作超出輪詢上限。
+            return await asyncio.wait_for(complete_message(snapshot, owner, data), timeout=CONVERSATION_TIMEOUT_SECONDS)
+        except TimeoutError:
+            raise ApiError("PROVIDER_UNAVAILABLE", "對話服務暫時無法使用，請稍後重試。", 503) from None
 
     @app.get("/api/v1/health")
     async def health():
@@ -290,37 +361,24 @@ def create_app() -> FastAPI:
 
     @app.post("/api/v1/cases/{case_id}/messages")
     async def send_message(case_id: str, data: MessageInput, request: Request):
+        owner = request.state.owner
         async with lock_for(case_id):
-            item = read_case(case_id, request)
-            if data.document_id:
-                find_document(item, data.document_id)
-            if len(item["messages"]) >= 200:
-                raise ApiError("MESSAGE_LIMIT", "此案件已達 100 次對話上限，請重新建立展示案件。", 429)
-            try:
-                from .ai.conversation import respond
-                raw = await asyncio.wait_for(respond(copy.deepcopy(item), data.message, data.document_id), timeout=45)
-                response = AssistantResponse.model_validate(raw).model_dump(exclude_unset=True)
-                if response["is_simulated"]:
-                    raise ApiError("INVALID_PROVIDER_RESPONSE", "真實服務不可回傳模擬結果。", 503)
-                for source in response["source_references"]:
-                    validate_official_url(source["official_url"])
-                    verified = get_source(source["source_id"])
-                    if source["official_url"] != verified["official_url"]:
-                        raise ApiError("INVALID_PROVIDER_RESPONSE", "回答來源未通過查核。", 503)
-            except ApiError:
-                raise
-            except (ImportError, TimeoutError):
-                raise ApiError("PROVIDER_UNAVAILABLE", "對話服務暫時無法使用，請稍後重試。", 503) from None
-            except ValidationError:
-                raise ApiError("INVALID_PROVIDER_RESPONSE", "對話服務回傳格式不正確，請稍後重試。", 503) from None
-            except Exception as error:
-                raise _public_provider_error(error) from None
-            timestamp = utc_now()
-            item["messages"].extend([
-                {"id": str(uuid.uuid4()), "role": "user", "content": data.message, "created_at": timestamp},
-                {"id": str(uuid.uuid4()), "role": "assistant", "content": response["message"], "response": response, "created_at": timestamp},
-            ])
-            return {"case": save_case(item, request), "response": response}
+            snapshot = prepare_message(case_id, owner, data)
+            # 舊相容端點也共用背景工作的容量，不能繞過全域長請求上限。
+            job = message_jobs.submit(case_id, owner, lambda: bounded_complete_message(snapshot, owner, data))
+        return await message_jobs.wait_result(case_id, owner, job["id"])
+
+    @app.post("/api/v1/cases/{case_id}/message-jobs", status_code=202)
+    async def create_message_job(case_id: str, data: MessageInput, request: Request):
+        owner = request.state.owner
+        async with lock_for(case_id):
+            snapshot = prepare_message(case_id, owner, data)
+            return message_jobs.submit(case_id, owner, lambda: bounded_complete_message(snapshot, owner, data))
+
+    @app.get("/api/v1/cases/{case_id}/message-jobs/{job_id}")
+    async def get_message_job(case_id: str, job_id: str, request: Request):
+        read_case(case_id, request)
+        return message_jobs.get(case_id, request.state.owner, job_id)
 
     @app.patch("/api/v1/cases/{case_id}/documents/{document_id}")
     async def update_document(case_id: str, document_id: str, data: DocumentUpdate, request: Request):
@@ -398,7 +456,9 @@ def create_app() -> FastAPI:
         async with lock_for(case_id):
             read_case(case_id, request)
             store.delete(case_id, request.state.owner)
-            return {"deleted": True, "id": case_id}
+        # 鎖外取消，避免 worker 正等同一把鎖而形成互等。
+        await message_jobs.cancel_case(case_id, request.state.owner)
+        return {"deleted": True, "id": case_id}
 
     dist = ROOT / "dist"
     for folder in ("assets", "pdfjs"):

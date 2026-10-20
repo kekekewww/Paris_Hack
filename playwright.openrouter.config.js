@@ -28,8 +28,8 @@ export default defineConfig({
   forbidOnly: true,
   workers: 1,
   retries: 0,
-  // 四輪真語意引導加一次真文件問答；各 API 原有逾時預算保持不變。
-  timeout: 360_000,
+  // 四輪真語意引導加一次真文件問答，每輪可等330秒，另保留清理預算。
+  timeout: 1_800_000,
   expect: { timeout: 20_000 },
   reporter: [['list']],
   use: {

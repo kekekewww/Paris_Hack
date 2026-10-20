@@ -59,8 +59,8 @@ class OpenAICompatibleSettings:
             raise AIError("INVALID_LLM_CONFIG", "模型服務網址必須是無帳密、查詢參數或片段的公開 HTTPS 網域。", 503) from None
         if openrouter_host and (self.base_url != OPENROUTER_BASE_URL or self.model != "openrouter/free"):
             raise AIError("INVALID_LLM_CONFIG", "OpenRouter 僅允許指定官方端點及 openrouter/free 免費路由。", 503)
-        timeout = self.timeout_seconds if self.timeout_seconds is not None else (35.0 if openrouter_host else 20.0)
-        maximum_timeout = 40 if openrouter_host else 60
+        timeout = self.timeout_seconds if self.timeout_seconds is not None else (300.0 if openrouter_host else 20.0)
+        maximum_timeout = 300 if openrouter_host else 60
         if type(timeout) not in (float, int) or not 0 < timeout <= maximum_timeout:
             raise AIError("INVALID_LLM_CONFIG", f"模型逾時設定必須大於 0 且不超過 {maximum_timeout} 秒。", 503)
         object.__setattr__(self, "timeout_seconds", float(timeout))

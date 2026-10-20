@@ -1,8 +1,12 @@
 import { ServiceError } from './service-error.js';
 
+const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+const jobIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const invalidJob = () => { throw new ServiceError('INVALID_RESPONSE', '對話工作回傳的資料格式不正確，請稍後重試。'); };
+
 /** HTTP implementation of the shared claim service contract. */
 export class ApiClaimService {
-  constructor({ baseUrl = '/api/v1', timeout = 15000, analysisTimeout = 95000, messageTimeout = 50000, fetchImpl = globalThis.fetch } = {}) {
+  constructor({ baseUrl = '/api/v1', timeout = 15000, analysisTimeout = 95000, messageTimeout = 330000, messagePollInterval = 3000, fetchImpl = globalThis.fetch } = {}) {
     // Backslashes can be treated as URL separators by browsers. Keep document
     // uploads on a same-origin path, including when configuration is supplied.
     if (typeof baseUrl !== 'string' || !/^\/(?!\/)/.test(baseUrl) || /[\\?#\s]/.test(baseUrl)) {
@@ -21,11 +25,13 @@ export class ApiClaimService {
     this.analysisTimeout = analysisTimeout;
     if (!Number.isFinite(messageTimeout) || messageTimeout <= 0) throw new TypeError('對話逾時時間必須大於零。');
     this.messageTimeout = messageTimeout;
+    if (!Number.isFinite(messagePollInterval) || messagePollInterval <= 0) throw new TypeError('對話工作查詢間隔必須大於零。');
+    this.messagePollInterval = messagePollInterval;
     // 瀏覽器原生 fetch 必須使用 Window/Worker receiver，不能把服務物件當作 this。
     this.fetchImpl = fetchImpl.bind(globalThis);
   }
 
-  async request(path, { method = 'GET', json, formData, timeoutMs = this.timeout } = {}) {
+  async request(path, { method = 'GET', json, formData, timeoutMs = this.timeout, expectedStatus } = {}) {
     const controller = new AbortController();
     const headers = { Accept: 'application/json' };
     const options = {
@@ -54,6 +60,9 @@ export class ApiClaimService {
       });
       const request = async () => {
         const response = await this.fetchImpl(`${this.baseUrl}${path}`, options);
+        if (response.ok && expectedStatus !== undefined && response.status !== expectedStatus) {
+          throw new ServiceError('INVALID_RESPONSE', '服務回傳了非預期的 HTTP 狀態，請稍後重試。', response.status);
+        }
         if (response.status === 204 && response.ok) return null;
         let data;
         try {
@@ -102,12 +111,59 @@ export class ApiClaimService {
     return this.request(`/cases/${encodeURIComponent(id)}`, { method: 'PATCH', json: body });
   }
 
-  sendMessage(id, message, { document_id } = {}) {
-    return this.request(`/cases/${encodeURIComponent(id)}/messages`, {
+  async sendMessage(id, message, { document_id } = {}) {
+    if (typeof id !== 'string' || !id.trim() || id === '.' || id === '..') {
+      throw new ServiceError('VALIDATION_ERROR', '請提供有效的案件識別碼。', 422);
+    }
+    const deadline = Date.now() + this.messageTimeout;
+    const remaining = () => {
+      const milliseconds = deadline - Date.now();
+      if (milliseconds <= 0) throw new ServiceError('TIMEOUT', '對話等待逾時，請稍後重試。');
+      return milliseconds;
+    };
+    const requestBudget = () => Math.min(this.timeout, 15000, remaining());
+    const path = `/cases/${encodeURIComponent(id)}/message-jobs`;
+    // Creation is never retried here: a lost response may still have started
+    // the provider request. Only the caller can explicitly start a new attempt.
+    const created = await this.request(path, {
       method: 'POST',
       json: { message, ...(document_id === undefined ? {} : { document_id }) },
-      timeoutMs: this.messageTimeout,
+      timeoutMs: requestBudget(),
+      expectedStatus: 202,
     });
+    remaining();
+    if (!isObject(created) || typeof created.id !== 'string' || !jobIdPattern.test(created.id)
+      || created.status !== 'pending' || created.result != null || created.error != null) invalidJob();
+    const jobId = created.id;
+    while (true) {
+      let sleepTimer;
+      try {
+        await new Promise(resolve => { sleepTimer = setTimeout(resolve, Math.min(this.messagePollInterval, remaining())); });
+      } finally {
+        clearTimeout(sleepTimer);
+      }
+      const job = await this.request(`${path}/${encodeURIComponent(jobId)}`, {
+        timeoutMs: requestBudget(),
+        expectedStatus: 200,
+      });
+      remaining();
+      if (!isObject(job) || job.id !== jobId || !['pending', 'succeeded', 'failed'].includes(job.status)) invalidJob();
+      if (job.status === 'pending') {
+        if (job.result != null || job.error != null) invalidJob();
+        continue;
+      }
+      if (job.status === 'failed') {
+        const error = job.error;
+        if (job.result != null || !isObject(error) || typeof error.code !== 'string' || !error.code.trim()
+          || typeof error.message !== 'string' || !error.message.trim() || !Number.isInteger(error.status)
+          || error.status < 400 || error.status > 599) invalidJob();
+        throw new ServiceError(error.code, error.message, error.status);
+      }
+      const result = job.result;
+      if (job.error != null || !isObject(result) || !isObject(result.case) || result.case.id !== id
+        || !isObject(result.response) || typeof result.response.message !== 'string') invalidJob();
+      return result;
+    }
   }
 
   getChecklist(id) {

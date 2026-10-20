@@ -1,0 +1,15 @@
+{
+  "scope": "one_real_openrouter_job_not_full_model_acceptance",
+  "origin": "https://tulsa-ppc-message-builders.trycloudflare.com",
+  "model_submissions": 1,
+  "polls": 1,
+  "status": "FAIL",
+  "health_before_verified": false,
+  "submit_status": 202,
+  "submit_ms": 761,
+  "max_poll_ms": 452,
+  "safe_error_code": "LLM_RATE_LIMITED",
+  "failure_type": "JOB_FAILED",
+  "synthetic_case_deleted": true,
+  "elapsed_ms": 6946
+}

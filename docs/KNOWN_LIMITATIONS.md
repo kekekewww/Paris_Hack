@@ -14,13 +14,13 @@
 | API | 使用 FastAPI、SQLite、本機官方資料及實際文件分析；失敗會顯示錯誤，不回退 Mock |
 | `grounded_rules` | 實際執行中文詞彙檢索與規則，`is_simulated=false`；不是生成式 LLM，`llm_configured=false` |
 | 外部 LLM | OpenRouter 既有文件問答曾真實零費用接通；調整前程序的前三輪引導及獨立探測成功；三次完整live與新4096工作區探測仍失敗，不能挪用舊程序成功補足；OpenAI／Gemini 未驗證 |
-| 免費容量 | 免費router不保證固定模型、容量或延遲；三次完整live依序為第四輪限流、第一輪INVALID（未復現）、第一輪限流而失敗。提高語意token預算不等於消除限流或保證35秒內完成 |
+| 免費容量 | 免費router不保證固定模型、容量或延遲；歷史完整live曾因限流及INVALID失敗。OpenRouter等待已延長至300秒，仍不能保證供應商在期限內完成或輸出通過驗證 |
 | 語言理解 | 本機模式使用規則；OpenRouter 語意模式可提供理解與追問提案，仍可能誤解否定、混合事件或上下文，事實引文、有限領域合理性與直接矛盾檢查不等於完整語意正確性證明，仍須由使用者確認類型與條件 |
 | 檢索 | 小型本機中文詞彙索引，沒有向量資料庫；官方文件需求仍由伺服器規則與來源決定，模型不能新增要求。查無支持內容不代表官網不存在該資訊 |
 
 外部語意模式不另設環境開關，明確設定 `LLM_PROVIDER=openai_compatible`，OpenRouter 僅允許 `https://openrouter.ai/api/v1` 與 `openrouter/free`。金鑰保存在後端私有 `.local/secrets/.env.openrouter`，啟動時明確映射至 canonical `LLM_API_KEY`；前端、建置及映像不得含秘密值，範本仍保留空白金鑰。缺設定回 `503 / LLM_NOT_CONFIGURED`，設定不合法、網路或輸出驗證失敗也回明確錯誤，不以本機／Mock 回覆掩蓋外部失敗。
 
-請求固定 `provider.max_price` 的 prompt／completion／request／image 四項為0、`require_parameters=true`、`allow_fallbacks=false`、`reasoning.effort=minimal`。`max_completion_tokens` 僅語意提高4096，官方證據與一般相容profile維持1800；仍按當次cap、`finish_reason=stop`及cost0驗證，35秒期限不變。前輪金鑰資訊 GET 顯示限制US$0.10、當時usage為0，多次推論的 `usage.cost` 為0；這些是實測結果，非未來可用性承諾。重大疾病額外 CLI 真模型探測兩輪遇429，保留為擴充覆蓋的外部限制，不宣稱三類模型探測全部通過。429 明確回 `503 / LLM_RATE_LIMITED`；不自動重試、不改付費模型、不切 Mock 或本機假成功。
+請求固定 `provider.max_price` 的 prompt／completion／request／image 四項為0、`require_parameters=true`、`allow_fallbacks=false`、`reasoning.effort=minimal`。`max_completion_tokens` 僅語意提高4096，官方證據與一般相容profile維持1800；仍按當次cap、`finish_reason=stop`及cost0驗證，OpenRouter期限現為300秒。前輪金鑰資訊 GET 顯示限制US$0.10、當時usage為0，多次推論的 `usage.cost` 為0；這些是實測結果，非未來可用性承諾。重大疾病額外 CLI 真模型探測兩輪遇429，保留為擴充覆蓋的外部限制，不宣稱三類模型探測全部通過。429 明確回 `503 / LLM_RATE_LIMITED`；不自動重試、不改付費模型、不切 Mock 或本機假成功。
 
 健康檢查的 `llm_configured=true` 只代表設定齊備；`llm_verified=true` 只表示同程序、同配置曾通過真實請求及完整驗證，重啟、停用或配置變更會使紀錄失效。Health 不送出模型請求，過往成功不能證明此刻有免費容量或保證即時 readiness，也不能單獨代表整體整合驗收完成。詳見 [LLM 整合紀錄](LLM_INTEGRATION.md)。
 
@@ -61,7 +61,7 @@ Mock 案件在分頁 `sessionStorage`，與 API 的保存機制不同。下載�
 
 HTTP adapter 一般操作預設 15 秒逾時，對話為 50 秒，文件分析另設 95 秒；後端對話／分析路由上限分別為 45／90 秒。網路中斷、逾時或首次 OCR 初始化等情況，不保證立即終止已開始的 CPU OCR；後端也可能已保存結果但回應未送達。請先等候並重新整理檢查已保存結果，確認狀態後再重試，避免重複處理。
 
-OpenRouter外部請求使用 `LLM_TIMEOUT_SECONDS=35`，可設定但不得超過40秒，低於後端對話45秒上限。單次工作區「…」診斷曾出現cost0、completion1800、finishlength而被拒；語意cap改4096只針對這項上限，官方證據仍1800。另一次4096工作區探測雖stop／cost0，仍因事實來源驗證失敗被拒，不能推論所有INVALID、截斷或限流已修復。免費供應商的等待、推論與回覆可能超出這個預算；限流或逾時只明確顯示可重試錯誤，不增加自動重試、備援模型或費用。`llm_verified` 保留的是先前成功紀錄，不能當作重試必定成功的依據。
+OpenRouter外部請求使用 `LLM_TIMEOUT_SECONDS=300`，預設及最高五分鐘，後端310秒、前端330秒；背景工作以短HTTP請求查詢，避開展示代理的單次等待上限。[長等待說明](LLM_WAIT.md)。工作狀態只存目前單程序記憶體，重啟會清除；重新整理會停止該分頁的查詢，已完成回覆可由案件恢復。同案未完成時拒絕另一個送出；刪案取消本機工作並禁止晚寫回，不保證供應商已停止生成。單次工作區「…」診斷曾出現cost0、completion1800、finishlength而被拒；語意cap4096只針對這項上限，官方證據仍1800。另一次4096工作區探測雖stop／cost0，仍因事實來源驗證失敗被拒，不能推論所有INVALID、截斷或限流已修復。免費供應商的等待、推論與回覆仍可能超出五分鐘；限流或逾時只明確顯示可重試錯誤，不增加自動重試、備援模型或費用。`llm_verified` 保留的是先前成功紀錄，不能當作重試必定成功的依據。
 
 最終容器實測首次圖片 OCR 曾超出內部 45 秒預算，明確回 `503 OCR_TIMEOUT`；模型載入後同一完整 smoke 重試 39 項通過。預算包含模型匯入、ONNX 初始化、圖最佳化與推論，但沒有分階段計時，不能斷定哪個步驟耗盡預算。Health 只確認 HTTP 與套件存在，不代表圖片 OCR 已暖機；展示前使用合成 smoke 驗證。尚未提供啟動預載／模型 readiness 或程序硬中止，這是目前可靠性邊界。
 

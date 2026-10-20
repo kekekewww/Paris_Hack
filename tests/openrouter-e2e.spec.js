@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { waitForUIMessageJob } from './message-job-helpers.js';
 
 // 即使以其他 config 指定此檔，也不能省略明確的真實請求授權旗標。
 if (process.env.LIVE_OPENROUTER !== '1' || !process.env.CLAIM_API_BASE_URL) {
@@ -21,14 +22,6 @@ const preparationSnapshot = (item) => JSON.stringify({
   conditions: item.conditions,
   documents: item.documents,
 });
-
-async function successfulMessage(response, context) {
-  const result = await response.json();
-  const errorCode = typeof result.error?.code === 'string' && /^[A-Z][A-Z0-9_]{0,63}$/.test(result.error.code)
-    ? result.error.code : 'NO_SAFE_ERROR_CODE';
-  expect(response.status(), `${context}必須取得真實後端成功回覆；error_code=${errorCode}`).toBe(200);
-  return result;
-}
 
 function assertRealModel(response) {
   expect(response.provider).toBe('openai_compatible');
@@ -160,7 +153,7 @@ test('真實模型逐輪語意引導、官方清單、PDF、錯誤重試與摘�
   page.on('request', (request) => {
     const path = new URL(request.url()).pathname;
     if (/^\/api\/v1\/cases\/[^/]+$/.test(path) && request.method() === 'PATCH') patchRequests += 1;
-    if (/^\/api\/v1\/cases\/[^/]+\/messages$/.test(path) && request.method() === 'POST') browserMessageRequests += 1;
+    if (/^\/api\/v1\/cases\/[^/]+\/message-jobs$/.test(path) && request.method() === 'POST') browserMessageRequests += 1;
   });
 
   await page.goto('/?service=api#triage');
@@ -170,9 +163,9 @@ test('真實模型逐輪語意引導、官方清單、PDF、錯誤重試與摘�
   const descriptions = ['你好', '我出車禍了', '沒有住院', '只有急診，當天回家，沒有手術'];
   for (const [index, description] of descriptions.entries()) {
     const created = index === 0 ? page.waitForResponse((response) => endpoint(response, '/api/v1/cases')) : null;
-    const answered = page.waitForResponse((response) =>
-      /^\/api\/v1\/cases\/[^/]+\/messages$/.test(new URL(response.url()).pathname)
-      && response.request().method() === 'POST', { timeout: 55_000 });
+    const answered = waitForUIMessageJob(page, {
+      caseId: initial?.id, context: `第 ${index + 1} 輪語意引導`,
+    });
     await page.getByLabel('描述就醫情況', { exact: true }).fill(description);
     await page.getByRole('button', { name: '送出描述', exact: true }).click();
     if (created) {
@@ -182,7 +175,7 @@ test('真實模型逐輪語意引導、官方清單、PDF、錯誤重試與摘�
       expect(typeof initial.id).toBe('string');
       page.__liveCaseIds.add(initial.id);
     }
-    const result = await successfulMessage(await answered, `第 ${index + 1} 輪語意引導`);
+    const result = await answered;
     const response = result.response;
     assertRealModel(response);
     assertSources(response.source_references, { allowEmpty: index < 3 });
@@ -296,7 +289,7 @@ test('真實模型逐輪語意引導、官方清單、PDF、錯誤重試與摘�
   const chat = page.getByLabel('詢問文件準備問題', { exact: true });
   const beforeFailure = await getCase(page, initial.id);
   const threadBeforeFailure = await thread.textContent();
-  const messagesURL = `${apiOrigin}/api/v1/cases/${initial.id}/messages`;
+  const messagesURL = `${apiOrigin}/api/v1/cases/${initial.id}/message-jobs`;
   page.__liveExpected503URL = messagesURL;
   let injectedRequests = 0;
   const inject503 = async (route) => {
@@ -309,7 +302,7 @@ test('真實模型逐輪語意引導、官方清單、PDF、錯誤重試與摘�
   };
   await page.route(messagesURL, inject503);
   await chat.fill(evidenceQuestion);
-  const failed = page.waitForResponse((response) => endpoint(response, `/cases/${initial.id}/messages`));
+  const failed = page.waitForResponse((response) => endpoint(response, `/cases/${initial.id}/message-jobs`));
   await page.getByRole('button', { name: '送出問題', exact: true }).click();
   expect((await failed).status()).toBe(503);
   await expect(page.getByRole('alert')).toContainText(injectedFailureMessage);
@@ -322,10 +315,9 @@ test('真實模型逐輪語意引導、官方清單、PDF、錯誤重試與摘�
   await page.unroute(messagesURL, inject503);
 
   // 這是此尺寸第五次真模型請求（前四次為語意引導）；受控 503 未觸及上游。
-  const answered = page.waitForResponse((response) => endpoint(response, `/cases/${initial.id}/messages`), { timeout: 55_000 });
+  const answered = waitForUIMessageJob(page, { caseId: initial.id, context: '移除單次故障後的文件問答' });
   await page.getByRole('button', { name: '重試', exact: true }).click();
-  const answerResponse = await answered;
-  const result = await successfulMessage(answerResponse, '移除單次故障後的文件問答');
+  const result = await answered;
   const answer = result.response;
   assertRealModel(answer);
   expect(answer.response_type).toBe('answer');

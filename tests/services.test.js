@@ -14,6 +14,11 @@ const memoryStorage = () => {
 const makeMock = storage => new MockClaimService({ delay: 0, storage: storage ?? memoryStorage(), registry });
 const directCase = service => service.createCase({ entry_path: 'direct', claim_type_id: 'inpatient', conditions: { cause: 'illness', surgery: 'no', receipt_type: 'unknown' } });
 const demoFile = () => new File(['%PDF-1.4 synthetic'], 'synthetic-application.pdf', { type: 'application/pdf' });
+const apiJobId = '12345678-1234-4234-8234-123456789abc';
+const apiMessageResult = id => ({
+  case: { id, entry_path: 'guided', claim_type_id: null, conditions: {}, documents: [], messages: [], created_at: '2026-10-20T00:00:00Z', updated_at: '2026-10-20T00:00:00Z' },
+  response: { response_type: 'clarification', message: '合成測試回覆', suggested_claim_types: [], missing_information: ['care_setting'], source_references: [], proposed_case_updates: {}, requires_human_review: true, provider: 'openai_compatible', is_simulated: false },
+});
 
 test('both replaceable service adapters are exported', () => {
   assert.equal(typeof MockClaimService, 'function');
@@ -421,6 +426,8 @@ test('HTTP adapter sends the contract through real Request/Response semantics wi
     requests.push(request);
     const pathname = new URL(request.url).pathname;
     if (pathname.endsWith('/missing')) return Response.json({ error: { code: 'CASE_NOT_FOUND', message: '找不到案件' } }, { status: 404 });
+    if (pathname.endsWith('/message-jobs')) return Response.json({ id: apiJobId, status: 'pending' }, { status: 202 });
+    if (pathname.endsWith(`/message-jobs/${apiJobId}`)) return Response.json({ id: apiJobId, status: 'succeeded', result: apiMessageResult('a b') });
     if (pathname.endsWith('/analyze')) {
       const data = await request.formData();
       assert.equal(data.get('file').name, 'synthetic-application.pdf');
@@ -428,21 +435,23 @@ test('HTTP adapter sends the contract through real Request/Response semantics wi
     }
     return Response.json({ ok: true });
   };
-  const service = new ApiClaimService({ fetchImpl: server });
+  const service = new ApiClaimService({ fetchImpl: server, messagePollInterval: 1 });
   assert.equal(service.mode, 'api');
   await service.health();
   await service.getClaimTypes();
   await service.createCase({ entry_path: 'guided' });
   await service.getCase('a b');
   await service.updateCase('a b', { conditions: { cause: 'illness' } });
-  await service.sendMessage('a b', '請說明', { document_id: 'application' });
+  assert.deepEqual(await service.sendMessage('a b', '請說明', { document_id: 'application' }), apiMessageResult('a b'));
   await service.getChecklist('a b');
   await service.updateDocument('a b', 'application', { confirmed_findings: [] });
   await service.analyzeDocument('a b', 'application', demoFile(), { scenario: 'complete' });
   await service.getSource('cardif-claims');
   await service.deleteCase('a b');
-  assert.deepEqual(requests.map(request => request.method), ['GET', 'GET', 'POST', 'GET', 'PATCH', 'POST', 'GET', 'PATCH', 'POST', 'GET', 'DELETE']);
+  assert.deepEqual(requests.map(request => request.method), ['GET', 'GET', 'POST', 'GET', 'PATCH', 'POST', 'GET', 'GET', 'PATCH', 'POST', 'GET', 'DELETE']);
   assert.equal(new URL(requests[3].url).pathname, '/api/v1/cases/a%20b');
+  assert.equal(new URL(requests[5].url).pathname, '/api/v1/cases/a%20b/message-jobs');
+  assert.equal(new URL(requests[6].url).pathname, `/api/v1/cases/a%20b/message-jobs/${apiJobId}`);
   assert.deepEqual(await requests[5].json(), { message: '請說明', document_id: 'application' });
   await assert.rejects(service.getCase('missing'), error => error.code === 'CASE_NOT_FOUND' && error.status === 404);
   assert.throws(() => new ApiClaimService({ baseUrl: 'https://unsafe.example/api' }), /同源|relative|相對/i);
@@ -473,11 +482,14 @@ test('document analysis has its own bounded timeout budget for real OCR', async 
 });
 
 test('conversation requests wait for their bounded server response budget', async () => {
-  const service = new ApiClaimService({ timeout: 10, messageTimeout: 150, fetchImpl: async () => {
+  const delayed = async (_url, options) => {
     await new Promise(resolve => setTimeout(resolve, 30));
-    return Response.json({ case: { id: 'synthetic-case' }, response: { message: '合成測試回覆' } });
-  } });
-  await assert.rejects(service.health(), error => error.code === 'TIMEOUT');
+    return options.method === 'POST'
+      ? Response.json({ id: apiJobId, status: 'pending' }, { status: 202 })
+      : Response.json({ id: apiJobId, status: 'succeeded', result: apiMessageResult('synthetic-case') });
+  };
+  await assert.rejects(new ApiClaimService({ timeout: 10, fetchImpl: delayed }).health(), error => error.code === 'TIMEOUT');
+  const service = new ApiClaimService({ timeout: 75, messageTimeout: 150, messagePollInterval: 1, fetchImpl: delayed });
   const result = await service.sendMessage('synthetic-case', '合成問題');
   assert.equal(result.response.message, '合成測試回覆');
 });

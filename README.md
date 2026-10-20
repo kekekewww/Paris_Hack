@@ -72,9 +72,9 @@ macOS／Linux 對應命令為 `python3.12 -m venv .venv`、`.venv/bin/python -m 
 
 ## 可選 OpenRouter 免費模型
 
-OpenRouter 語意對話不另設環境開關：設定 `LLM_PROVIDER=openai_compatible`、固定 `LLM_BASE_URL=https://openrouter.ai/api/v1` 與 `LLM_MODEL=openrouter/free` 後，由後端依請求分流語意對話或官方證據問答。已授權的 key 保存在後端私有 `.local/secrets/.env.openrouter`，啟動時明確映射至 canonical `LLM_API_KEY`；後端不會自行掃描其他 env 檔。`LLM_TIMEOUT_SECONDS=35`，OpenRouter 最高允許40秒。秘密值只能注入後端，不可放入 `VITE_`、前端程式、Docker build args 或映像；公開範本保持空白金鑰。
+OpenRouter 語意對話不另設環境開關：設定 `LLM_PROVIDER=openai_compatible`、固定 `LLM_BASE_URL=https://openrouter.ai/api/v1` 與 `LLM_MODEL=openrouter/free` 後，由後端依請求分流語意對話或官方證據問答。已授權的 key 保存在後端私有 `.local/secrets/.env.openrouter`，啟動時明確映射至 canonical `LLM_API_KEY`；後端不會自行掃描其他 env 檔。`LLM_TIMEOUT_SECONDS=300`，OpenRouter 預設及最高等待五分鐘；後端對話處理310秒、前端整體等待330秒。前端以背景工作與短請求查詢結果，避免展示隧道中斷長HTTP請求。秘密值只能注入後端，不可放入 `VITE_`、前端程式、Docker build args 或映像；公開範本保持空白金鑰。
 
-請求固定 `provider.max_price` 物件的 prompt／completion／request／image 四項為0，並設定 `require_parameters=true`、`allow_fallbacks=false`、`reasoning.effort=minimal`。`max_completion_tokens` 依分流為語意4096、官方證據1800；只提高語意分支的輸出預算，35秒期限、正常完成與零費用驗證不變，不自動重試或改用其他模型。前輪金鑰資訊實際 GET 查核顯示限制US$0.10、當時usage為0；推論仍逐次驗證實際模型、用量、零費用，以及語意事實引文或官方證據。設定與驗收邊界見 [LLM 整合說明](docs/LLM_INTEGRATION.md)。預設 `grounded_rules` 不需要金鑰；OpenAI／Gemini 尚未啟用或驗證。
+請求固定 `provider.max_price` 物件的 prompt／completion／request／image 四項為0，並設定 `require_parameters=true`、`allow_fallbacks=false`、`reasoning.effort=minimal`。`max_completion_tokens` 依分流為語意4096、官方證據1800；正常完成與零費用驗證不變，不自動重試或改用其他模型。前輪金鑰資訊實際 GET 查核顯示限制US$0.10、當時usage為0；推論仍逐次驗證實際模型、用量、零費用，以及語意事實引文或官方證據。設定與驗收邊界見 [LLM 整合說明](docs/LLM_INTEGRATION.md) 與 [長等待說明](docs/LLM_WAIT.md)。預設 `grounded_rules` 不需要金鑰；OpenAI／Gemini 尚未啟用或驗證。
 
 ## 檢查與測試
 

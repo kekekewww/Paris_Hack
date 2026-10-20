@@ -4,6 +4,9 @@
 
 | ID | 階段 | 工作 | 優先 | 狀態 | 相依 | 驗收條件 | 驗證證據／外部依賴 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| LLM-WAIT-20261020 | 2／3 | 五分鐘模型等待與背景對話查詢 | P0 | DONE | 使用者回饋、既有免費模型與Quick Tunnel | 模型300／後端310／前端330秒；短HTTP查詢避開代理期限；隔離、防重、刪除與長等待回歸；更新正式服務 | provider先2 RED後103；全後端544／前端69／Mock87／真API及OCR27／受控長等待4／公開啟動15全部PASS；實際配置300已載入。真探測1次限流FAIL如實保留，未標模型成功；[報告](docs/LLM_WAIT.md) |
+| LLM-WAIT-IMAGE | 3 | 長等待版本Docker映像與容器重驗 | P1 | BLOCKED | Docker Desktop Linux引擎 | 新映像source／dist一致並通過容器流程 | 實際docker build因dockerDesktopLinuxEngine pipe不存在失敗；本機原生展示已更新，舊semantic映像不含本輪修正 |
+| OPS-20261020 | 3 | 重新啟動展示伺服器與Quick Tunnel | P0 | DONE | 使用者要求、既有正式dist與私有配置 | 新HTTPS首頁／資產／API正常，安全cookie與案件隔離及清除通過 | 公開啟動檢查15/15；零模型／OCR分析請求，合成案件已刪除；[證據](docs/restart-20261020/smoke.json)，目前網址／PID見[狀態](STATUS.md)；整體模型gate不變 |
 | SEMANTIC-20261020 | 2／3 | 語意對話整合與完整驗收 | P0 | BLOCKED | SEMANTIC-IMPL、SEMANTIC-LIVE | 包含真模型的完整新流程通過 | 實作與其餘驗收完成；最後新程序live第2輪限流，沒有宣稱整輪通過；[本輪報告](docs/SEMANTIC_CONVERSATION.md) |
 | SEMANTIC-IMPL | 2／3 | 真模型語意、追問、有限上下文與官方規則隔離 | P0 | DONE | 最新授權、既有免費配置 | 真請求分流、事實及引用驗證、確認才改案、真成功與回歸、部署與紀錄 | 後端477／前端58／Mock87；三句真引導與改寫曾成功，新程序招呼亦真成功；最終容器追問12、公開HTTP23／視覺12圖過；API/OCR27同前端與不變規則profile過 |
 | SEMANTIC-LIVE | 2／3 | 最終完整模型旅程及工作區語意重驗 | P0 | BLOCKED | OpenRouter免費容量及輸出品質 | 真模型逐輪、門診候選、確認、官方清單、文件問答、摘要全程通過 | 完整live四輪分別第4句限流／第1句INVALID／第1句限流／最終第2句限流；補充workspace probe截斷及事實依據不合，均保留FAIL；不放寬原斷言 |

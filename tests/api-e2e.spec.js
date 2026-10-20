@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { resolve, basename } from 'node:path';
+import { waitForUIMessageJob } from './message-job-helpers.js';
 
 const apiBaseURL = process.env.CLAIM_API_BASE_URL || 'http://127.0.0.1:8000';
 const expectedProvider = process.env.EXPECTED_LLM_PROVIDER || 'grounded_rules';
@@ -240,14 +241,13 @@ test('真實 API 引導、官方連結、缺漏 PNG、人工確認及摘要完�
   await page.getByRole('button', { name: '描述我的狀況', exact: true }).click();
   await page.getByLabel('描述就醫情況', { exact: true }).fill('我因車禍住院三天，沒有手術，想準備文件。');
   const created = page.waitForResponse((response) => endpoint(response, '/api/v1/cases'));
-  const answered = page.waitForResponse((response) => /\/api\/v1\/cases\/[^/]+\/messages$/.test(new URL(response.url()).pathname));
+  const answered = waitForUIMessageJob(page, { context: '真實 API 引導' });
   await page.getByRole('button', { name: '送出描述', exact: true }).click();
   const createResponse = await created;
   expect(createResponse.status()).toBe(201);
   const item = rememberCase(page, await createResponse.json());
-  const answerResponse = await answered;
-  expect(answerResponse.status()).toBe(200);
-  const answer = await answerResponse.json();
+  const answer = await answered;
+  expect(answer.case.id).toBe(item.id);
   expect(answer.response.provider).toBe(expectedProvider);
   expect(answer.response.is_simulated).toBe(false);
   expect(answer.response.source_references.length).toBeGreaterThan(0);
@@ -356,12 +356,10 @@ test('真實 API 快速選擇門診與清晰 PNG 分析可保存至摘要', asyn
   await expect(openAssistant).toHaveAttribute('aria-expanded', 'false');
   await openAssistant.click();
   await expect(page.getByRole('button', { name: '隱藏助手', exact: true })).toHaveAttribute('aria-expanded', 'true');
-  const answered = page.waitForResponse((response) => endpoint(response, `/cases/${item.id}/messages`));
+  const answered = waitForUIMessageJob(page, { caseId: item.id, context: '工作區文件問答' });
   await page.getByLabel('詢問文件準備問題', { exact: true }).fill('保險金申請書有哪些欄位與簽名需要確認？');
   await page.getByRole('button', { name: '送出問題', exact: true }).click();
-  const actualAnswer = await answered;
-  expect(actualAnswer.status()).toBe(200);
-  const answer = (await actualAnswer.json()).response;
+  const answer = (await answered).response;
   expect(answer.provider).toBe(expectedProvider);
   expect(answer.is_simulated).toBe(false);
   expect(answer.response_type).toBe('answer');
@@ -542,28 +540,48 @@ test('API 暫時 503 顯示錯誤並可重試，沒有回退到 Mock', async ({ 
 
 test('真實引導回覆延遲到達時不覆蓋使用者已返回的首頁', async ({ page }) => {
   let release;
+  let heldTerminal = null;
   const navigationCompleted = new Promise((resolveNavigation) => { release = resolveNavigation; });
-  await page.route('**/api/v1/cases/*/messages', async (route) => {
+  await page.route('**/api/v1/cases/*/message-jobs/*', async (route) => {
+    if (route.request().method() !== 'GET') return route.continue();
     const actualResponse = await route.fetch(); // 真實後端回覆，只延後交付，不替換內容。
+    const job = await actualResponse.json();
+    if (actualResponse.status() === 200 && job.status === 'pending') {
+      await route.fulfill({ response: actualResponse });
+      return;
+    }
+    heldTerminal = {
+      httpStatus: actualResponse.status(), status: job.status,
+      path: new URL(route.request().url()).pathname,
+    };
     await navigationCompleted;
     await route.fulfill({ response: actualResponse });
   });
-  await page.goto('/?service=api#assistant');
-  await page.getByLabel('描述就醫情況', { exact: true }).fill('我因疾病住院三天，沒有手術。');
-  const created = page.waitForResponse((response) => endpoint(response, '/api/v1/cases'));
-  const answered = page.waitForResponse((response) => /\/api\/v1\/cases\/[^/]+\/messages$/.test(new URL(response.url()).pathname));
-  await page.getByRole('button', { name: '送出描述', exact: true }).click();
-  rememberCase(page, await (await created).json());
-  await page.getByRole('button', { name: '返回首頁', exact: true }).first().click();
-  await expect(page).toHaveURL(/#triage$/);
-  release();
-  const response = await answered;
-  expect(response.status()).toBe(200);
-  expect((await response.json()).response.provider).toBe(expectedProvider);
-  await response.finished();
-  await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
-  await expect(page).toHaveURL(/#triage$/);
-  await expect(page.getByRole('button', { name: '描述我的狀況', exact: true })).toBeVisible();
+  try {
+    await page.goto('/?service=api#assistant');
+    await page.getByLabel('描述就醫情況', { exact: true }).fill('我因疾病住院三天，沒有手術。');
+    const created = page.waitForResponse((response) => endpoint(response, '/api/v1/cases'));
+    const answered = waitForUIMessageJob(page, { context: '延遲交付的真實引導' });
+    await page.getByRole('button', { name: '送出描述', exact: true }).click();
+    const item = rememberCase(page, await (await created).json());
+    await expect.poll(() => heldTerminal !== null, {
+      timeout: 330_000, message: '必須先取得 UI 真 GET 的完成結果，才進行延遲導航測試',
+    }).toBe(true);
+    expect(heldTerminal.httpStatus).toBe(200);
+    expect(heldTerminal.status).toBe('succeeded');
+    expect(heldTerminal.path.startsWith(`/api/v1/cases/${item.id}/message-jobs/`)).toBe(true);
+    await page.getByRole('button', { name: '返回首頁', exact: true }).first().click();
+    await expect(page).toHaveURL(/#triage$/);
+    release();
+    const result = await answered;
+    expect(result.case.id).toBe(item.id);
+    expect(result.response.provider).toBe(expectedProvider);
+    await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
+    await expect(page).toHaveURL(/#triage$/);
+    await expect(page.getByRole('button', { name: '描述我的狀況', exact: true })).toBeVisible();
+  } finally {
+    release();
+  }
 });
 
 test('超過十頁的 PDF 在前端及真實 API 均遭拒絕', async ({ page }) => {

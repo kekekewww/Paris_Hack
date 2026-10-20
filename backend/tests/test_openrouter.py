@@ -436,21 +436,37 @@ def test_openrouter_errors_are_safe_without_retry_or_fallback(status, code):
 
 def test_openrouter_environment_has_bounded_total_timeout(monkeypatch):
     configure(monkeypatch)
-    assert adapter.OpenAICompatibleSettings.from_environment().timeout_seconds == 35
-    monkeypatch.setenv("LLM_TIMEOUT_SECONDS", "39.5")
-    assert adapter.OpenAICompatibleSettings.from_environment().timeout_seconds == 39.5
+    assert adapter.OpenAICompatibleSettings.from_environment().timeout_seconds == 300
+    monkeypatch.setenv("LLM_TIMEOUT_SECONDS", "299.5")
+    assert adapter.OpenAICompatibleSettings.from_environment().timeout_seconds == 299.5
     monkeypatch.setenv("LLM_BASE_URL", "https://example.test/v1")
     monkeypatch.setenv("LLM_MODEL", "generic-model")
     monkeypatch.delenv("LLM_TIMEOUT_SECONDS")
     assert adapter.OpenAICompatibleSettings.from_environment().timeout_seconds == 20
 
 
-@pytest.mark.parametrize("timeout", ["nan", "inf", "-1", "0", "40.1", "invalid", ""])
+@pytest.mark.parametrize("timeout", ["nan", "inf", "-1", "0", "300.1", "invalid", ""])
 def test_invalid_openrouter_timeout_is_safe_configuration_error(monkeypatch, timeout):
     configure(monkeypatch, LLM_TIMEOUT_SECONDS=timeout)
     with pytest.raises(AIError) as caught:
         adapter.OpenAICompatibleSettings.from_environment()
     assert caught.value.code == "INVALID_LLM_CONFIG"
+
+
+def test_openrouter_waits_for_a_reasoning_reply_beyond_the_previous_deadline(monkeypatch):
+    # Accelerate the total deadline by 100x: the synthetic 100-second response
+    # exceeds the former 35-second budget but fits the new five-minute budget.
+    actual_timeout = asyncio.timeout
+    monkeypatch.setattr(adapter.asyncio, "timeout", lambda seconds: actual_timeout(seconds / 100))
+
+    async def reasoning(request):
+        await asyncio.sleep(1)
+        return httpx.Response(200, json=completion(request))
+
+    answer = respond_with(reasoning)
+    assert answer["provider"] == "openai_compatible"
+    assert answer["is_simulated"] is False
+    assert answer["source_references"]
 
 
 def test_openrouter_total_timeout_covers_stream_wait():

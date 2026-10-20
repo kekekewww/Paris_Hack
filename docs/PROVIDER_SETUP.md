@@ -22,11 +22,11 @@ OpenRouter 金鑰保存在後端私有檔 `.local/secrets/.env.openrouter`，不
 LLM_PROVIDER=openai_compatible
 LLM_BASE_URL=https://openrouter.ai/api/v1
 LLM_MODEL=openrouter/free
-LLM_TIMEOUT_SECONDS=35
+LLM_TIMEOUT_SECONDS=300
 # LLM_API_KEY 僅在後端啟動環境安全注入，此處不提供值。
 ~~~
 
-OpenRouter 設定拒絕其他端點、其他請求模型及超過 40 秒的整體逾時。請求固定 `provider.max_price` 的 `prompt`、`completion`、`request`、`image` 四項為 `0`，並設定 `require_parameters=true`、`allow_fallbacks=false`、`reasoning.effort=minimal`。`max_completion_tokens` 依分流為語意4096、官方證據1800，一般相容profile仍為1800；metadata按當次cap驗證，仍須 `finish_reason=stop`、cost0及原35秒期限，沒有延長deadline。不自動重試、不改用付費模型，也不以 Mock 或本機規則回覆掩蓋外部失敗。[費用與參數邊界](LLM_INTEGRATION.md)
+OpenRouter 設定拒絕其他端點、其他請求模型及超過300秒的整體逾時；預設也是300秒。後端對話310秒、前端總等待330秒，背景工作以短請求查詢結果。[長等待說明](LLM_WAIT.md)。請求固定 `provider.max_price` 的 `prompt`、`completion`、`request`、`image` 四項為 `0`，並設定 `require_parameters=true`、`allow_fallbacks=false`、`reasoning.effort=minimal`。`max_completion_tokens` 依分流為語意4096、官方證據1800，一般相容profile仍為1800；metadata按當次cap驗證，仍須 `finish_reason=stop`與cost0。不自動重試、不改用付費模型，也不以 Mock 或本機規則回覆掩蓋外部失敗。[費用與參數邊界](LLM_INTEGRATION.md)
 
 前輪金鑰資訊 GET 查核顯示限制為 US$0.10、當時 usage 為0；這不是變更帳號或方案，也不等同無限制免費服務。當輪多次推論的實際 `usage.cost` 為0，但免費供應商也曾回429、503或逾時。前輪實際模型、用量與錯誤見 [OpenRouter 歷史驗收](OPENROUTER_ACCEPTANCE.md)，本輪語意模式驗收以 [語意對話紀錄](SEMANTIC_CONVERSATION.md) 為準；不能保證免費模型持續可用。
 

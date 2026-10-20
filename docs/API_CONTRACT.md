@@ -16,7 +16,7 @@ const service = createClaimService({ mode: 'mock' });
 
 Mock 建構參數為 `{ delay = 180, storage = sessionStorage, registry = officialRegistry }`。測試可注入 `delay: 0` 與實作 `getItem/setItem/removeItem` 的記憶體 storage。`simulateFailure(code?, message?)` 只令下一次服務呼叫失敗，重試可以恢復。Mock 案件僅保存在同一分頁的 sessionStorage，不存檔案 Blob、base64 或原文內容；請只使用合成展示資料。清除案件也會移除該案件的訊息及檢查結果。
 
-API 建構參數為 `{ baseUrl = '/api/v1', timeout = 15000, messageTimeout = 50000, analysisTimeout = 95000, fetchImpl = fetch }`。一般讀寫為15秒、對話50秒、文件分析95秒；分別涵蓋後端對話45秒與分析90秒的處理預算，避免合法回覆尚在處理就被前端提早取消。瀏覽器原生fetch綁定至globalThis，保持Window／Worker呼叫語意。`baseUrl` 必須是以單一 `/` 開頭的同源相對路徑，禁止完整 URL、雙斜線及反斜線；檔案不會傳到任意網域。
+API 建構參數為 `{ baseUrl = '/api/v1', timeout = 15000, messageTimeout = 330000, analysisTimeout = 95000, fetchImpl = fetch }`。一般讀寫15秒、對話整體330秒、文件分析95秒；後端對話310秒、模型最多300秒、分析90秒。`sendMessage` 提交背景工作後每3秒查詢一次結果，單次HTTP最多15秒且受剩餘整體期限約束，不重送模型請求。瀏覽器原生fetch綁定至globalThis，保持Window／Worker呼叫語意。`baseUrl` 必須是以單一 `/` 開頭的同源相對路徑，禁止完整 URL、雙斜線及反斜線；檔案不會傳到任意網域。
 
 ## 方法與端點
 
@@ -29,14 +29,32 @@ API 建構參數為 `{ baseUrl = '/api/v1', timeout = 15000, messageTimeout = 50
 | `createCase(input)` | POST | `/cases` | `CreateCase` JSON | `Case` |
 | `getCase(id)` | GET | `/cases/{id}` | — | `Case` |
 | `updateCase(id, updates)` | PATCH | `/cases/{id}` | `{claim_type_id?, conditions?}` | `Case` |
-| `sendMessage(id, message, {document_id?})` | POST | `/cases/{id}/messages` | `{message, document_id?}` | `{case: Case, response: AssistantResponse}` |
+| `sendMessage(id, message, {document_id?})` | POST＋GET | `/cases/{id}/message-jobs` → `/cases/{id}/message-jobs/{job_id}` | `{message, document_id?}` | 提交202，查詢工作直到成功，方法仍回 `{case: Case, response: AssistantResponse}` |
+| 同步相容端點 | POST | `/cases/{id}/messages` | `{message, document_id?}` | `{case: Case, response: AssistantResponse}`；代理可能提早中止，網站不使用此長請求 |
 | `getChecklist(id)` | GET | `/cases/{id}/checklist` | — | `Document[]` |
 | `updateDocument(id, docId, updates)` | PATCH | `/cases/{id}/documents/{docId}` | `{status?, confirmed_findings?}` | `Case` |
 | `analyzeDocument(id, docId, file, options?)` | POST | `/cases/{id}/documents/{docId}/analyze` | `multipart/form-data` 的 `file` | `Case` |
 | `getSource(id)` | GET | `/sources/{id}` | — | `Source` |
 | `deleteCase(id)` | DELETE | `/cases/{id}` | — | `{deleted: true, id}` |
 
-建立案件時 HTTP 後端使用 201，其他成功回應使用 200。`deleteCase` 必須回傳 JSON；無此案件則 404。資料服務不提供任何正式理賠送件端點。
+建立案件時 HTTP 後端使用201，提交對話工作使用202，其他成功回應使用200。`deleteCase` 必須回傳 JSON；無此案件則404。資料服務不提供任何正式理賠送件端點。
+
+### 背景對話工作
+
+提交只回 `{id: UUID4, status: 'pending'}`，不將工作編號當成模型成功。查詢結果格式：
+
+```ts
+type MessageJob =
+  | { id: string; status: 'pending' }
+  | { id: string; status: 'succeeded'; result: { case: Case; response: AssistantResponse } }
+  | { id: string; status: 'failed'; error: { code: string; message: string; status: number } };
+```
+
+查詢HTTP200可能表示工作失敗；adapter必須把`failed.error`轉為既有`ServiceError`，不能把pending或failed當成成功。只有成功且通過原有模型、引用與回覆驗證，才保存一組使用者／助手訊息。工作編號不可跨owner或案件使用，未知／過期工作404；刪除或到期案件仍是`CASE_NOT_FOUND`。
+
+同案同時只允許一個對話工作，重複送出409 `MESSAGE_JOB_ACTIVE`；容量滿429 `MESSAGE_JOB_LIMIT`，均不新增模型請求。同一程序最多16項運算、128項工作紀錄，完成紀錄最多保留15分鐘，容量滿可提前清除最舊的完成紀錄；原訊息仍依案件保留規則保存。伺服器重啟會清除工作狀態，前端重新整理不會自動恢復未完成的查詢。刪案取消本機工作且禁止晚回覆重建案件，無法保證供應商端已停止生成。等待時若案件類型或條件改變，工作失敗409 `MESSAGE_CASE_CHANGED`，須由使用者重新送出以取得符合新情境的回覆。
+
+模型等待及處理與HTTP請求生命週期分離，網站每3秒發出一個短GET；不使用Quick Tunnel不支援的SSE，也不重送POST。同步相容端點保留給直接HTTP客戶端，經過代理時仍可能受到代理自身期限影響。[長等待與驗收](LLM_WAIT.md)
 
 真實後端會以 `claim_session` 的 HttpOnly、SameSite=Strict cookie 識別匿名 owner；adapter 使用同源 cookie，不在 JSON 或 JavaScript 暴露 token。HTTPS 須配置 Secure cookie。不同 owner、已刪除或到期案件均回 `404 CASE_NOT_FOUND`。案件自建立起固定保留 24 小時，每 owner 最多 20 件，每案最多 100 回成功對話。API 回應 `Cache-Control: no-store`；跨來源需符合明確 allowlist，不能只更改前端 `baseUrl` 連外。
 
@@ -144,7 +162,7 @@ type AssistantResponse = {
 
 內部模型輸出固定 `{facts,question,message}`。facts固定cause／inpatient／outpatient／emergency／critical_diagnosis／surgery六欄，每欄固定 `{value,turn,quote}`：cause為unknown／accident／illness，其餘為unknown／yes／no；unknown需turn=null且quote空字串，已知值需user turn逐字引文及來源語境／領域合理性／直接矛盾檢查。question採允許的追問enum，message為1–500字短對話，不得含URL、文件要求、金額、資格核准、處置指示或與facts矛盾。這是有限防護，不宣稱完整語意查核。
 
-模型請求的 `max_completion_tokens` 僅OpenRouter語意分支為4096；官方證據及一般相容profile維持1800。OpenRouter completion metadata不得超過當次明確cap；`finish_reason=length`即使cost0仍拒絕，不延長35秒deadline、不改JSON schema／1–500字message／6000字輸入，也不重試或切付費模型。
+模型請求的 `max_completion_tokens` 僅OpenRouter語意分支為4096；官方證據及一般相容profile維持1800。OpenRouter completion metadata不得超過當次明確cap；`finish_reason=length`即使cost0仍拒絕。OpenRouter整體deadline現為300秒，不改JSON schema／1–500字message／6000字輸入，也不重試或切付費模型。
 
 公開 `AssistantResponse` 與sendMessage的request／response欄位不變，前端不傳內部facts、history或cap物件。伺服器對應registry候選與canonical引用；新案件有可支持候選才產生 `proposed_case_updates`，確認後由既有 `updateCase` 寫入。已選類型的案件只回 `clarification` 提醒確認後調整，更新提案為空。模型不能決定官方文件要求、建立清單或直接改案件；官方來源、完整段落、規則與清單由伺服器決定。上傳或對話中的指令不得覆寫規則。完整question enum與本輪驗收見 [LLM整合說明](LLM_INTEGRATION.md) 及 [語意對話紀錄](SEMANTIC_CONVERSATION.md)。
 
@@ -203,8 +221,10 @@ type Analysis = {
 | 415 | `UNSUPPORTED_FILE_TYPE` | 非 PDF/JPG/PNG |
 | 403 | `ORIGIN_NOT_ALLOWED` | Origin 或跨站來源不允許 |
 | 431 | `HEADERS_TOO_LARGE` | 請求標頭超過 16 KB |
-| 429 | `RATE_LIMITED` / `CASE_LIMIT` / `MESSAGE_LIMIT` | 每 IP／每分鐘配額、owner 案件或案件對話上限；RATE_LIMITED 附 Retry-After |
-| 409 | `CASE_EXISTS` | 案件 ID 衝突 |
+| 429 | `RATE_LIMITED` / `CASE_LIMIT` / `MESSAGE_LIMIT` / `MESSAGE_JOB_LIMIT` | 每 IP／每分鐘配額、owner 案件、案件對話或程序工作容量上限；RATE_LIMITED 附 Retry-After |
+| 409 | `CASE_EXISTS` / `MESSAGE_JOB_ACTIVE` / `MESSAGE_CASE_CHANGED` / `MESSAGE_JOB_CANCELLED` | 案件ID衝突、已有對話、等待途中情境改變或工作已取消 |
+| 404 | `MESSAGE_JOB_NOT_FOUND` | 工作不屬於目前owner／案件、已過期或被清除 |
+| 503 | `MESSAGE_JOB_UNAVAILABLE` / `MESSAGE_JOB_FAILED` | 服務關閉或工作未預期失敗，隱藏內部例外 |
 | 503 | `OCR_BUSY` / `OCR_TIMEOUT` / `OCR_UNAVAILABLE` | OCR 單工容量、處理預算或模型不可用 |
 | 503 | `LLM_NOT_CONFIGURED` / `INVALID_LLM_CONFIG` | 外部模型未配置或設定不合法 |
 | 503 | `LLM_RATE_LIMITED` | 免費模型回429；明確顯示稍後重試，不自動重試或改用付費／Mock |

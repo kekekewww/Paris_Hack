@@ -1,0 +1,67 @@
+{
+  "exit_code": 0,
+  "stats": {
+    "startTime": "2026-10-20T07:20:01.876Z",
+    "duration": 167772.067,
+    "expected": 87,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "elapsed_seconds": 168.4984611,
+  "projects": {
+    "desktop-1440": {
+      "total": 29,
+      "expected": 29,
+      "unexpected": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "tablet-768": {
+      "total": 29,
+      "expected": 29,
+      "unexpected": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "mobile-390": {
+      "total": 29,
+      "expected": 29,
+      "unexpected": 0,
+      "flaky": 0,
+      "skipped": 0
+    }
+  },
+  "report_errors": 0,
+  "test_errors": 0,
+  "console_errors": 0,
+  "page_errors": 0,
+  "console_evidence": "All 87 tests passed the unchanged afterEach assertion that the observed console error/pageerror array is empty.",
+  "axe": {
+    "tests": 3,
+    "passed": 3,
+    "scans_per_test": 3,
+    "violations": 0,
+    "evidence": "Each passed WCAG test asserts empty violations for landing, workspace and guided type selection."
+  },
+  "artifacts": {
+    "png": 12,
+    "traces": 0,
+    "total_files": 13,
+    "files": [
+      ".local/llm-wait-20261020/mock-results/.last-run.json",
+      ".local/llm-wait-20261020/mock-results/e2e-AI-引導確認類型後進入共用工作區並取得準備摘要-desktop-1440/guided-workspace.png",
+      ".local/llm-wait-20261020/mock-results/e2e-AI-引導確認類型後進入共用工作區並取得準備摘要-mobile-390/guided-workspace.png",
+      ".local/llm-wait-20261020/mock-results/e2e-AI-引導確認類型後進入共用工作區並取得準備摘要-tablet-768/guided-workspace.png",
+      ".local/llm-wait-20261020/mock-results/e2e-上傳與-Mock-缺漏分析可預覽文件、查看問題並人工確認-desktop-1440/ocr-findings.png",
+      ".local/llm-wait-20261020/mock-results/e2e-上傳與-Mock-缺漏分析可預覽文件、查看問題並人工確認-mobile-390/ocr-findings.png",
+      ".local/llm-wait-20261020/mock-results/e2e-上傳與-Mock-缺漏分析可預覽文件、查看問題並人工確認-tablet-768/ocr-findings.png",
+      ".local/llm-wait-20261020/mock-results/e2e-引導類型須先選擇再獨立建立，改選前不會產生文件清單-desktop-1440/guided-before-choice.png",
+      ".local/llm-wait-20261020/mock-results/e2e-引導類型須先選擇再獨立建立，改選前不會產生文件清單-mobile-390/guided-before-choice.png",
+      ".local/llm-wait-20261020/mock-results/e2e-引導類型須先選擇再獨立建立，改選前不會產生文件清單-tablet-768/guided-before-choice.png",
+      ".local/llm-wait-20261020/mock-results/e2e-首頁雙入口、官方來源與原型聲明可操作-desktop-1440/landing.png",
+      ".local/llm-wait-20261020/mock-results/e2e-首頁雙入口、官方來源與原型聲明可操作-mobile-390/landing.png",
+      ".local/llm-wait-20261020/mock-results/e2e-首頁雙入口、官方來源與原型聲明可操作-tablet-768/landing.png"
+    ]
+  }
+}

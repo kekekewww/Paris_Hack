@@ -97,14 +97,14 @@ document.addEventListener('click',async e=>{
 });
 document.addEventListener('submit',e=>{
   const form=e.target.closest('[data-form]');if(!form)return;e.preventDefault();const data=new FormData(form);
-  if(form.dataset.form==='guided'){const message=String(data.get('message')||'').trim();if(message){if(state.busy){notify('上一個操作仍在處理，請稍候。');return}guidedFlowVersion++;clearGuidedChoice();guidedResponsePending=true;syncGuidedPicker();const flowVersion=guidedFlowVersion;action(()=>sendGuided(message,flowVersion),{busy:'正在釐清就醫情況…'})}return}
+  if(form.dataset.form==='guided'){const message=String(data.get('message')||'').trim();if(message){if(state.busy){notify('上一個操作仍在處理，請稍候。');return}guidedFlowVersion++;clearGuidedChoice();guidedResponsePending=true;syncGuidedPicker();const flowVersion=guidedFlowVersion;action(()=>sendGuided(message,flowVersion),{busy:mode==='mock'?'正在釐清就醫情況…':'正在釐清就醫情況，最多等候 5 分鐘…'})}return}
   if(form.dataset.form==='direct'){
     const conditions=Object.fromEntries(data);const claim_type_id=state.selected;
     const editingCaseId=state.editing?state.case.id:null,flowVersion=directFlowVersion;
     state.directConditions=conditions;
     action(async()=>{let c;try{c=editingCaseId?await service.updateCase(editingCaseId,{claim_type_id,conditions}):await service.createCase({entry_path:'direct',claim_type_id,conditions})}catch(error){if(flowVersion!==directFlowVersion)return;throw error}if(flowVersion!==directFlowVersion)return;setCase(c);state.editing=false;state.selected=null;state.directConditions={};directFlowVersion++;if(state.route==='search')go('workspace');notify('文件清單已建立，請逐項確認。')},{busy:'正在整理官方文件清單…'});return
   }
-  if(form.dataset.form==='workspace-chat'){const message=String(data.get('message')||'').trim();if(message)action(async()=>{const result=await service.sendMessage(state.case.id,message);setCase(result.case);render()},{busy:'正在查找可支持的官方資訊…'});return}
+  if(form.dataset.form==='workspace-chat'){const message=String(data.get('message')||'').trim();if(message)action(async()=>{const result=await service.sendMessage(state.case.id,message);setCase(result.case);render()},{busy:mode==='mock'?'正在查找可支持的官方資訊…':'正在整理回覆，最多等候 5 分鐘…'});return}
   if(form.dataset.form==='analyze'){
     if(fileChecking){notify('正在檢查PDF頁數，請稍候。');return}
     const error=validateFile(currentFile);if(error){showError(new Error(error),null,'#upload-error');return}

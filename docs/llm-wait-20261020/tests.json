@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-20",
+  "implementation_status": "DONE",
+  "model_acceptance_status": "BLOCKED",
+  "timeout_seconds": { "openrouter_default_and_max": 300, "backend_conversation": 310, "frontend_overall": 330, "one_http_request_max": 15, "poll_interval": 3 },
+  "backend": { "passed": 544, "failed": 0, "duration_seconds": 28.96, "warnings": 1 },
+  "provider_targeted": { "passed": 103, "expected_red_before_change": 2, "external_model_requests": 0 },
+  "frontend": { "passed": 69, "failed": 0, "skipped": 0, "new_jobs_expected_red_before_change": 11 },
+  "mock_e2e": { "passed": 87, "failed": 0, "duration_ms": 167772.067, "viewports": [1440, 768, 390], "console_errors": 0, "page_errors": 0, "axe_scans": 9, "axe_violations": 0 },
+  "api_ocr_e2e": { "passed": 27, "failed": 0, "duration_minutes_rounded": 2.0, "viewports": [1440, 768, 390], "provider": "grounded_rules", "external_model_requests": 0 },
+  "controlled_wait_browser": { "passed": 4, "failed": 0, "duration_seconds": 22.3, "viewports": [1440, 390], "virtual_wait_seconds_min": 126, "pending_polls_min": 42, "max_in_flight": 1, "console_errors": 0, "page_errors": 0, "horizontal_overflow": 0, "external_model_requests": 0, "scope": "controlled_transport_mock_fixtures_not_real_backend_or_model" },
+  "public_startup_smoke": { "passed": 15, "failed": 0, "external_model_requests": 0 },
+  "real_openrouter_job": { "status": "FAIL", "submissions": 1, "code": "LLM_RATE_LIMITED", "elapsed_ms": 6946, "submit_http_status": 202, "poll_http_status": 200, "job_status": "failed", "synthetic_case_deleted": true, "llm_verified": false },
+  "native_runtime": { "origin": "https://tulsa-ppc-message-builders.trycloudflare.com", "port": 8002, "parent_pid": 15036, "listener_pid": 24720, "tunnel_pid": 36124, "observed_startup_timeout_seconds": 300.0, "test_servers_cleaned": [8004, 5174, 5176] },
+  "sha256": {
+    "dist/index.html": "dce9eb808abb44685c6726eec9cf9f6802fb335efb25eb306b09a7f7066f3238",
+    "dist/assets/index-h9YV-k--.js": "ecac527ffcc2301dc200fc5bd69f935e894e6dc8d5d0e871add480e933e082c2",
+    "backend/app/ai/openai_compatible.py": "545aedd5577808cc962360525227a905bdc5b9a86783a69e947ea441c89c69c5",
+    "backend/app/main.py": "f6c067df8687b5b19f3b50e497ca550dcfe254430a171ef772f8e8275a1bb942",
+    "backend/app/message_jobs.py": "44100e6a800972fbc688f2ac46aa8189afb4acea19232e1a65196d2d564ceaf0"
+  },
+  "docker_image": { "status": "BLOCKED", "attempted_tag": "cardif-claim-preparation:llm-wait-20261020", "reason": "Docker Desktop Linux engine pipe does not exist", "new_image_created": false, "previous_image_is_current": false }
+}

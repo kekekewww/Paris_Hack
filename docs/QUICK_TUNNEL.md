@@ -1,6 +1,10 @@
 # Cloudflare Quick Tunnel 臨時展示
 
-> 2026-10-20 目前網址：[理賠準備助手](https://boots-deaf-found-arrange.trycloudflare.com/?service=api)。真實語意模式已部署，最終新程序公開HTTP23原斷言通過，verified來自本輪真模型招呼；完整模型旅程仍受免費限流阻擋。477後端、最終容器追問12與三尺寸視覺通過，詳見[本輪報告](SEMANTIC_CONVERSATION.md)及[目前狀態](../STATUS.md)。以下為歷史網址與歷史驗收，不代表目前程序。
+> 2026-10-20 長等待更新已發布，網址沿用：[理賠準備助手](https://tulsa-ppc-message-builders.trycloudflare.com/?service=api)。模型300秒／後端310秒／前端330秒，以背景工作短查詢避免長HTTP等待；正式資產index-h9YV-k--.js。後端544／前端69／Mock87／API及OCR27／受控等待4／公開啟動15通過。唯一真模型探測POST202後回failed LLM_RATE_LIMITED，並非逾時，configured=true／verified=false；完整模型gate仍BLOCKED。[長等待報告](LLM_WAIT.md)。目前8002 parent15036／listener24720、隧道36124；下方重啟輪次PID與驗收為歷史。
+
+> 2026-10-20 最新重啟網址：[理賠準備助手](https://tulsa-ppc-message-builders.trycloudflare.com/?service=api)。首頁、正式JS／CSS、API與安全cookie、合成案件建立／隔離／刪除等啟動檢查15/15通過，[去敏感證據](restart-20261020/smoke.json)。沿用正式dist、私有OpenRouter配置及案件庫；本次零模型／OCR分析請求，重啟後configured=true／verified=false，沒有宣稱重驗完整模型。8002 parent2400／listener10252、cloudflared36124；日誌與腳本在.local/restart-20261020，操作前須重新核對PID。臨時網址需電腦與程序持續執行。以下全部為歷史網址與驗收，目前狀態以[續作紀錄](../STATUS.md)為準。
+
+> 重啟前語意版本紀錄：boots-deaf-found-arrange.trycloudflare.com 已失效。當時真實語意模式已部署，公開HTTP23原斷言通過，verified來自當時真模型招呼；完整模型旅程仍受免費限流阻擋。477後端、容器追問12與三尺寸視覺通過，詳見[語意報告](SEMANTIC_CONVERSATION.md)。
 
 > 最新連續追問修復已發布（2026-10-19），後端347／前端56、Mock87／API27、最終容器追問12／公開6通過。但本輪真模型回503限流，原公開完整腳本在模型verified斷言失敗；當前整體gate保持BLOCKED。以下OpenRouter成功與程序為前輪歷史，最新以[追問修復報告](ASSISTANT_FOLLOWUP.md)為準。
 

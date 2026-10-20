@@ -29,9 +29,9 @@
 | `LLM_BASE_URL` | `https://openrouter.ai/api/v1` | 只接受這個 canonical 官方端點 |
 | `LLM_API_KEY` | 後端啟動環境安全注入 | 文件與範本不提供秘密值 |
 | `LLM_MODEL` | `openrouter/free` | 拒絕其他請求模型及 auto router |
-| `LLM_TIMEOUT_SECONDS` | `35` | OpenRouter 整體預算不得超過40秒 |
+| `LLM_TIMEOUT_SECONDS` | `300` | OpenRouter 預設／最多300秒，包含等待與讀取完整回覆 |
 
-所有OpenRouter分流保留 `response_format: {"type":"json_object"}`、`stream:false`、`reasoning.effort:minimal`。`max_completion_tokens` 僅語意分支提高為4096，官方證據分支維持1800；一般非OpenRouter相容請求也維持預設1800。本次沒有放寬1–500字message、6000字對話、35秒期限、JSON schema或以下免費限制：
+所有OpenRouter分流保留 `response_format: {"type":"json_object"}`、`stream:false`、`reasoning.effort:minimal`。`max_completion_tokens` 僅語意分支為4096，官方證據分支維持1800；一般非OpenRouter相容請求也維持預設1800。依使用者回饋，OpenRouter等待由35秒延長至300秒，後端310秒、前端330秒；以背景工作與短請求查詢跨越代理等待限制，詳見[長等待說明](LLM_WAIT.md)。1–500字message、6000字對話、JSON schema與以下免費限制保持：
 
 ~~~json
 {

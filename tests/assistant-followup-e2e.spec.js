@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { waitForUIMessageJob } from './message-job-helpers.js';
 
 if (!process.env.CLAIM_API_BASE_URL) {
   throw new Error('連續引導驗收需要 CLAIM_API_BASE_URL。');
@@ -40,16 +41,13 @@ function assertProvider(response, mode) {
 }
 
 async function sendDescription(page, mode, text, turn) {
-  const answered = mode === 'api' ? page.waitForResponse((response) =>
-    /^\/api\/v1\/cases\/[^/]+\/messages$/.test(new URL(response.url()).pathname)
-    && response.request().method() === 'POST') : null;
+  const answered = mode === 'api'
+    ? waitForUIMessageJob(page, { context: `第 ${turn} 輪連續引導` }) : null;
   await page.getByLabel('描述就醫情況', { exact: true }).fill(text);
   await page.getByRole('button', { name: '送出描述', exact: true }).click();
   let actual;
   if (answered) {
-    const response = await answered;
-    expect(response.status()).toBe(200);
-    actual = (await response.json()).response;
+    actual = (await answered).response;
     assertProvider(actual, mode);
   }
   await expect(assistantBubbles(page)).toHaveCount(turn);
@@ -137,7 +135,7 @@ for (const mode of ['mock', 'api']) {
         const path = new URL(request.url()).pathname;
         if (/^\/api\/v1\/cases\/[^/]+$/.test(path) && request.method() === 'PATCH') page.__followupPatchCount += 1;
         if (path === '/api/v1/cases' && request.method() === 'POST') page.__followupCreateCount += 1;
-        if (/^\/api\/v1\/cases\/[^/]+\/messages$/.test(path) && request.method() === 'POST') page.__followupMessageCount += 1;
+        if (/^\/api\/v1\/cases\/[^/]+\/message-jobs$/.test(path) && request.method() === 'POST') page.__followupMessageCount += 1;
       });
       page.on('response', (response) => {
         if (endpoint(response, '/api/v1/cases') && response.status() === 201) {

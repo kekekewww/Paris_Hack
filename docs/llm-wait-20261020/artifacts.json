@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "files_checked": 400,
+  "secret_matches": [],
+  "configured_timeout_seconds": 300.0,
+  "baseline_sha256": "59a6fd5053e9811560823b3f12637ef0c7bbe7f3aa2fd9a1abe1ea90fad1c8a1",
+  "baseline_unchanged": true
+}
