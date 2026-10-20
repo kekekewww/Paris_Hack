@@ -1,0 +1,54 @@
+{
+  "backend": {
+    "passed": 652,
+    "failed": 0,
+    "warnings": 1,
+    "elapsed_seconds": 35.91
+  },
+  "related_five_files": {
+    "passed": 455,
+    "elapsed_seconds": 3.85
+  },
+  "semantic_passed": 79,
+  "new_backend_cases": 20,
+  "ui": {
+    "passed": 2,
+    "failed": 0,
+    "real_model_jobs": 2,
+    "retries": 0,
+    "elapsed_seconds": 27.922
+  },
+  "ui_scope": "targeted uncertain-diagnosis desktop/mobile, not full previous 15-reply suite",
+  "initial_red": {
+    "false_rejections": 3,
+    "retained_negative_passes": 10
+  },
+  "review_red": {
+    "new_unrelated_cancer_cases_failed": 2,
+    "subsequently_rejected": true
+  },
+  "raw_model_reply_saved": false,
+  "official_rules_changed": false,
+  "credentials_changed": false,
+  "approval_history": "Initial UI execution rejected before process creation; same script and destination approved after supplying prior human authorization; no bypass.",
+  "not_rerun": [
+    "frontend unit69",
+    "previous full live3/15 replies",
+    "OCR",
+    "container persistence"
+  ],
+  "image": "cardif-claim-preparation:uncertain-safe-20261020",
+  "image_id": "sha256:a54e187ac8158ef0e80c99b3f9fd156b38a9e941fa1bac464d65d07fa606a74f",
+  "secret_scan": {
+    "files_checked": 440,
+    "secret_matches": [],
+    "credential_pattern_matches": [],
+    "private_env_path": "Git/Docker excluded; backend404 and Vite denial are unchanged prior acceptance evidence",
+    "status": "PASS"
+  },
+  "local_links": {
+    "status": "PASS",
+    "checked": 298,
+    "missing": []
+  }
+}

@@ -19,11 +19,59 @@ PLAUSIBLE = {**ANCHORS, "inpatient": ANCHORS["inpatient"] + r"|醫院.{0,8}(?:�
              "cause": r"車禍|意外|碰撞|撞|摔|跌|交通|疾病|生病|肺炎|感染|確診|診斷"}
 SAFETY = re.compile(r"忽略.{0,12}(指令|規則|系統)|忽略以上|system\s*:|輸出.{0,8}(金鑰|秘密)|所有文件.{0,8}(通過|核准)|改用\s*https?://|多少錢|給付金額|獲賠|賠多少|保證|核准|資格|一定.*賠|保障|[十百千萬億0-9]+元", re.I)
 FORBIDDEN_MESSAGE = re.compile(r"https?\s*:|www\.|\b[a-z0-9-]+\.[a-z]{2,}\b|\[[^\]]+\]\(|[<>]|(?:十|百|千|萬|億|\d)\s*元|保證|核准|批准|審核通過|給付|獲賠|賠償|資格|保障|必備|應備|需附|須附|必須提供|診斷證明|收據|申請書|吃藥|用藥|藥物|服藥|停藥|服用|停止|安排手術|立即.{0,8}(?:手術|開刀)|冰敷|治療建議", re.I)
+CRITICAL_TOPICS = (r"癌症|罹癌", r"重大疾病")
+CRITICAL_CLAUSE_BREAK = re.compile(r"[，,。；;！？?!\n]|但是|然而|可是|不過|而且|並且|以及|但|且|並")
+UNDIAGNOSED = re.compile(r"(?:尚未|還沒|還未|未|沒有)(?:被)?確診")
+CRITICAL_UNCERTAINTY = re.compile(r"可能|疑似|懷疑|擔心|擔憂|害怕|不(?:太)?確定|不知道|不清楚|待確認|是否|是不是|會不會|不能排除|無法排除")
+
+
+def _supported_critical_restatement(message: str, dialogue: list[dict]) -> bool:
+    """Permit only same-topic uncertainty, never a new diagnosis or denial."""
+    users = [item["content"] for item in dialogue if item["role"] == "user"]
+    preceding_topics = []
+    for clause in CRITICAL_CLAUSE_BREAK.split(message):
+        # This narrow exception cannot validate specific cancer names.
+        if "癌" in re.sub(r"癌症|罹癌", "", clause):
+            return False
+        topics = [topic for topic in CRITICAL_TOPICS if re.search(topic, clause)]
+        if topics:
+            preceding_topics = topics
+        if not topics and "確診" not in clause:
+            continue
+        # A status-only continuation must still refer to an identified topic.
+        topics = topics or preceding_topics
+        if not topics:
+            return False
+        undiagnosed = bool(UNDIAGNOSED.search(clause))
+        remainder = UNDIAGNOSED.sub("", clause)
+        if re.search(r"確診|(?:確定|確實)(?:是|有|沒有|不是)|就是|(?:不是|沒有)(?:癌症|重大疾病)", remainder):
+            return False
+        for topic in topics:
+            source = next((text for text in reversed(users) if re.search(topic, text)), None)
+            if source is None:
+                return False
+            source_clauses = CRITICAL_CLAUSE_BREAK.split(source)
+            index = max(index for index, part in enumerate(source_clauses) if re.search(topic, part))
+            source_clause = source_clauses[index]
+            if not (CRITICAL_UNCERTAINTY.search(source_clause) or UNDIAGNOSED.search(source_clause)) or _mention_state(source_clause, topic) is not None:
+                return False
+            if undiagnosed:
+                following = source_clauses[index + 1] if index + 1 < len(source_clauses) else ""
+                explicit_status = UNDIAGNOSED.search(source_clause) or (not re.search(ANCHORS["critical_diagnosis"], following) and UNDIAGNOSED.search(following))
+                if not explicit_status:
+                    return False
+            else:
+                # Uncertainty about a visit must not qualify a later diagnosis.
+                fragment = next(part for part in re.split(r"住院|門診|急診|手術", clause) if re.search(topic, part))
+                if not CRITICAL_UNCERTAINTY.search(fragment) or _mention_state(fragment, topic) is not None:
+                    return False
+    return True
 
 SYSTEM_PROMPT = """你是臺灣理賠準備對話助手，只理解使用者本次事件、釐清事實與詢問下一個未知項目。以繁體中文簡短自然對話，不能決定文件需求、資格、金額或核准。
 只回JSON，exact keys為facts、question、message。facts exact keys為cause,inpatient,outpatient,emergency,critical_diagnosis,surgery，六欄都要回。
 cause.value限unknown/accident/illness，其餘value限unknown/yes/no。每項exact keys為value,turn,quote；已知事實例如{"value":"no","turn":3,"quote":"沒有住院"}，必須引用user原文及正確turn，不能引用assistant；每個未知欄都用{"value":"unknown","turn":null,"quote":""}。
 保留歷史已知資訊，最新更正與本次事件優先；未提及、否定、假設與未來不能當肯定。沒有住院不等於有門診；症狀不能當疾病確診；critical_diagnosis=yes只能使用者明確說醫師已確診癌症或重大疾病。
+可以簡短重述使用者自己提出的同一疾病疑慮，仍須保留可能、疑似或不確定語氣，不能新增癌症或其他診斷；不確定不等於尚未確診，只有使用者明講尚未確診時才能這樣重述。
 六項facts各自獨立，不能用某項就醫情形推論另一項的yes或no。除緊接單一欄位且無歧義問句的有／沒有短答外，每個已知fact的quote都必須直接提及該欄事件：例如outpatient引用門診／看診／診所／看醫生，emergency引用急診／ER，inpatient引用住院／入院／留院或明確在醫院過夜，surgery引用手術／開刀／動刀；沒有直接證據就維持unknown。
 例如「只有急診」只支持emergency=yes，不能推outpatient=no或inpatient=no；「只有門診」只支持outpatient=yes，不能推emergency=no或inpatient=no。「當天回家」也不能自行推inpatient=no；若歷史user已明確說「沒有住院」，應保留inpatient=no並引用那一則user原文與turn，其餘未提及欄位仍為unknown。
 question限describe_event/care_setting/inpatient/outpatient/emergency/outpatient_or_emergency/critical_diagnosis/medical_records/confirm_claim/scope。依優先順序選擇：1. critical_diagnosis/inpatient/outpatient/emergency任一為yes，必須confirm_claim，簡短理解並請使用者確認，不再追問其他unknown。2. 已有本次事件描述、但inpatient/outpatient/emergency三欄皆unknown，必須care_setting，詢問是否已就醫及有沒有住院，不能選outpatient_or_emergency。3. 只有inpatient=no且outpatient/emergency皆unknown，才能選outpatient_or_emergency，改問門診或急診，不重問已知住院情形。4. 尚無事件且六項facts皆unknown才選describe_event。其餘只問對應unknown欄位；care_setting也僅可在三項就醫欄位全unknown時使用。不能自行更改案件。
@@ -123,7 +171,7 @@ def validate_semantics(generated, content: dict, retriever, invalid) -> dict:
     for field in ("inpatient", "outpatient", "emergency"):
         if values[field] != "unknown" and re.search(r"(?:是否|有沒有|曾|有去|看過|去過).{0,3}(?:" + ANCHORS[field] + r").{0,3}[嗎？?]", message): invalid()
         if values[field] == "no" and re.search(r"(?:您|你|本次|這次)(?:目前|確實|曾經)?(?:已經?|有)(?:去)?(?:" + ANCHORS[field] + r")", message): invalid()
-    if re.search(r"癌症|重大疾病|確診", message) and question != "critical_diagnosis" and values["critical_diagnosis"] != "yes": invalid()
+    if question != "critical_diagnosis" and values["critical_diagnosis"] != "yes" and not _supported_critical_restatement(message, content["dialogue"]): invalid()
     for clause in re.split(r"[，,。；;！？?!\n]", message):
         for field in ("inpatient", "outpatient", "emergency", "critical_diagnosis", "surgery"):
             if not re.search(ANCHORS[field], clause, re.I): continue

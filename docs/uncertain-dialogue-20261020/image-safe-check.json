@@ -1,0 +1,18 @@
+{
+  "image_id": "sha256:a54e187ac8158ef0e80c99b3f9fd156b38a9e941fa1bac464d65d07fa606a74f",
+  "expected_image_id_matches": true,
+  "hash_count": 224,
+  "backend_hash_count": 17,
+  "dist_hash_count": 207,
+  "all_image_hashes_match_host": true,
+  "local_directory_exists": true,
+  "local_has_contents": false,
+  "env_file_present": false,
+  "database_present": false,
+  "no_secret_injection": true,
+  "no_network": true,
+  "no_server_started": true,
+  "no_model_calls": true,
+  "ephemeral_container_auto_removed": true,
+  "passed": true
+}

@@ -166,7 +166,7 @@ class OpenAICompatibleProvider:
             # Do not retain references to frames containing model or user data.
             del caller, frame
         logger.warning("LLM validation rejected stage=%s line=%d field=%s", stage, line, fact_field)
-        raise AIError("INVALID_LLM_RESPONSE", "外部模型回覆缺少可驗證的引用或超出允許範圍，請重新確認。", 503)
+        raise AIError("INVALID_LLM_RESPONSE", "外部模型回覆未通過格式、內容或來源驗證，請稍後重試。", 503)
 
     def _openrouter_metadata(self, envelope: dict, *, max_completion_tokens: int = 1800) -> dict:
         model = envelope.get("model")

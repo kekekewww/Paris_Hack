@@ -1,0 +1,34 @@
+{
+  "scope": "one_real_generic_uncertain_diagnosis_request_safe_flags_only",
+  "model_requests": 1,
+  "status": "FAIL",
+  "raw_prompts_and_replies_saved": false,
+  "http_status": 200,
+  "metadata": {
+    "model": "deepseek/deepseek-v4.1-flash-1017",
+    "cost": 0.001536384,
+    "prompt_tokens": 898,
+    "completion_tokens": 1243,
+    "total_tokens": 2141
+  },
+  "question": "care_setting",
+  "fact_values": {
+    "cause": "unknown",
+    "inpatient": "unknown",
+    "outpatient": "unknown",
+    "emergency": "unknown",
+    "critical_diagnosis": "unknown",
+    "surgery": "unknown"
+  },
+  "message_flags": {
+    "length": 36,
+    "has_critical_terms": true,
+    "has_uncertainty": true,
+    "has_forbidden_terms": false,
+    "has_care_question_words": true
+  },
+  "rejection": {
+    "stage": "validate_semantics",
+    "line": 126
+  }
+}

@@ -52,6 +52,82 @@ def run(item, message, handler):
     return answer
 
 
+@pytest.mark.parametrize("current,reply", [
+    ("可能是重大疾病，但我還不確定", "您提到可能是重大疾病，請問本次是否已就醫及有沒有住院？"),
+    ("醫師說疑似癌症，尚未確診", "了解目前疑似癌症且尚未確診，請問本次是否已就醫及有沒有住院？"),
+])
+def test_supported_uncertain_critical_restatement_keeps_facts_unknown(current, reply):
+    def handler(request):
+        return httpx.Response(200, json=completion(semantic(request, "care_setting", reply)))
+
+    answer = run(case(), current, handler)
+    assert answer["message"] == reply and answer["missing_information"] == ["care_setting"]
+    assert answer["response_type"] == "clarification"
+    assert answer["suggested_claim_types"] == [] and answer["proposed_case_updates"] == {}
+
+
+def test_uncertain_critical_restatement_does_not_override_supported_emergency_visit():
+    def handler(request):
+        return httpx.Response(200, json=completion(semantic(request, "confirm_claim",
+            "您提到可能是重大疾病，請確認是否先查看門診文件資訊？", emergency=("yes", "有去急診"))))
+
+    answer = run(case(), "有去急診，可能是重大疾病，但還不確定", handler)
+    assert [entry["id"] for entry in answer["suggested_claim_types"]] == ["outpatient"]
+    assert answer["proposed_case_updates"]["claim_type_id"] == "outpatient"
+    assert answer["source_references"][0]["source_id"] == "cardif-claims"
+
+
+def test_uncertain_critical_restatement_keeps_explicit_no_admission_question_gate():
+    def handler(request):
+        return httpx.Response(200, json=completion(semantic(request, "outpatient_or_emergency",
+            "您提到可能是重大疾病，請問本次有去門診或急診嗎？", inpatient=("no", "沒有住院"))))
+
+    answer = run(case(None, "沒有住院"), "可能是重大疾病，但我還不確定", handler)
+    assert answer["missing_information"] == ["outpatient_or_emergency"]
+    assert answer["suggested_claim_types"] == [] and answer["proposed_case_updates"] == {}
+
+
+@pytest.mark.parametrize("diagnosis,value,question,reply", [
+    ("醫師已確診重大疾病", "yes", "confirm_claim", "請確認本次已確診重大疾病資訊。"),
+    ("沒有重大疾病", "no", "care_setting", "請問本次是否已就醫及有沒有住院？"),
+])
+def test_explicit_critical_facts_keep_their_existing_provenance_rules(diagnosis, value, question, reply):
+    def handler(request):
+        return httpx.Response(200, json=completion(semantic(request, question, reply, critical_diagnosis=(value, diagnosis))))
+
+    answer = run(case(), diagnosis, handler)
+    if value == "yes":
+        assert [entry["id"] for entry in answer["suggested_claim_types"]] == ["critical_illness"]
+        assert answer["source_references"][0]["source_id"] == "cardif-claims"
+    else:
+        assert answer["proposed_case_updates"] == {} and answer["suggested_claim_types"] == []
+
+
+@pytest.mark.parametrize("current,reply", [
+    ("可能是重大疾病，但我還不確定", "您已確診重大疾病，請問本次是否已就醫？"),
+    ("可能是重大疾病，但我還不確定", "確定不是重大疾病，請問本次是否已就醫？"),
+    ("可能是重大疾病，但我還不確定", "目前尚未確診重大疾病，請問本次是否已就醫？"),
+    ("可能是重大疾病，但我還不確定", "您提到可能是癌症，請問本次是否已就醫？"),
+    ("可能是重大疾病，但我還不確定", "可能需要住院，但您已確診重大疾病。請問本次是否已就醫？"),
+    ("可能是重大疾病，但我還不確定", "您提到疑似重大疾病，確診癌症。請問本次是否已就醫？"),
+    ("可能是重大疾病，但我還不確定", "您提到疑似重大疾病且已確診重大疾病，請問本次是否已就醫？"),
+    ("可能是重大疾病，但我還不確定", "可能需住院您已確診重大疾病，請問本次是否已就醫？"),
+    ("可能是重大疾病，但我還不確定", "可能需住院罹患重大疾病，請問本次是否已就醫？"),
+    ("疑似癌症，但重大疾病尚未確診", "目前疑似癌症且尚未確診，請問本次是否已就醫？"),
+    ("疑似重大疾病，尚未確診", "您提到疑似重大疾病。您有肺癌。請問本次是否已就醫及有沒有住院？"),
+    ("疑似重大疾病，尚未確診", "您提到疑似重大疾病。肺癌尚未確診。請問本次是否已就醫及有沒有住院？"),
+    ("沒有重大疾病", "您可能有重大疾病，請問本次是否已就醫？"),
+    ("你好", "您可能有重大疾病，請問本次是否已就醫？"),
+])
+def test_uncertainty_cannot_authorize_diagnosis_denial_or_a_new_critical_topic(current, reply):
+    def handler(request):
+        return httpx.Response(200, json=completion(semantic(request, "care_setting", reply)))
+
+    with pytest.raises(AIError) as caught:
+        run(case(), current, handler)
+    assert caught.value.code == "INVALID_LLM_RESPONSE" and caught.value.status == 503
+
+
 @pytest.mark.parametrize("message", ["你好", "我出車禍了", "沒有住院"])
 def test_every_ordinary_intake_turn_reaches_the_model_and_is_labelled_real_provider(message):
     observed = []

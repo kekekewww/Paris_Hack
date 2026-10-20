@@ -1,0 +1,6 @@
+{
+  "backend/app/ai/semantic_dialogue.py": "0e95bf32d109643b98e326397cba1bd82a717e332d4f5d4b679f080df6bddd9f",
+  "backend/app/ai/openai_compatible.py": "a5b21333edf1d9df381c3d1ee766fde0a8549eb283a550df1dfa98c98731cbc9",
+  "backend/tests/test_semantic_dialogue.py": "e8410e7c4e6f04f8345186eff6dcb41a4235f57470055c8c09350a98386e29b9",
+  "dist/index.html": "367f009ea264cd3a33afee5eafa8051af12f5ad4587554a6f124c766c96e0fba"
+}
