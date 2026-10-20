@@ -1,0 +1,33 @@
+{
+  "backend": {
+    "command": ".venv/Scripts/python.exe -m pytest backend/tests -q",
+    "passed": 632,
+    "failed": 0,
+    "warnings": 1,
+    "elapsed_seconds": 65.48
+  },
+  "ai_related": {
+    "passed": 489,
+    "failed": 0,
+    "elapsed_seconds": 5.67
+  },
+  "frontend": {
+    "command": "npm test",
+    "passed": 69,
+    "failed": 0,
+    "elapsed_ms": 358.7008
+  },
+  "baseline_original_sha256": "59a6fd5053e9811560823b3f12637ef0c7bbe7f3aa2fd9a1abe1ea90fad1c8a1",
+  "historical_not_rerun_this_task": {
+    "mock_responsive": 87,
+    "api_ocr_responsive": 27,
+    "controlled_long_wait": 4
+  },
+  "docker_image": "cardif-claim-preparation:deepseek-query-20261020",
+  "docker_image_id": "sha256:3ea3b760219cb1095fa56a64f0d73f3b953ca53ace9606ebc3c35712882af700",
+  "semantic_validators_relaxed": false,
+  "e2e_assertions_relaxed": false,
+  "public_http_early_failure": "Same-process verified was false immediately after restart, original assertion retained.",
+  "execution_environment_error": "System Python lacked httpx/pytest; corrected to project .venv before final suite.",
+  "note": "Current final model suite is recorded independently in public-final.json; preceding failures retained."
+}

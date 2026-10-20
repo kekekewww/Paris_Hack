@@ -1,0 +1,35 @@
+{
+  "scope": "final_source_public_three_viewport_real_model_e2e",
+  "result": {
+    "exit_code": 0,
+    "signal": null,
+    "elapsed_seconds": 116.253,
+    "finished_at": "2026-10-20T08:49:44.836Z"
+  },
+  "workers": 1,
+  "retries": 0,
+  "projects": [
+    "desktop-1440",
+    "tablet-768",
+    "mobile-390"
+  ],
+  "maximum_model_requests": 15,
+  "raw_content_saved": false,
+  "passed": 3,
+  "failed": 0,
+  "actual_model_replies": 15,
+  "checks": {
+    "real_provider_and_non_simulated": true,
+    "ai_message_labels": true,
+    "independent_confirmation_before_case_update": true,
+    "official_rules_and_sources": true,
+    "complete_application_fields_or_signature_evidence": true,
+    "pdf_text_and_canvas": true,
+    "human_review_preserved": true,
+    "summary_download_reload": true,
+    "all_test_cases_deleted_and_404": true,
+    "console_and_pageerror_zero": true,
+    "page_and_dialog_overflow_at_most_one_pixel": true,
+    "same_process_verified": true
+  }
+}

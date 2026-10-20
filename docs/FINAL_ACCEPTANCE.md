@@ -1,5 +1,7 @@
 # 本機最終驗收與外部依賴
 
+> 2026-10-20最新：已依新授權切換DeepSeek V4.1 Flash 1017與新key。後端632、前端69、公開真模型三尺寸3/3（116.253秒、15回覆）、HTTPS23及最終Docker224檔一致／真問答／重啟／安全／清理全部通過；Phase 2／3當前原型gate DONE。先前三輪FAIL與修正完整保留於[最新報告](DEEPSEEK_SETUP.md)。下方free、未開Docker、未驗證與BLOCKED段落均為歷史，不能取代最新STATUS；仍不代表正式保險服務或固定部署驗收。
+
 > 2026-10-20 目前：真OpenRouter語意對話已實作與部署，後端477、前端58、Mock87、API/OCR27、最終容器追問12、公開HTTP23及三尺寸視覺均有本輪證據；模型完整旅程仍受限流／不合規輸出阻擋，P2／P3整體gate保持BLOCKED。版本與差異、成功及失敗詳見[語意對話報告](SEMANTIC_CONVERSATION.md)。以下為歷史紀錄，不能挪作目前整體PASS。
 
 > 最新連續追問修復已發布（2026-10-19），後端347／前端56、Mock87／API27、最終容器追問12／公開6通過。但本輪真模型回503限流，原公開完整腳本在模型verified斷言失敗；當前整體gate保持BLOCKED。以下OpenRouter成功與程序為前輪歷史，最新以[追問修復報告](ASSISTANT_FOLLOWUP.md)為準。

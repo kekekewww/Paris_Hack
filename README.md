@@ -1,6 +1,6 @@
 # 理賠文件準備助手
 
-> 本輪（2026-10-20）已獲授權加入真實 OpenRouter 語意對話，必要的當前訊息與有限歷史會送交模型；原始上傳檔與 OCR 資料不送。語意4096版本已部署，最終公開live首輪真AI通過、第二輪限流，完整流程gate仍BLOCKED。本輪實作、真實請求、公開檢查及同程序verified的最終狀態以 [語意對話紀錄](docs/SEMANTIC_CONVERSATION.md) 為準，不能沿用舊程序結果。
+> 最新依使用者授權改用DeepSeek V4.1 Flash 1017及新key，固定官方供應商，300秒等待與文件規則保持。[目前設定與真實驗證](docs/DEEPSEEK_SETUP.md)／[續作狀態](STATUS.md)。舊free的成功、限流與INVALID均保留為歷史證據，不當作新程序驗收。
 
 延續團隊原始 HTML 的法國巴黎人壽黑客松原型，提供「描述情況、逐步確認」與「直接選擇類別」兩條路徑，整理官方文件、預覽 PDF、初步檢查指定欄位，再產生送件前摘要。
 
@@ -11,13 +11,21 @@
 | 模式 | 對話 | 文件檢查 | 保存方式 |
 | --- | --- | --- | --- |
 | `?service=mock` | 固定展示邏輯，有模擬標示 | 完整／缺漏／模糊的指定情境 | 分頁 sessionStorage；不存原檔 |
-| `?service=api` | 預設本機 `grounded_rules`；OpenRouter 提供語意對話與官方證據問答，語意4096／證據1800；舊程序部分真實成功，新預算完整gate仍BLOCKED | PDF 文字擷取／本機 RapidOCR；品質不足先提示重傳 | SQLite 結構化結果；不持久保存原檔或抽取全文 |
+| `?service=api` | 展示服務已設定指定 DeepSeek；提供真語意對話與官方證據問答，語意4096／證據1800。未配置金鑰的本機預設grounded_rules | PDF文字擷取／本機RapidOCR；品質不足先提示重傳 | SQLite結構化結果；不持久保存原檔或抽取全文 |
 
-`grounded_rules` **不是生成式 LLM**。明確選用 `openai_compatible`、官方 OpenRouter 端點及 `openrouter/free` 時，本輪新增模型處理引導與一般補充的語意；有依據的文件問答仍由模型選證據、伺服器重建完整官方段落。安全、資格與金額等限制仍可由規則直接處理，不能只看服務設定就把每則訊息都標為 AI。
+`grounded_rules` **不是生成式LLM**。明確設定 `openai_compatible`、官方OpenRouter端點及指定DeepSeek模型後，模型處理引導與一般補充的語意；文件問答由模型選證據、伺服器重建完整官方段落。安全、資格與金額等限制仍由規則處理，每則訊息依實際來源標示。原free設定可選且保留零費用護欄。
 
 語意對話會送出必要的當前訊息與最多8則歷史，以及已確認類型與cause／surgery兩項最小案件狀態。對話合計最多6000字，當前訊息最多4000字；歷史只保留完整句段與短答必要問句，排除文件問答／分析上下文。明顯識別資料先做盡力遮罩，未匹配資訊仍可能外送，並非全面去識別。不自動附加原始上傳檔、OCR／抽取全文或分析欄位。使用者自行輸入的事故、就醫或個人文字可能包含敏感資訊，展示仍只用合成資料。
 
-模型提出語意與類型／條件提案，官方文件要求由伺服器規則決定；新案件由使用者確認並建立清單後才寫入，已建立案件則只提醒確認，不由語意回覆直接覆寫條件。外部失敗明確報錯，不自動重試、不改用付費模型，也不回退 Mock／本機假成功。OpenAI／Gemini 仍暫緩。
+文件問答另只附本次必要遮罩query與官方證據，不附對話歷史、完整案件或檔案；模型依問題選取完整官方段落，伺服器驗證並重建引用。
+
+模型提出語意與類型／條件提案，官方文件要求由伺服器規則決定；新案件由使用者確認並建立清單後才寫入，已建立案件只提醒確認，不由語意回覆直接覆寫條件。外部失敗明確報錯，不自動重試、不換模型，也不回退Mock／本機假成功。OpenAI／Gemini仍暫緩。
+
+目前展示：[理賠準備助手](https://tulsa-ppc-message-builders.trycloudflare.com/?service=api)。模型最多300秒，後端310秒、網頁整體330秒，以背景工作查詢結果；一般請求15秒。正式dist與Docker均以API為預設，Mock仍可透過明確query使用。
+
+## 歷史驗收
+
+以下為先前版本的成功與失敗，當前結果以[DeepSeek報告](docs/DEEPSEEK_SETUP.md)及[STATUS](STATUS.md)為準。
 
 先前回報「你好 → 我出車禍了 → 沒有住院」時，原公開版三句都是 `grounded_rules` 並重複追問 `care_setting`，沒有呼叫模型；當時 Adapter 會先跑規則並在非文件回答時早退。這段重現與接通證據保留為歷史，本輪改為已授權的語意對話分工，不將舊成功視為新模式成功。
 
@@ -70,11 +78,13 @@ $env:SESSION_COOKIE_SECURE = 'false'
 
 macOS／Linux 對應命令為 `python3.12 -m venv .venv`、`.venv/bin/python -m pip ...` 與 `.venv/bin/python -m uvicorn ...`；使用 `export` 設定相同環境變數。
 
-## 可選 OpenRouter 免費模型
+## OpenRouter 模型
 
-OpenRouter 語意對話不另設環境開關：設定 `LLM_PROVIDER=openai_compatible`、固定 `LLM_BASE_URL=https://openrouter.ai/api/v1` 與 `LLM_MODEL=openrouter/free` 後，由後端依請求分流語意對話或官方證據問答。已授權的 key 保存在後端私有 `.local/secrets/.env.openrouter`，啟動時明確映射至 canonical `LLM_API_KEY`；後端不會自行掃描其他 env 檔。`LLM_TIMEOUT_SECONDS=300`，OpenRouter 預設及最高等待五分鐘；後端對話處理310秒、前端整體等待330秒。前端以背景工作與短請求查詢結果，避免展示隧道中斷長HTTP請求。秘密值只能注入後端，不可放入 `VITE_`、前端程式、Docker build args 或映像；公開範本保持空白金鑰。
+OpenRouter目前依使用者新授權使用 `LLM_MODEL=deepseek/deepseek-v4.1-flash-1017`，以 `LLM_PROVIDER=openai_compatible` 與固定 `LLM_BASE_URL=https://openrouter.ai/api/v1` 啟用。付費profile只允許這個requested model及DeepSeek官方供應商，不自動改用其他模型；原 `openrouter/free` profile仍保留且要求零費用。新key只保存在後端私有 `.local/secrets/.env.openrouter`，啟動時明確映射至 canonical `LLM_API_KEY`；不在前端、Git、Docker build args或映像提供秘密值。[新設定與真實驗證](docs/DEEPSEEK_SETUP.md)
 
-請求固定 `provider.max_price` 物件的 prompt／completion／request／image 四項為0，並設定 `require_parameters=true`、`allow_fallbacks=false`、`reasoning.effort=minimal`。`max_completion_tokens` 依分流為語意4096、官方證據1800；正常完成與零費用驗證不變，不自動重試或改用其他模型。前輪金鑰資訊實際 GET 查核顯示限制US$0.10、當時usage為0；推論仍逐次驗證實際模型、用量、零費用，以及語意事實引文或官方證據。設定與驗收邊界見 [LLM 整合說明](docs/LLM_INTEGRATION.md) 與 [長等待說明](docs/LLM_WAIT.md)。預設 `grounded_rules` 不需要金鑰；OpenAI／Gemini 尚未啟用或驗證。
+`LLM_TIMEOUT_SECONDS=300`，OpenRouter預設及最高等待五分鐘；後端310秒、前端330秒。前端以背景工作與短請求查詢結果，避免展示隧道中斷長HTTP請求。[長等待說明](docs/LLM_WAIT.md)
+
+DeepSeek請求設定 `provider.only=["deepseek"]`、`require_parameters=true`、`allow_fallbacks=false`與 `reasoning.effort=low`。單價上限為每百萬token輸入US$0.30／輸出US$1.20，固定request／image費率上限0；回覆cost必須為有限數字且在0–US$0.05間，這是事後驗證而非退款或供應商硬停。新key的總額上限US$2及2026-11-19到期已由官方GET確認，未修改帳號。`max_completion_tokens` 維持語意4096／官方證據1800，來源、事實、正常完成與用量檢查不變。預設 `grounded_rules` 不需要金鑰；OpenAI／Gemini 尚未啟用或驗證。[LLM整合說明](docs/LLM_INTEGRATION.md)
 
 ## 檢查與測試
 
@@ -100,9 +110,9 @@ npm run test:api
 
 測試後關閉此終端機，避免測試環境變數影響日常展示。若要使用其他獨立服務，可用 `CLAIM_API_BASE_URL`、`CLAIM_API_SERVER_COMMAND`，並同步設定該服務正確的 origin；已有 8000 服務時 Playwright 會重用，不能假定測試設定已更改它的資料庫或配額。
 
-健康檢查可使用 `Invoke-RestMethod http://127.0.0.1:8000/api/v1/health`。成功只表示 API 存活，請同時核對 `service_mode`、`llm_provider`、`llm_configured`、`llm_verified` 與 `ocr_provider`，並以實際合成文件完成上傳檢查。`llm_verified` 只記錄同程序、同配置的過往真實成功；health 不發送推論請求，也不保證此刻有免費容量。
+健康檢查可使用 `Invoke-RestMethod http://127.0.0.1:8000/api/v1/health`。成功只表示 API 存活，請同時核對 `service_mode`、`llm_provider`、`llm_configured`、`llm_verified` 與 `ocr_provider`，並以實際合成文件完成上傳檢查。`llm_verified` 只記錄同程序、同配置的過往真實成功；health不發送推論請求，也不保證供應商此刻可用。
 
-已啟動的本機 API 也可執行 `.venv/Scripts/python.exe scripts/smoke_api.py --include-ocr`。腳本只接受 loopback 網址，以合成 PDF／PNG 真正呼叫 API、核對來源與隔離，最後刪除自己建立的案件。它使用既有後端設定；若已啟用 OpenRouter，語意對話或文件問答可能消耗免費請求配額，不改用付費模型。容器改用 `--base-url http://127.0.0.1:8001` 等實際本機埠。
+已啟動的本機API也可執行 `.venv/Scripts/python.exe scripts/smoke_api.py --include-ocr`。腳本只接受loopback網址，以合成PDF／PNG真正呼叫API、核對來源與隔離，最後刪除自己建立的案件。它使用既有後端設定；若已啟用OpenRouter，對話會使用該配置並可能產生費用或消耗免費配額，不自行切換模型。容器改用 `--base-url http://127.0.0.1:8001` 等實際本機埠。
 
 展示前先等 health 成功，再執行上述合成文件 smoke。Health 不代表圖片模型已暖機；本機容器實測曾首次圖片請求超出 45 秒，安全回 `OCR_TIMEOUT`，模型載入後重試 39 項通過。保留此限制，先確認已保存狀態再重試，不將超時當成檢查通過。
 

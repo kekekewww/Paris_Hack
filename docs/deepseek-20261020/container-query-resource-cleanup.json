@@ -1,0 +1,9 @@
+{
+  "container_identity_checked": true,
+  "volume_label_checked": true,
+  "container_remove_exit": 0,
+  "volume_remove_exit": 0,
+  "container_absent": true,
+  "volume_absent": true,
+  "image_preserved": true
+}

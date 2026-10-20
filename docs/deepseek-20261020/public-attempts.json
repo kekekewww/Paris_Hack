@@ -1,0 +1,47 @@
+[
+  {
+    "attempt": 1,
+    "passed": 0,
+    "failed": 3,
+    "failure": "turn4_semantic_inferred_negative",
+    "result": {
+      "exit_code": 1,
+      "signal": null,
+      "elapsed_seconds": 76.98,
+      "finished_at": "2026-10-20T08:15:07.052Z"
+    },
+    "workers": 1,
+    "retries": 0,
+    "raw_content_saved": false
+  },
+  {
+    "attempt": 2,
+    "passed": 1,
+    "failed": 2,
+    "failure": "turn2_premature_question",
+    "result": {
+      "exit_code": 1,
+      "signal": null,
+      "elapsed_seconds": 71.324,
+      "finished_at": "2026-10-20T08:25:35.325Z"
+    },
+    "workers": 1,
+    "retries": 0,
+    "raw_content_saved": false
+  },
+  {
+    "attempt": 3,
+    "passed": 2,
+    "failed": 1,
+    "failure": "document_answer_not_specific",
+    "result": {
+      "exit_code": 1,
+      "signal": null,
+      "elapsed_seconds": 109.936,
+      "finished_at": "2026-10-20T08:39:00.112Z"
+    },
+    "workers": 1,
+    "retries": 0,
+    "raw_content_saved": false
+  }
+]

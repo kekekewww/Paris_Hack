@@ -1,0 +1,15 @@
+{
+  "submit_status": 202,
+  "attempts": 1,
+  "job_status": "succeeded",
+  "provider": "openai_compatible",
+  "is_simulated": false,
+  "same_case": true,
+  "messages_count": 2,
+  "type_unchanged": true,
+  "conditions_unchanged": true,
+  "documents_unchanged": true,
+  "passed": true,
+  "elapsed_seconds": 4.016,
+  "llm_verified": true
+}

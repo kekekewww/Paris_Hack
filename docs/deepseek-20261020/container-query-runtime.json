@@ -1,0 +1,11 @@
+{
+  "user_correct": true,
+  "read_only": true,
+  "capabilities_dropped": true,
+  "no_new_privileges": true,
+  "loopback_only": true,
+  "tmpfs_correct": true,
+  "volume_correct": true,
+  "health_healthy": true,
+  "passed": true
+}

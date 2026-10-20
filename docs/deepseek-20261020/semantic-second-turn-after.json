@@ -1,0 +1,62 @@
+{
+  "scope": "one_real_request_with_synthetic_dialogue_and_safe_rejection_flags",
+  "model_requests": 1,
+  "status": "PASS",
+  "metadata": {
+    "model": "deepseek/deepseek-v4.1-flash-1017",
+    "cost": 0.000706236,
+    "prompt_tokens": 941,
+    "completion_tokens": 416,
+    "total_tokens": 1357
+  },
+  "question": "care_setting",
+  "message_flags": {
+    "length": 26,
+    "forbidden": false
+  },
+  "facts": {
+    "cause": {
+      "value": "accident",
+      "turn": 3,
+      "quote_length": 5,
+      "quote_in_user_turn": true,
+      "quote_has_anchor": true
+    },
+    "inpatient": {
+      "value": "unknown",
+      "turn": null,
+      "quote_length": 0,
+      "quote_in_user_turn": false,
+      "quote_has_anchor": false
+    },
+    "outpatient": {
+      "value": "unknown",
+      "turn": null,
+      "quote_length": 0,
+      "quote_in_user_turn": false,
+      "quote_has_anchor": false
+    },
+    "emergency": {
+      "value": "unknown",
+      "turn": null,
+      "quote_length": 0,
+      "quote_in_user_turn": false,
+      "quote_has_anchor": false
+    },
+    "critical_diagnosis": {
+      "value": "unknown",
+      "turn": null,
+      "quote_length": 0,
+      "quote_in_user_turn": false,
+      "quote_has_anchor": false
+    },
+    "surgery": {
+      "value": "unknown",
+      "turn": null,
+      "quote_length": 0,
+      "quote_in_user_turn": false,
+      "quote_has_anchor": false
+    }
+  },
+  "response_type": "clarification"
+}

@@ -1,10 +1,10 @@
 # 模型供應商設定狀態
 
-> 本輪（2026-10-20）已獲授權加入真實 OpenRouter 語意對話，必要的當前訊息與有限歷史會送交模型；原始上傳檔與 OCR 資料不送。語意4096版本已部署，最終公開live首輪真AI通過、第二輪限流，完整流程gate仍BLOCKED。本輪實作、真實請求、公開檢查及同程序verified的最終狀態以 [語意對話紀錄](SEMANTIC_CONVERSATION.md) 為準，不能沿用舊程序結果。
+> 最新使用DeepSeek V4.1 Flash 1017及新key，固定官方供應商；真語意與官方證據請求已成功，[本輪設定與驗收](DEEPSEEK_SETUP.md)記錄公開流程。下方先前free限流歷程均為歷史，完整gate以STATUS為準。
 
 前輪連續追問修復已發布（2026-10-19），後端347／前端56、Mock87／API27、容器追問12／公開6通過；該輪真模型回503限流，原公開完整腳本在模型verified斷言失敗，沒有以規則成功代替模型成功。[歷史追問修復報告](ASSISTANT_FOLLOWUP.md)
 
-更新日期：2026-10-20（臺灣）。使用者已明確授權安全保存提供的 OpenRouter 金鑰與必要對話文字外送，並且只允許 `openrouter/free`。這項新授權取代先前「暫不建立金鑰」對 OpenRouter 的限制；OpenAI 與 Google AI Studio／Gemini 仍暫緩，沒有因此啟用。
+更新日期：2026-10-20（臺灣）。使用者已提供新OpenRouter key並指定付費deepseek/deepseek-v4.1-flash-1017，此授權取代只能free的限制；必要對話外送範圍不變。OpenAI／Gemini仍暫緩，不新增其他供應商金鑰或帳號變更。
 
 ## 目前設定與驗證
 
@@ -12,7 +12,7 @@
 | --- | --- | --- |
 | OpenAI API | `OPENAI_API_KEY` 預留欄位 | 仍暫緩；本輪未建立、使用或驗證 OpenAI 金鑰 |
 | Google AI Studio／Gemini API | `GEMINI_API_KEY` 預留欄位 | 仍暫緩；沒有 Gemini 原生 Adapter，本輪未呼叫 Gemini |
-| OpenRouter | 透過既有 `openai_compatible` Adapter，固定官方端點與 `openrouter/free` | 既有文件問答曾真實接通；調整前程序的前三輪引導與獨立探測成功；三次完整live及新4096工作區探測仍失敗，gate BLOCKED |
+| OpenRouter | openai_compatible、官方端點、指定DeepSeek模型與官方供應商 | 新key額度／期限與真語意、官方證據請求已查核；公開流程見本輪報告，free先前失敗另存 |
 
 OpenRouter 金鑰保存在後端私有檔 `.local/secrets/.env.openrouter`，不在此文件顯示內容。啟動時明確映射至 Adapter 使用的 canonical `LLM_API_KEY`，不依賴自動尋找或沿用其他供應商的金鑰。後端不會自行載入任意 env 檔；前端及建置產物不得讀取秘密檔。
 
@@ -21,12 +21,12 @@ OpenRouter 金鑰保存在後端私有檔 `.local/secrets/.env.openrouter`，不
 ~~~dotenv
 LLM_PROVIDER=openai_compatible
 LLM_BASE_URL=https://openrouter.ai/api/v1
-LLM_MODEL=openrouter/free
+LLM_MODEL=deepseek/deepseek-v4.1-flash-1017
 LLM_TIMEOUT_SECONDS=300
 # LLM_API_KEY 僅在後端啟動環境安全注入，此處不提供值。
 ~~~
 
-OpenRouter 設定拒絕其他端點、其他請求模型及超過300秒的整體逾時；預設也是300秒。後端對話310秒、前端總等待330秒，背景工作以短請求查詢結果。[長等待說明](LLM_WAIT.md)。請求固定 `provider.max_price` 的 `prompt`、`completion`、`request`、`image` 四項為 `0`，並設定 `require_parameters=true`、`allow_fallbacks=false`、`reasoning.effort=minimal`。`max_completion_tokens` 依分流為語意4096、官方證據1800，一般相容profile仍為1800；metadata按當次cap驗證，仍須 `finish_reason=stop`與cost0。不自動重試、不改用付費模型，也不以 Mock 或本機規則回覆掩蓋外部失敗。[費用與參數邊界](LLM_INTEGRATION.md)
+OpenRouter只接受canonical官方端點及原free或唯一新增paid模型，等待預設／最多300秒；後端310／前端330秒與背景查詢保持。[長等待說明](LLM_WAIT.md)。paid限定only=["deepseek"]與low effort，prompt／completion上限US$0.30／1.20每百萬token、request／image固定費率0，cost有限且0–US$0.05，實際model須匹配兩個官方ID。free仍minimal、四零價與cost0。兩者均require_parameters=true／allow_fallbacks=false，語意4096／證據1800及finish／schema驗證不變，不自動重試或換模型。[費用與參數邊界](LLM_INTEGRATION.md)
 
 前輪金鑰資訊 GET 查核顯示限制為 US$0.10、當時 usage 為0；這不是變更帳號或方案，也不等同無限制免費服務。當輪多次推論的實際 `usage.cost` 為0，但免費供應商也曾回429、503或逾時。前輪實際模型、用量與錯誤見 [OpenRouter 歷史驗收](OPENROUTER_ACCEPTANCE.md)，本輪語意模式驗收以 [語意對話紀錄](SEMANTIC_CONVERSATION.md) 為準；不能保證免費模型持續可用。
 
@@ -39,6 +39,7 @@ OpenRouter 設定拒絕其他端點、其他請求模型及超過300秒的整體
 - 本輪已授權語意模式傳送必要的當前訊息與最多8則歷史，合計最多9則／6000字；當前訊息為1–4000字，遮罩後完整保留。歷史user每則最多1000字、assistant最多600字，超長只留完整句段，無安全句段則排除。
 - 保留最後安全引導回覆，以及「有／沒有／是／不是」短答所需的前一個結構化追問；若必要問句未能完整保留遮罩後內容（包含被上限縮減），短答一起排除。文件、answer、uncertain及不明配對不納入；歷史只取role／content，再加本次turn索引；另外只傳已確認類型與cause／surgery最小狀態，不附加完整案件、原始上傳檔、OCR／抽取全文或分析欄位。
 - 明顯識別資料先做盡力遮罩，不是全面去識別；使用者自行輸入的文字仍可能含未匹配的個人與就醫資訊，展示只用合成資料。官方證據只由伺服器挑選。
+- 文件問答只送本次必要遮罩query及官方證據；query復用1–4000字與遮罩後長度驗證，不附加對話歷史、完整案件、上傳檔或OCR。模型只選1–3個證據ID，後端還原完整段落與來源。
 - 模型內部只回facts／question／message，六項事實須有允許user turn的逐字引文；伺服器以有限語境、領域合理性與矛盾檢查驗證，並非完整語意證明。模型不能直接決定官方文件要求或修改案件；新案件確認後才透過既有API寫入，已建案語意回覆不帶更新提案。支援文件問答仍由伺服器依所選官方證據重建全文與引用。
 - 免費路由會選擇實際供應模型，模型與容量可能改變；不得把 router 名稱當成固定模型承諾。[官方 Free Models Router](https://openrouter.ai/docs/cookbook/get-started/free-models-router-playground)
 

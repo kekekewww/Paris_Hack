@@ -74,6 +74,27 @@ def test_every_ordinary_intake_turn_reaches_the_model_and_is_labelled_real_provi
     assert answer["proposed_case_updates"] == {}
 
 
+@pytest.mark.parametrize("question,allowed", [("care_setting", True), ("outpatient_or_emergency", False)])
+def test_accident_after_a_greeting_cannot_skip_unknown_admission(question, allowed):
+    item = case(None, "你好")
+    item["messages"].append({"role": "assistant", "content": "您好，請簡單描述這次發生的情況。", "response": {"response_type": "clarification"}})
+
+    def handler(request):
+        message = "了解車禍情況，請問本次是否已就醫，以及有沒有住院？" if allowed else "了解，請問本次有去門診或急診嗎？"
+        payload = semantic(request, question, message, cause=("accident", "出車禍"))
+        return httpx.Response(200, json=completion(payload))
+
+    if allowed:
+        answer = run(item, "我出車禍了", handler)
+        assert answer["response_type"] == "clarification"
+        assert answer["missing_information"] == ["care_setting"]
+        assert answer["suggested_claim_types"] == [] and answer["proposed_case_updates"] == {}
+    else:
+        with pytest.raises(AIError) as caught:
+            run(item, "我出車禍了", handler)
+        assert caught.value.code == "INVALID_LLM_RESPONSE" and caught.value.status == 503
+
+
 def test_model_semantics_can_recognize_a_visit_and_only_propose_a_registry_claim():
     def handler(request):
         return httpx.Response(200, json=completion(semantic(request, "confirm_claim", "了解，本次有到診所看診，請確認是否先查看門診文件。",
@@ -84,6 +105,53 @@ def test_model_semantics_can_recognize_a_visit_and_only_propose_a_registry_claim
     assert [claim["id"] for claim in answer["suggested_claim_types"]] == ["outpatient"]
     assert answer["proposed_case_updates"]["conditions"]["cause"] == "accident"
     assert answer["source_references"] and answer["requires_human_review"] is True
+
+
+@pytest.mark.parametrize("current,care_field,care_quote,prior_no_admission", [
+    ("只有急診，當天回家，沒有手術", "emergency", "只有急診", True),
+    ("只有門診，沒有手術", "outpatient", "只有門診", False),
+])
+def test_exclusive_visit_evidence_leaves_other_care_facts_independent(current, care_field, care_quote, prior_no_admission):
+    item = case(None, "你好", "我出車禍了", *( ["沒有住院"] if prior_no_admission else [] ))
+    item["messages"].append({"role": "assistant", "content": "請問本次有到門診或急診嗎？", "response": {"response_type": "clarification"}})
+
+    def handler(request):
+        known = {"cause": ("accident", "出車禍"), care_field: ("yes", care_quote), "surgery": ("no", "沒有手術")}
+        if prior_no_admission:
+            known["inpatient"] = ("no", "沒有住院")
+        payload = semantic(request, "confirm_claim", "請確認是否先查看門診文件資訊？", **known)
+        return httpx.Response(200, json=completion(payload))
+
+    answer = run(item, current, handler)
+    assert answer["response_type"] == "claim_suggestion"
+    assert [entry["id"] for entry in answer["suggested_claim_types"]] == ["outpatient"]
+    assert answer["proposed_case_updates"] == {"claim_type_id": "outpatient", "conditions": {"cause": "accident", "surgery": "no", "receipt_type": "unknown"}}
+    assert answer["source_references"][0]["source_id"] == "cardif-claims"
+    assert answer["source_references"][0]["official_url"] == "https://life.cardif.com.tw/zh/a314"
+    assert answer["requires_human_review"] is True
+    if care_field == "emergency":
+        assert "急診是否適用仍待個別保單及官方確認" in answer["message"]
+
+
+@pytest.mark.parametrize("current,care_field,care_quote,inferred_field,inferred_quote,prior_no_admission", [
+    ("只有急診，當天回家，沒有手術", "emergency", "只有急診", "outpatient", "只有急診，當天回家，沒有手術", True),
+    ("只有急診，當天回家，沒有手術", "emergency", "只有急診", "inpatient", "當天回家", True),
+    ("只有門診，沒有手術", "outpatient", "只有門診", "emergency", "只有門診", False),
+    ("只有門診，沒有手術", "outpatient", "只有門診", "inpatient", "只有門診", False),
+])
+def test_exclusive_visit_or_returning_home_cannot_fabricate_another_care_negative(current, care_field, care_quote, inferred_field, inferred_quote, prior_no_admission):
+    item = case(None, "我出車禍了", *( ["沒有住院"] if prior_no_admission else [] ))
+
+    def handler(request):
+        known = {"cause": ("accident", "出車禍"), care_field: ("yes", care_quote), "surgery": ("no", "沒有手術")}
+        if prior_no_admission:
+            known["inpatient"] = ("no", "沒有住院")
+        known[inferred_field] = ("no", inferred_quote)
+        return httpx.Response(200, json=completion(semantic(request, "confirm_claim", "請確認是否先查看門診文件資訊？", **known)))
+
+    with pytest.raises(AIError) as caught:
+        run(item, current, handler)
+    assert caught.value.code == "INVALID_LLM_RESPONSE" and caught.value.status == 503
 
 
 def test_workspace_ordinary_correction_uses_semantics_without_mutating_confirmed_case():

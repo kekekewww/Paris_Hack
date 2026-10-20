@@ -1,0 +1,56 @@
+{
+  "scope": "real_deepseek_semantic_and_evidence_not_full_site_acceptance",
+  "model": "deepseek/deepseek-v4.1-flash-1017",
+  "timeout_seconds": 300.0,
+  "status": "PASS",
+  "requests": [
+    {
+      "profile": "semantic",
+      "status": "PASS",
+      "response_type": "clarification",
+      "provider": "openai_compatible",
+      "is_simulated": false,
+      "official_references": 0,
+      "metadata": {
+        "model": "deepseek/deepseek-v4.1-flash-1017",
+        "cost": 0.0005049,
+        "prompt_tokens": 523,
+        "completion_tokens": 290,
+        "total_tokens": 813
+      },
+      "actual_provider": "DeepSeek",
+      "elapsed_seconds": 2.391
+    },
+    {
+      "profile": "official_evidence",
+      "status": "PASS",
+      "response_type": "answer",
+      "provider": "openai_compatible",
+      "is_simulated": false,
+      "official_references": 3,
+      "metadata": {
+        "model": "deepseek/deepseek-v4.1-flash-1017",
+        "cost": 0.0002508,
+        "prompt_tokens": 344,
+        "completion_tokens": 123,
+        "total_tokens": 467
+      },
+      "actual_provider": "DeepSeek",
+      "elapsed_seconds": 1.453
+    }
+  ],
+  "automatic_retries": 0,
+  "total_verified_request_cost_usd": 0.0007557,
+  "observed_transport": [
+    {
+      "http_status": 200,
+      "official_provider_confirmed": true,
+      "provider": "DeepSeek"
+    },
+    {
+      "http_status": 200,
+      "official_provider_confirmed": true,
+      "provider": "DeepSeek"
+    }
+  ]
+}

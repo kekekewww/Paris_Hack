@@ -1,0 +1,9 @@
+{
+  "restart_exit_code": 0,
+  "same_owner_read_status": 200,
+  "case_exact_match": true,
+  "llm_verified_after_restart": false,
+  "llm_configured_after_restart": true,
+  "prior_job_after_restart_status": 404,
+  "passed": true
+}

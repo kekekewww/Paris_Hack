@@ -1,0 +1,10 @@
+{
+  "host_bundle": "index-h9YV-k--.js",
+  "image_bundle": "index-CecfFZZO.js",
+  "host_length": 74366,
+  "image_length": 74304,
+  "shared_prefix_length": 716,
+  "shared_suffix_length": 5,
+  "host_delta_length": 73645,
+  "image_delta_length": 73583
+}

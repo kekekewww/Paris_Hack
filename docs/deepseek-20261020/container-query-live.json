@@ -1,0 +1,23 @@
+{
+  "submit_status": 202,
+  "attempts": 1,
+  "job_status": "succeeded",
+  "checks": {
+    "real_provider": true,
+    "non_simulated": true,
+    "answer_type": true,
+    "human_review_required": true,
+    "no_updates": true,
+    "canonical_sources": true,
+    "complete_application_evidence": true,
+    "evidence_has_matching_source_page": true,
+    "same_case": true,
+    "preparation_unchanged": true,
+    "messages_exactly_two": true
+  },
+  "passed": true,
+  "canonical_evidence_count": 1,
+  "reference_count": 1,
+  "elapsed_seconds": 2.031,
+  "llm_verified": true
+}

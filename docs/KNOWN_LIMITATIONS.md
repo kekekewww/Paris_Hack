@@ -1,10 +1,10 @@
 # 已知限制
 
-> 本輪（2026-10-20）已獲授權加入真實 OpenRouter 語意對話，必要的當前訊息與有限歷史會送交模型；原始上傳檔與 OCR 資料不送。語意4096版本已部署，最終公開live首輪真AI通過、第二輪限流，完整流程gate仍BLOCKED。本輪實作、真實請求、公開檢查及同程序verified的最終狀態以 [語意對話紀錄](SEMANTIC_CONVERSATION.md) 為準，不能沿用舊程序結果。
+> 最新模型已改為指定DeepSeek付費profile及官方供應商，[本輪驗證](DEEPSEEK_SETUP.md)記錄實際結果。下方原free的限流與INVALID為歷史，不代表新模型完整流程結果；整體gate以STATUS為準。
 
 前輪連續追問修復已發布（2026-10-19），後端347／前端56、Mock87／API27、容器追問12／公開6通過；該輪真模型回503限流，原公開完整腳本在模型verified斷言失敗，沒有以規則成功代替模型成功。[歷史追問修復報告](ASSISTANT_FOLLOWUP.md)
 
-更新日期：2026-10-20（臺灣）。本文記錄目前功能邊界；Phase 2、Phase 3 與部署驗收狀態請以 [STATUS.md](../STATUS.md) 及實際測試報告為準。使用者已授權 OpenRouter 語意對話與必要的當前訊息／有限歷史，僅允許 `openrouter/free`；OpenAI／Gemini 仍暫緩。前輪 OpenRouter 實際串接曾完成 Phase 2／3 原型範圍整體驗收；先前重驗因限流BLOCKED；調整前程序的前三輪引導及獨立探測已有成功，三次完整live與新4096工作區探測仍失敗，當前gate BLOCKED；歷史結果見 [OpenRouter 紀錄](OPENROUTER_ACCEPTANCE.md) 及 [供應商設定](PROVIDER_SETUP.md)；這不代表固定部署或商業級服務已驗收。
+更新日期：2026-10-20（臺灣）。本文記錄功能邊界，gate以[STATUS](../STATUS.md)為準。使用者新授權指定付費deepseek/deepseek-v4.1-flash-1017，新key上限US$2／2026-11-19到期已由官方GET確認；不擴大對話外送範圍，OpenAI／Gemini仍暫緩。原free失敗及成功保留為歷史；目前兩種真profile已成功，完整公開流程另見本輪報告。不代表固定部署或商業級保險服務已驗收。
 
 ## 服務與 AI
 
@@ -13,14 +13,16 @@
 | Mock | 可完整操作前端；對話、分析與框線為固定模擬情境，不能證明真實 AI 或 OCR 已完成 |
 | API | 使用 FastAPI、SQLite、本機官方資料及實際文件分析；失敗會顯示錯誤，不回退 Mock |
 | `grounded_rules` | 實際執行中文詞彙檢索與規則，`is_simulated=false`；不是生成式 LLM，`llm_configured=false` |
-| 外部 LLM | OpenRouter 既有文件問答曾真實零費用接通；調整前程序的前三輪引導及獨立探測成功；三次完整live與新4096工作區探測仍失敗，不能挪用舊程序成功補足；OpenAI／Gemini 未驗證 |
+| 外部 LLM | 指定DeepSeek真語意及官方證據請求成功，已驗model／provider／費用；完整公開流程見新報告。即使付費，仍不保證容量或所有語意正確；OpenAI／Gemini未驗證 |
 | 免費容量 | 免費router不保證固定模型、容量或延遲；歷史完整live曾因限流及INVALID失敗。OpenRouter等待已延長至300秒，仍不能保證供應商在期限內完成或輸出通過驗證 |
 | 語言理解 | 本機模式使用規則；OpenRouter 語意模式可提供理解與追問提案，仍可能誤解否定、混合事件或上下文，事實引文、有限領域合理性與直接矛盾檢查不等於完整語意正確性證明，仍須由使用者確認類型與條件 |
 | 檢索 | 小型本機中文詞彙索引，沒有向量資料庫；官方文件需求仍由伺服器規則與來源決定，模型不能新增要求。查無支持內容不代表官網不存在該資訊 |
 
-外部語意模式不另設環境開關，明確設定 `LLM_PROVIDER=openai_compatible`，OpenRouter 僅允許 `https://openrouter.ai/api/v1` 與 `openrouter/free`。金鑰保存在後端私有 `.local/secrets/.env.openrouter`，啟動時明確映射至 canonical `LLM_API_KEY`；前端、建置及映像不得含秘密值，範本仍保留空白金鑰。缺設定回 `503 / LLM_NOT_CONFIGURED`，設定不合法、網路或輸出驗證失敗也回明確錯誤，不以本機／Mock 回覆掩蓋外部失敗。
+外部語意模式不另設開關，明確設定openai_compatible。OpenRouter端點固定官方HTTPS，requested僅原free與新授權的精確DeepSeek ID。金鑰只在私有後端檔與啟動環境，前端、Git及映像不得含值；缺設定、非法配置、網路或輸出驗證失敗明確回報，不以本機／Mock假成功。
 
-請求固定 `provider.max_price` 的 prompt／completion／request／image 四項為0、`require_parameters=true`、`allow_fallbacks=false`、`reasoning.effort=minimal`。`max_completion_tokens` 僅語意提高4096，官方證據與一般相容profile維持1800；仍按當次cap、`finish_reason=stop`及cost0驗證，OpenRouter期限現為300秒。前輪金鑰資訊 GET 顯示限制US$0.10、當時usage為0，多次推論的 `usage.cost` 為0；這些是實測結果，非未來可用性承諾。重大疾病額外 CLI 真模型探測兩輪遇429，保留為擴充覆蓋的外部限制，不宣稱三類模型探測全部通過。429 明確回 `503 / LLM_RATE_LIMITED`；不自動重試、不改付費模型、不切 Mock 或本機假成功。
+paid固定DeepSeek官方供應商與low effort，單價cap輸入0.3／輸出1.2美元／百萬token，request／image固定費率0，回覆cost有限且0–US$0.05；此事後檢查不能取消既有費用或取代key總額限制。free仍minimal、四零價與cost0。兩者皆無重試／fallback，300秒、語意4096／證據1800與finish／來源／用量驗證保持。重大疾病的額外歷史CLI限流仍保留，不宣稱所有擴充情境已全面覆蓋。429明確回LLM_RATE_LIMITED，不能以Mock或本機假成功。
+
+文件問答會送當前必要遮罩query及公開官方證據；query復用1–4000字、遮罩後長度檢查，不附帶歷史、完整案件、上傳原檔或OCR。模型只選證據ID，後端重建全文與引用；合法引用仍不代表必然切題，完整流程保留具體欄位／簽名等品質斷言。歷史只有證據、沒有問題的profile已因相關性失敗修正。
 
 健康檢查的 `llm_configured=true` 只代表設定齊備；`llm_verified=true` 只表示同程序、同配置曾通過真實請求及完整驗證，重啟、停用或配置變更會使紀錄失效。Health 不送出模型請求，過往成功不能證明此刻有免費容量或保證即時 readiness，也不能單獨代表整體整合驗收完成。詳見 [LLM 整合紀錄](LLM_INTEGRATION.md)。
 

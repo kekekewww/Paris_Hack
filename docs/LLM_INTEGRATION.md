@@ -1,15 +1,15 @@
 # LLM Adapter 與實際驗證狀態
 
-> 本輪（2026-10-20）已獲授權加入真實 OpenRouter 語意對話，必要的當前訊息與有限歷史會送交模型；原始上傳檔與 OCR 資料不送。語意4096版本已部署，最終公開live首輪真AI通過、第二輪限流，完整流程gate仍BLOCKED。本輪實作、真實請求、公開檢查及同程序verified的最終狀態以 [語意對話紀錄](SEMANTIC_CONVERSATION.md) 為準，不能沿用舊程序結果。
+> 最新配置依使用者授權改用DeepSeek V4.1 Flash 1017與新key，固定DeepSeek官方供應商。真語意及官方證據探測已成功，[最新設定與驗收](DEEPSEEK_SETUP.md)記錄公開流程結果。原free限流、INVALID與歷史成功保留於[語意紀錄](SEMANTIC_CONVERSATION.md)，不混稱目前程序。
 
-更新日期：2026-10-20（臺灣）。使用者已授權以 `openrouter/free` 理解本次對話與有限上下文。這項新授權擴大先前「只外送公開官方證據」的範圍；不改用其他模型、付費服務或新增上傳檔／OCR 外送。OpenAI 與 Google AI Studio／Gemini 仍暫緩。提高預算前程序的前三輪真實引導、獨立改述及問候探測已有成功，但三次完整live均未通過，gate仍為BLOCKED；不能以離線fixture、前輪成功或單一health旗標代替完整驗收。
+更新日期：2026-10-20（臺灣）。最新授權允許使用付費 `deepseek/deepseek-v4.1-flash-1017`，取代之前只能free的限制。必要當前描述與有限同案歷史可送模型，原始上傳檔／OCR不送，官方需求仍由規則決定。OpenAI／Gemini暫緩；不因此開放其他模型或自動備援。
 
 ## 對話分工與公開契約
 
 | 分流 | 模型與伺服器的工作 |
 | --- | --- |
 | OpenRouter 語意對話 | 處理引導與一般補充的語意提案；傳送必要的當前訊息與有限歷史，輸出經伺服器結構與證據驗證 |
-| 有依據的文件問答 | 保留既有 `evidence_ids` 模式，只從本次官方證據選取 ID；完整段落與引用由伺服器重建 |
+| 有依據的文件問答 | 依本次必要遮罩query，從本次官方證據選取 `evidence_ids`；完整段落與引用由伺服器重建 |
 | 本機與安全處理 | 明確選用 `grounded_rules` 時執行本機規則；資格、給付金額、正式核准、提示注入等限制可由規則直接處理，清楚標示實際 provider |
 | Mock | 供展示與離線回歸，有 `provider: mock`、`is_simulated: true`；不能代替外部模型結果 |
 
@@ -17,9 +17,9 @@
 
 對外仍使用既有 `AssistantResponse`，每則回覆以自己的 `provider`／`is_simulated` 標示來源。模型內部 JSON 不直接交給前端，也沒有送件或修改案件的工具。錯誤明確回傳，不以本機、Mock 或另一個模型的成功回覆掩蓋外部失敗。[API 契約](API_CONTRACT.md)
 
-## 啟用與免費費用界線
+## 啟用與費用界線
 
-不新增語意模式環境開關。後端明確設定 `LLM_PROVIDER=openai_compatible`、canonical OpenRouter 端點及 `openrouter/free` 時，使用新的語意分流；預設 `grounded_rules` 仍可獨立執行。沒有把預設本機模式偽裝成模型。
+不新增語意模式環境開關。後端明確設定 `LLM_PROVIDER=openai_compatible`、canonical OpenRouter端點與已授權模型，執行語意或官方證據分流；預設grounded_rules仍可獨立執行，不冒充生成式模型。
 
 金鑰保存在私有 `.local/secrets/.env.openrouter`，啟動時明確映射至 canonical `LLM_API_KEY`；應用不掃描其他 env 檔、不沿用其他供應商金鑰。秘密值不放入前端、Git、Docker build args、映像或日誌。[供應商設定](PROVIDER_SETUP.md)
 
@@ -28,19 +28,20 @@
 | `LLM_PROVIDER` | `openai_compatible` | 明確設定才啟用外部模式 |
 | `LLM_BASE_URL` | `https://openrouter.ai/api/v1` | 只接受這個 canonical 官方端點 |
 | `LLM_API_KEY` | 後端啟動環境安全注入 | 文件與範本不提供秘密值 |
-| `LLM_MODEL` | `openrouter/free` | 拒絕其他請求模型及 auto router |
+| `LLM_MODEL` | `deepseek/deepseek-v4.1-flash-1017` | 僅新增這個paid requested ID；原openrouter/free亦保留，其他模型／auto拒絕 |
 | `LLM_TIMEOUT_SECONDS` | `300` | OpenRouter 預設／最多300秒，包含等待與讀取完整回覆 |
 
-所有OpenRouter分流保留 `response_format: {"type":"json_object"}`、`stream:false`、`reasoning.effort:minimal`。`max_completion_tokens` 僅語意分支為4096，官方證據分支維持1800；一般非OpenRouter相容請求也維持預設1800。依使用者回饋，OpenRouter等待由35秒延長至300秒，後端310秒、前端330秒；以背景工作與短請求查詢跨越代理等待限制，詳見[長等待說明](LLM_WAIT.md)。1–500字message、6000字對話、JSON schema與以下免費限制保持：
+所有OpenRouter分流保留JSON object／非串流／不儲存請求。DeepSeek依官方catalog支援使用low effort，free維持minimal；語意4096／官方證據1800 token，300／310／330秒與原schema保持。[長等待說明](LLM_WAIT.md)。當前paid provider設定如下：
 
 ~~~json
 {
   "provider": {
+    "only": ["deepseek"],
     "require_parameters": true,
     "allow_fallbacks": false,
     "max_price": {
-      "prompt": 0,
-      "completion": 0,
+      "prompt": 0.3,
+      "completion": 1.2,
       "request": 0,
       "image": 0
     }
@@ -48,7 +49,7 @@
 }
 ~~~
 
-不提供其他模型、不自動重試、沒有付費或 Mock fallback。`max_price` 是物件，四項零價格配合固定免費 router 限制請求費用；免費容量仍可能不足。[官方路由設定](https://openrouter.ai/docs/guides/routing/provider-selection)
+prompt／completion單位是美元／百萬token，request／image分別為固定每請求／每張圖費率。paid只允許回傳1017或canonical 20261017完整model ID，cost為有限數字且在0–US$0.05間；這是回應後驗證，不能退款或取代key總額限制。新key官方GET確認上限US$2、到期2026-11-19。原free profile不帶only、四項單價皆0且回覆cost恰0。不自動重試、不換模型、無Mock或供應商fallback。[官方路由設定](https://openrouter.ai/docs/guides/routing/provider-selection)
 
 ## 語意模式的資料範圍
 
@@ -74,13 +75,15 @@
 
 支援的文件問答保留較窄的 `{"evidence_ids":["id"]}` 輸出：只允許本次1至3個不重複 ID。伺服器重建完整 canonical 官方段落與來源／頁碼／URL；未知 ID、重複、超量、自由文字、網址、工具呼叫、截斷或拒答等不當作成功。一般非 OpenRouter 相容設定仍保留原有完整段落比對，但未因此取得新的供應商實測證據。
 
+OpenRouter文件問答輸入為 `{query,evidence:[{id,title,text}]}`。query只取當前必要問題，復用 `prepare_dialogue([], message)` 的1–4000字驗證、明顯個資遮罩及遮罩後長度檢查，不附加歷史／case／檔案／OCR。query與證據均視為不可信資料。這補足先前只傳證據、模型不知題目的相關性缺口，不擴大模型對官方規則或輸出內容的權限。
+
 JSON mode 本身不能保證事實、規範或提案正確；內部結構與最終 `validate_assistant_response` 都須通過才回成功。[OpenRouter Chat API](https://openrouter.ai/docs/api/api-reference/chat/create-a-chat-completion)
 
 ## 真實模型、用量與 health
 
-OpenRouter回應必須提供具體實際 `model`，不能只有router別名；三項token為有效正整數且總數相符，completion不得超過當次請求明確使用的cap（語意4096／證據1800），`finish_reason` 必須為 `stop`，`usage.cost` 必須是有限數值且恰為0。`length` 即使cost0也拒絕，不把全域metadata上限一併放寬。缺失、錯型或非零費用不當作成功。模型與用量保留在後端去敏感驗證紀錄，不加入案件回覆。OpenRouter 自動回傳 usage，不需已棄用的 `usage.include`。[官方 Usage Accounting](https://openrouter.ai/docs/cookbook/administration/usage-accounting)
+OpenRouter回應必須提供具體實際 `model`，paid僅接受已授權兩個精確ID；三項token須為有效正整數且總數相符，completion不得超過當次cap（語意4096／證據1800），`finish_reason` 必須為 `stop`。`usage.cost` 須為有限數字：free恰0、paid為0–US$0.05；缺失、錯型或超限拒絕。`length` 即使費用合法也拒絕。模型與用量保留於後端去敏感驗證紀錄，不加入案件回覆。OpenRouter自動回usage，不需已棄用的 `usage.include`。[官方Usage Accounting](https://openrouter.ai/docs/cookbook/administration/usage-accounting)
 
-`provider_status()` 不呼叫模型、不公開金鑰／模型／網址。`llm_configured` 只表示設定齊備；`llm_verified=true` 只表示同程序、同配置曾以預設真實 transport 通過 HTTP、模型、零費用、內容及最終回覆驗證。重啟、停用或配置變更會清除。離線 transport、本機回覆與環境旗標不能建立真實成功紀錄；舊成功也不能證明新語意模式已驗證或即時有容量。
+`provider_status()` 不呼叫模型、不公開金鑰／模型／網址。`llm_configured` 只表示設定齊備；`llm_verified=true` 只表示同程序、同配置曾以預設真transport通過HTTP、模型、所選profile費用、內容及最終回覆驗證。重啟、停用或配置變更會清除。離線transport、本機回覆與環境旗標不能建立真成功；歷史成功不能證明即時readiness。
 
 ## 錯誤與真實驗收要求
 
@@ -88,11 +91,15 @@ OpenRouter回應必須提供具體實際 `model`，不能只有router別名；�
 | --- | --- | --- |
 | 503 | `LLM_NOT_CONFIGURED`／`INVALID_LLM_CONFIG` | 必要設定缺少或不合法 |
 | 503 | `LLM_TIMEOUT` | 單次及整體預算逾時 |
-| 503 | `LLM_RATE_LIMITED` | 免費供應商回429，明確顯示稍後重試 |
+| 503 | `LLM_RATE_LIMITED` | 外部供應商回429，明確顯示稍後重試 |
 | 503 | `LLM_PROVIDER_ERROR` | 網路、其他 HTTP 錯誤或重新導向 |
 | 503 | `INVALID_LLM_RESPONSE` | 語意／證據、模型、用量、費用或最終輸出驗證失敗 |
 
-外部預設35秒、最多40秒，低於對話路由45秒與前端50秒；回應上限64 KiB。供應商原始錯誤 body、完整 prompt、Authorization 與原始模型回覆不寫入公開紀錄或回傳使用者。每次失敗不偽裝成規則／Mock 成功，也不在背景自動改用付費模型。
+OpenRouter預設／最多300秒，後端310秒、網頁整體330秒；其他相容端點預設20／最多60秒。回應上限64KiB。供應商原始錯誤body、完整prompt、Authorization與原始模型回覆不寫入日誌或回傳使用者；拒絕診斷僅白名單stage／程式行號／欄位enum。每次失敗明確回報，不自動重試、換模型或以Mock／規則假成功。
+
+## 舊free語意版本驗收（歷史）
+
+以下35秒、零費用、限流與未完成gate為舊版本記錄；現行模型與驗收見[DeepSeek報告](DEEPSEEK_SETUP.md)。
 
 本輪早期兩次真實探測未通過：一次回 `INVALID_LLM_RESPONSE`，另一次於35秒回 `LLM_TIMEOUT`；這兩次未取得可核對的schema／模型用量元資料，仍保留為失敗。
 

@@ -1,0 +1,10 @@
+{
+  "backend/app/ai/openai_compatible.py": "43ffb5a5320fe7301ad6f985d023f59ddfc5ae0d4561e8a2f39c6651efd36414",
+  "backend/app/ai/semantic_dialogue.py": "9afbcfbf0d96b359fd1331b13ebdafbf1696b65e83f9a628f92c40da9917292b",
+  "backend/tests/test_paid_openrouter.py": "3e158cec224f8f02c5ea0ca59d63552e883a731531f4562c0c89ccc09324df57",
+  "backend/tests/test_semantic_dialogue.py": "4547f2f2a3bf2c77e72655d43bc5342c4e112c74dc76e4a4335be55d5754c911",
+  "dist/index.html": "367f009ea264cd3a33afee5eafa8051af12f5ad4587554a6f124c766c96e0fba",
+  "dist/assets/index-CecfFZZO.js": "d96a9547ba73437d10262f92938fe7c29b0bd37ac337753d4de8839f8f9c5762",
+  "法國巴黎人壽_理賠申請系統.html": "59a6fd5053e9811560823b3f12637ef0c7bbe7f3aa2fd9a1abe1ea90fad1c8a1",
+  "docs/baseline/original.html": "59a6fd5053e9811560823b3f12637ef0c7bbe7f3aa2fd9a1abe1ea90fad1c8a1"
+}
