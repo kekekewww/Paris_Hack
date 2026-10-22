@@ -1,11 +1,11 @@
 # 續作狀態
 
-更新：2026-10-21（臺灣）。**依使用者要求恢復伺服器與新Quick Tunnel，公開啟動15項全過。** 本次只重啟，產品程式／模型設定未變，沒有呼叫模型或OCR分析；652後端與目標2/2為前輪修正證據，未重跑。
+更新：2026-10-22（臺灣）。**依使用者要求恢復伺服器與新Quick Tunnel，公開啟動15項全過。** 本次只重啟，產品程式／模型設定未變，沒有呼叫模型或OCR分析；652後端與目標2/2為前輪修正證據，未重跑。
 
 - current_phase：Phase 3維護交付完成，展示服務保持運作。
-- current_task：OPS-20261021 DONE；UNCERTAIN-20261020及原切換任務DONE保留，沒有新功能實作。OpenAI／Gemini仍依使用者決定暫緩。
+- current_task：OPS-20261022 DONE；UNCERTAIN-20261020及原切換任務DONE保留，沒有新功能實作。OpenAI／Gemini仍依使用者決定暫緩。
 - last_completed_task：核對8002及其隧道皆已停止，恢復隱藏程序、精確新origin／Secure cookie、原模型／300秒與案件庫，公開15項通過並更新連結。
-- last_successful_test：本次首頁、JS/CSS、API、模型配置、OCR配置、安全cookie、私有路徑404、合成案規則／owner隔離／清除15/15 PASS；model_requests=0／ocr_analysis_requests=0，測試案已刪除。[本次證據](docs/restart-20261021/smoke.json)
+- last_successful_test：本次首頁、JS/CSS、API、模型配置、OCR配置、安全cookie、私有路徑404、合成案規則／owner隔離／清除15/15 PASS；model_requests=0／ocr_analysis_requests=0，測試案已刪除。[本次證據](docs/restart-20261022/smoke.json)
 - last_feature_tests：前輪全後端652/652（35.91秒）、相關五檔455／語意79、公開目標2/2（27.922秒、2真job）與最終映像224hash一致；本次重啟未重跑。[修正紀錄](docs/MODEL_REQUEST_FLOW.md)
 - current_blockers：沒有本輪必要外部阻礙；初次瀏覽器自動審核因授權證據不足拒絕，補既有人類授權後同腳本／同目的地重審獲允許，沒有繞過。有限詞彙與語意驗證仍不能保證全面語言正確。
 - final_live_evidence：本次只跑原句桌面／手機各一真UI工作，非模擬clarification、AI標示、成功messages2、無候選／updates／type／docs／PATCH、無肯定診斷、console／pageerror0、無橫溢、兩案DELETE200／GET404。上一輪完整PDF／官方問答／摘要15回覆三尺寸3/3另保留歷史，未重跑。
@@ -15,15 +15,15 @@
 - wait_state：模型300秒／後端310秒／網頁330秒；單POST202＋每3秒短GET，原owner隔離／容量／同案防重／刪除／TTL／shutdown／條件變更護欄保持。一般HTTP15秒、分析95秒不變。
 - key_state：上一輪切換結束時官方GET /key 200，上限US$2、usage US$0.031929972、remaining US$1.968070028，到期2026-11-19T07:57:36.297Z（臺灣15:57）。僅回報當時快照，沒有變更額度或帳號；秘密只存私有.local/secrets/.env.openrouter，owner ACL／Git及Docker排除，無前端／argv／Git金鑰。
 - final_checks：本次440檔實際新key／完整憑證格式掃描零命中，298個本地連結無缺漏，證據在docs/uncertain-dialogue-20261020/tests.json。原HTML與dist未更動；前輪432／279為歷史數字。
-- public_url：https://structure-pierce-rotation-navigation.trycloudflare.com/?service=api 。舊tulsa網址不再作為當前連結；Quick Tunnel網址及存活無保證，電腦與程序需保持執行。
-- runtime_state：公開8002 parent18484／listener11492、專案cloudflared10668；操作前重新核對CIM與埠。沿用.local/quick-tunnel/cases.sqlite3、精確新origin、安全cookie、單worker／rate120／no-access-log／no-proxy-headers，未動無關8000／3137或其隧道。當前安全log .local/restart-20261021/app.stderr.log。新host使用獨立cookie，沿用DB不表示舊host案件會自動出現在新host。
+- public_url：https://equally-main-human-here.trycloudflare.com/?service=api 。先前Quick Tunnel網址不再作為當前連結；Quick Tunnel網址及存活無保證，電腦與程序需保持執行。
+- runtime_state：公開8002 parent57552／listener47120、專案cloudflared51528；操作前重新核對CIM與埠。沿用.local/quick-tunnel/cases.sqlite3、精確新origin、安全cookie、單worker／rate120／no-access-log／no-proxy-headers，未動無關8000／3137或其隧道。當前安全log .local/restart-20261022/app.stderr.log。新host使用獨立cookie，沿用DB不表示舊host案件會自動出現在新host。
 - restart_model_state：configured=true／verified=false；啟動log確認精確DeepSeek模型與timeout300.0。重啟重設verified是既有語意，本次未用模型呼叫重新建立，不把配置成功當真模型重驗。
 - asset_state：API預設index-CecfFZZO.js，dist/index.html SHA256 367f009ea264cd3a33afee5eafa8051af12f5ad4587554a6f124c766c96e0fba；JS d96a9547ba73437d10262f92938fe7c29b0bd37ac337753d4de8839f8f9c5762。原dist已備份，舊assets保留給舊分頁。
 - docker_state：最終cardif-claim-preparation:uncertain-safe-20261020／sha256:a54e187ac8158ef0e80c99b3f9fd156b38a9e941fa1bac464d65d07fa606a74f，實build及backend17＋dist207共224hash一致；.local空、無env/db。離線run --rm無網路／secret／模型，已清除。runtime安全／OCR／持久性為不變設定的上一輪證據，本次未重跑。
 - data_scope：必要描述／最多8則有限歷史，合計最多9則／6000字；文件問答只用本次遮罩query（1–4000字）與公開官方證據，不帶history／完整案／原始上傳檔／OCR／分析欄位／cookie／key。遮罩非全面去識別。文件需求仍由官方規則決定，獨立確認才建立清單。
 - design_state：原始HTML及備份SHA256皆59a6fd5053e9811560823b3f12637ef0c7bbe7f3aa2fd9a1abe1ea90fad1c8a1；版型／CSS／官方來源規則未變。Mock保留。前輪Mock87／API及OCR27／受控長等待4為不變部分歷史差異證據，不當作本輪重跑。
 - known_limits：單worker／記憶體job，重啟會清除工作；有限語意／PII處理非全面正確性證明；歷史OCR底層例外根因未明，保留監測限制；不驗保單資格／金額，不正式核准或送件。[完整限制](docs/KNOWN_LIMITATIONS.md)
-- saved_evidence：本次[重啟15項](docs/restart-20261021/smoke.json)，程序／隧道log在.local/restart-20261021；前輪[完整模型流程與修正](docs/MODEL_REQUEST_FLOW.md)及安全JSON保留，不改寫歷史驗收。
+- saved_evidence：本次[重啟15項](docs/restart-20261022/smoke.json)，程序／隧道log在.local/restart-20261022；前輪[完整模型流程與修正](docs/MODEL_REQUEST_FLOW.md)及安全JSON保留，不改寫歷史驗收。
 
 ## 後續維護的三步
 

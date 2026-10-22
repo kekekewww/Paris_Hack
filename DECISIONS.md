@@ -60,3 +60,7 @@
 ## 2026-10-21
 
 46. 使用者要求重啟，核對8002與其cloudflared皆未執行，故恢復既有原生服務及新Quick Tunnel；新origin精確注入，私有DeepSeek／300秒／原DB及dist不變。公開啟動15項全部過且合成案刪404，沒有模型／OCR分析請求，verified=false如實保留。更新當前展示連結；舊驗收網址保留為歷史，不冒稱新host的cookie能自動接續舊host案件。無關服務、DNS及帳號未改動。
+
+## 2026-10-22
+
+47. 使用者再次要求重啟，先核對8002與專案隧道皆停止，再恢復既有原生服務及新Quick Tunnel；沿用DeepSeek、300秒期限、原DB及dist，新origin精確設定並驗證Secure cookie。新[公開網址](https://equally-main-human-here.trycloudflare.com/?service=api)啟動15/15通過，model_requests=0／ocr_analysis_requests=0，合成案件刪後404；[本次證據](docs/restart-20261022/smoke.json)獨立保存，不覆寫前輪歷史。health為openai_compatible、configured=true／verified=false，僅證明本次啟動與基本隔離正常，不宣稱重新通過真模型驗收。無關服務未動，舊網址與功能驗收仍保留為歷史紀錄。
