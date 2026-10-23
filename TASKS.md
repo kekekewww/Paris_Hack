@@ -1,6 +1,6 @@
 # 開發任務
 
-最新維運（2026-10-22）：OPS-20261022 DONE；伺服器／隧道已恢復，[新公開網址](https://equally-main-human-here.trycloudflare.com/?service=api)啟動15/15通過，零模型／OCR分析呼叫，合成案件已刪除並確認404。health configured=true／verified=false；本次未重驗真模型，功能驗收仍依前輪歷史紀錄。
+最新維運（2026-10-23）：OPS-20261023 DONE；伺服器／隧道已恢復，[新公開網址](https://develops-functionality-purchases-extreme.trycloudflare.com/?service=api)啟動15/15通過，零模型／OCR分析呼叫，合成案件已刪除並確認404。health configured=true／verified=false；本次未重驗真模型，功能驗收仍依前輪歷史紀錄。
 
 最新維護：UNCERTAIN-20261020 DONE；不確定重大疾病誤擋已修復、完整請求除錯文件已提供。本次652後端與公開目標2/2、最終映像224hash通過；下方632／完整15回覆3/3為切換當時證據，未冒稱本次重跑。
 
@@ -8,6 +8,7 @@
 
 | ID | 階段 | 工作 | 優先 | 狀態 | 相依 | 驗收條件 | 驗證證據／外部依賴 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| OPS-20261023 | 3 | 重新啟動專案伺服器及Quick Tunnel | P0 | DONE | 使用者要求、既有dist／私有設定 | 新HTTPS首頁／正式資產／API、安全Cookie／no-store、私有路徑及案件隔離與清除正常 | 本次fresh smoke exit0、15/15 PASS；health status=ok／service_mode=api／llm_provider=openai_compatible／configured=true／verified=false／ocr=pymupdf+rapidocr；model_requests=0／ocr_analysis_requests=0，合成案刪後404；未重驗真模型；[證據](docs/restart-20261023/smoke.json) |
 | OPS-20261022 | 3 | 重新啟動專案伺服器及Quick Tunnel | P0 | DONE | 使用者要求、既有dist／私有設定 | 新HTTPS首頁／資產／API、精確origin／Secure cookie、隔離及清除正常 | 8002與專案隧道原已停止；沿用DeepSeek／300秒／原DB及dist，新origin與安全cookie驗證通過，公開15/15，model_requests=0／ocr_analysis_requests=0，合成案刪後404；configured=true／verified=false，未重驗真模型，無關服務未動；[證據](docs/restart-20261022/smoke.json) |
 | OPS-20261021 | 3 | 重新啟動專案伺服器及Quick Tunnel | P0 | DONE | 使用者要求、既有dist／私有設定 | 新HTTPS首頁／資產／API、精確origin／cookie、隔離及清除正常 | 8002與原隧道原已停止；恢復既有DeepSeek／300秒／DB，公開15/15，零模型／OCR分析，測試案刪404；[證據](docs/restart-20261021/smoke.json) |
 | UNCERTAIN-20261020 | 2／3 | 不確定重大疾病誤擋與完整模型流程除錯 | P0 | DONE | 使用者確切輸入、DeepSeek | 合理不確定重述通過；不推定確診／候選；未知肯定及洗白仍拒；真流程與除錯文件 | 真before舊126行FAIL、初修afterPASS；最終652／相關455／語意79及公開桌面手機2/2過、最終image224hash一致；[完整流程](docs/MODEL_REQUEST_FLOW.md) |

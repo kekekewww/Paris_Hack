@@ -23,7 +23,7 @@
 
 模型提出語意與類型／條件提案，官方文件要求由伺服器規則決定；新案件由使用者確認並建立清單後才寫入，已建立案件只提醒確認，不由語意回覆直接覆寫條件。外部失敗明確報錯，不自動重試、不換模型，也不回退Mock／本機假成功。OpenAI／Gemini仍暫緩。
 
-目前展示：[理賠準備助手](https://equally-main-human-here.trycloudflare.com/?service=api)。模型最多300秒，後端310秒、網頁整體330秒，以背景工作查詢結果；一般請求15秒。正式dist與Docker均以API為預設，Mock仍可透過明確query使用。
+目前展示：[理賠準備助手](https://develops-functionality-purchases-extreme.trycloudflare.com/?service=api)。模型最多300秒，後端310秒、網頁整體330秒，以背景工作查詢結果；一般請求15秒。正式dist與Docker均以API為預設，Mock仍可透過明確query使用。
 
 ## 歷史驗收
 
