@@ -3,9 +3,10 @@
 更新：2026-10-26（臺灣）。**使用者核准的組員回饋完整修改已完成，Phase 3原型維護驗收通過。**
 
 - current_phase：Phase 3／本輪修正 DONE。
-- current_task：本輪功能與交付紀錄已完成；後續依組員新回饋維護，功能、真模型及容器閘門均已通過。
-- last_completed_task：引導確認改用同案有效提案，避免一般PATCH清除已驗就醫事實；獨立P1／P2覆核CLEAR。
-- last_successful_test：後端878／前端126／最終三尺寸Mock87／指定真模型3／最後引導真API及OCR3通過；完整真API30、摘要9／標題3及OCR53＋8分輪證據保留。
+- current_task：GH-20261026 DONE；最終程式碼已上傳指定GitHub，後續依組員新回饋維護。
+- source_repository：https://github.com/kekekewww/Paris_Hack ，預設分支main；產品程式碼基準7f19bd60876abb79ec7f2fb0e1b4102fdbb66f05，後續交付紀錄提交只更新文件。
+- last_completed_task：推送最終產品至main並以遠端SHA核對；保留本機implementation/claim-preparation分支，沒有force push或更改公開設定。
+- last_successful_test：本次上傳前全後端878（112.81秒、1既有警告）／前端126（0失敗）通過；前輪三尺寸Mock87、指定真模型3、完整真API30與摘要9／標題3／引導3及OCR53＋8為既有功能證據，本次上傳未重跑模型或瀏覽器。
 - current_blockers：本輪MVP無必要外部阻礙。OpenAI／Gemini依使用者決定暫緩，不阻擋此版；兩完整商品碼精確對照仍unverified，不當成投保或保障證明。
 - public_url：https://worm-flying-speeches-tales.trycloudflare.com/?service=api
 - runtime：backend127.0.0.1:8002／PID83932；cloudflared PID90084。停止前一律重新核對CIM與埠，不能只憑這份PID。

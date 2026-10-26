@@ -81,3 +81,7 @@
 53. OCR以VIE_Claim.2024.01標籤與條件規則擴充，混合PDF與勾選保守處理；無可靠位置回null／unlocated，禁止假框。原檔只在同分頁30MB受限記憶體快取、單檔10MB，按case／doc／analysis／SHA隔離，重整須重選；未宣稱全面手寫或官方審核。
 54. 真模型依安全stage追查：日期evidence外形違約以明確flat JSON提示修正，未放寬驗證；未顯示的自由message曾被內容守門拒絕，改固定中性相容ack，facts仍由真模型抽取並嚴驗。其後找出guided普通PATCH清空就醫facts；同選型改用當前server提案accept，仍先選型再獨立建立、改選走明確PATCH。手機首輪真因未知，後續成功不冒稱已證明根治。最小修獨立P1／P2覆核CLEAR。
 55. 最終原型維護gate依實證完成：後端878、前端126、最終三尺寸Mock87、指定DeepSeek真流程單輪3/3（11網站訊息，含本機安全分流，並非11次外部推論）、真API完整30及摘要9／標題3／最後引導3分輪通過。最終Docker230hash同源／31HTTP與持久性通過，先前19真OCR的10個相關來源不變；專用資源已清除，其他服務未操作。新Quick Tunnel為worm-flying-speeches-tales，公開15項過、同程序verified=true。四輪模型與harness失敗保留，未提交秘密或原始模型內容；[完整驗收](docs/feedback-20261026/ACCEPTANCE.md)。
+
+56. 使用者要求上傳最終程式碼至kekekewww/Paris_Hack，已核對該公開儲存庫為空且既有帳號有ADMIN權限。採Git推送至main，保留本機開發分支與提交紀錄，不覆蓋既有遠端歷史、不變更儲存庫可見性。憑證、案件DB、原始上傳檔、依賴目錄與建置產物維持排除，僅提供可自行配置的.env範本；上傳前先做可達歷史與最終樹安全檢查及必要測試。
+
+57. 上傳前重驗後端878／前端126通過；獨立只讀稽核18個可達commit、128 trees、525 blobs（14,204,160 bytes）與326唯一路徑，未發現真憑證、案件DB或上傳原檔，key樣式命中均為合成測試fixture。既有GitHub CLI認證透過Git credential helper使用，不讀出token值；最終產品7f19bd6已推送main，遠端HEAD／main SHA一致，GitHub工具另確認預設分支main及原公開設定。此後只補交付紀錄，不修改產品程式；沒有PR、正式部署或額外模型請求。
