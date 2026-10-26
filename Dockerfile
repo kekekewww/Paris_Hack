@@ -7,7 +7,7 @@ COPY index.html vite.config.js ./
 COPY src ./src
 COPY assets/brand.png ./assets/brand.png
 COPY scripts/prepare-assets.mjs ./scripts/prepare-assets.mjs
-COPY data/official-sources.json ./data/official-sources.json
+COPY data/official-sources.json data/official-library.json ./data/
 ARG VITE_SERVICE_MODE=api
 ENV VITE_SERVICE_MODE=${VITE_SERVICE_MODE}
 # prepare-assets 會從鎖定的 pdfjs-dist 複製字型、CMap、WASM 與 ICC。
@@ -32,7 +32,7 @@ RUN python -m pip install --no-cache-dir \
     && mkdir -p /app/.local \
     && chown 10001:10001 /app/.local
 COPY backend/app ./backend/app
-COPY data/official-sources.json ./data/official-sources.json
+COPY data/official-sources.json data/official-library.json ./data/
 COPY --from=frontend /build/dist ./dist
 USER 10001:10001
 EXPOSE 8000

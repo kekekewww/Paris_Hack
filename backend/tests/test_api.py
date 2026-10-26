@@ -216,10 +216,19 @@ def test_grounded_conversation_requires_confirmation_before_case_updates(client)
     assert result["response"]["is_simulated"] is False
     assert result["response"]["provider"] == "grounded_rules"
     assert result["response"]["source_references"]
-    assert result["response"]["proposed_case_updates"]["claim_type_id"] == "inpatient"
+    assert result["response"]["proposed_case_updates"] == {}
+    assert result["response"]["pending_question"]["field"] == "surgery"
     assert result["case"]["claim_type_id"] is None
     assert len(result["case"]["messages"]) == 2
     assert result["case"]["messages"][1]["response"] == result["response"]
+    for field in ("payment_method", "claim_type_id"):
+        response = client.post(f"/api/v1/cases/{case['id']}/messages", json={"message": "稍後確認"})
+        assert response.status_code == 200, response.text
+        result = response.json()
+        assert result["response"]["pending_question"]["field"] == field
+        assert result["case"]["claim_type_id"] is None
+    assert result["response"]["proposed_case_updates"]["claim_type_id"] == "inpatient"
+    assert result["response"]["proposal"]["base_revision"] == result["case"]["revision"]
 
 
 def test_real_pdf_analysis_has_actual_provider_and_findings_cannot_be_washed_away(client):
@@ -239,7 +248,8 @@ def test_real_pdf_analysis_has_actual_provider_and_findings_cannot_be_washed_awa
     assert document["status"] == "needs_attention"
     assert document["analysis"]["findings"]
     findings = [item["id"] for item in document["analysis"]["findings"]]
-    changed = client.patch(url, json={"confirmed_findings": findings, "status": "uploaded"}).json()
+    assert client.patch(url, json={"confirmed_findings": findings, "status": "uploaded"}).status_code == 409
+    changed = client.patch(url, json={"confirmed_findings": findings, "status": "uploaded", "analysis_id": document["analysis"]["analysis_id"]}).json()
     assert find(changed)["status"] == "needs_attention"
     assert find(changed)["analysis"]["findings"] == document["analysis"]["findings"]
     reset = client.patch(url, json={"status": "not_started"}).json()

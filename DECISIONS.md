@@ -68,3 +68,16 @@
 ## 2026-10-23
 
 48. 本輪僅依使用者要求重新啟動伺服器與Quick Tunnel，更新為[新公開網址](https://develops-functionality-purchases-extreme.trycloudflare.com/?service=api)。本次fresh smoke exit0、15/15 PASS，涵蓋首頁、正式JS／CSS、health與配置、安全Cookie、no-store、私有檔404、合成案官方規則、owner隔離及刪案後404；model_requests=0／ocr_analysis_requests=0、synthetic_case_deleted=true。[本次證據](docs/restart-20261023/smoke.json)獨立保存，前輪網址與驗收紀錄保留為歷史。health為status=ok／service_mode=api／llm_provider=openai_compatible／configured=true／verified=false、OCR配置為pymupdf+rapidocr；配置及啟動成功不等於本次真模型或OCR分析重驗，不將歷史功能驗收宣稱為新結果。
+
+## 2026-10-26
+
+49. 使用者明確要求先分析組員PDF並提出如何修改、最後等待指令，因此本輪限於閱讀、離線調查與進度記錄；附件中的示例、條件表、保單代碼及參考站不構成直接實作授權。已確認對話過早確認、工作區缺變更提案閉環、人工確認無備妥出口、原檔重開及有限OCR／證據原文回覆等架構原因；現場503與截圖中每一欄OCR漏判未經真模型／原文件重現，不冒稱定案。具體方案仍為[待討論提案](docs/TEAM_REVIEW_20261026.md)，沒有修改產品／測試／dist或服務。完整保單版本核對、FAQ及全險種文件庫另列範圍，原型歷史gate不等同本輪回饋已修復。
+
+50. 使用者其後明確「核准完整修改」，解除第49點等待限制；依已分析方案直接實作與驗收。沿用現有Vanilla／FastAPI／單worker及已授權模型，新增必要資料與提案版本／人工備妥語意，官方索引查不到的商品碼仍待查證。代理分檔負責，root統一整合、真模型驗收及展示發布；一般可逆工作不再詢問。
+
+
+51. 本輪採revision／server proposal ID的一次性確認，正式案件不因聊天自動更改；人工manual_ready獨立於OCR、須當前analysis_id與所有提醒確認，原辨識及人工覆核旗標不抹除。新增最小details與pending question，未知可延後；來源、最新更正、日期／否定／PII與競態保護持續驗證。
+52. 官方目錄實查302入口＝287 PDF網址＋15 HTML及8FAQ；完整商品碼IHI_C_1131001／IHO_1131001未精確對照，保留unverified與候選分離。178版次可採、74未標、1未來日期歧義待確認，不把網址時間戳或檔名當投保證明。未支援類型只提供文件查詢，不捏造其他險種清單。
+53. OCR以VIE_Claim.2024.01標籤與條件規則擴充，混合PDF與勾選保守處理；無可靠位置回null／unlocated，禁止假框。原檔只在同分頁30MB受限記憶體快取、單檔10MB，按case／doc／analysis／SHA隔離，重整須重選；未宣稱全面手寫或官方審核。
+54. 真模型依安全stage追查：日期evidence外形違約以明確flat JSON提示修正，未放寬驗證；未顯示的自由message曾被內容守門拒絕，改固定中性相容ack，facts仍由真模型抽取並嚴驗。其後找出guided普通PATCH清空就醫facts；同選型改用當前server提案accept，仍先選型再獨立建立、改選走明確PATCH。手機首輪真因未知，後續成功不冒稱已證明根治。最小修獨立P1／P2覆核CLEAR。
+55. 最終原型維護gate依實證完成：後端878、前端126、最終三尺寸Mock87、指定DeepSeek真流程單輪3/3（11網站訊息，含本機安全分流，並非11次外部推論）、真API完整30及摘要9／標題3／最後引導3分輪通過。最終Docker230hash同源／31HTTP與持久性通過，先前19真OCR的10個相關來源不變；專用資源已清除，其他服務未操作。新Quick Tunnel為worm-flying-speeches-tales，公開15項過、同程序verified=true。四輪模型與harness失敗保留，未提交秘密或原始模型內容；[完整驗收](docs/feedback-20261026/ACCEPTANCE.md)。

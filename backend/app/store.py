@@ -74,7 +74,7 @@ class CaseStore:
                         if field.lower() in raw_fields:
                             raise ValueError("Raw document data is not retained")
                         if field == "file" and value is not None:
-                            if not isinstance(value, dict) or set(value) - {"name", "type", "size"}:
+                            if not isinstance(value, dict) or set(value) - {"name", "type", "size", "sha256"}:
                                 raise ValueError("Only file metadata is retained")
                         pending.append(value)
                 elif isinstance(node, list):

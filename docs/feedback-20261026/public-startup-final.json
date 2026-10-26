@@ -1,0 +1,34 @@
+{
+  "scope": "restart_http_smoke_only_not_full_llm_acceptance",
+  "origin": "https://worm-flying-speeches-tales.trycloudflare.com",
+  "status": "PASS",
+  "checks_passed": 15,
+  "checks": [
+    "首頁HTTP200",
+    "正式資產可讀/assets/index-BJ0t45NG.js",
+    "正式資產可讀/assets/index-eUFzoW7z.css",
+    "API健康與模式",
+    "既有OpenRouter設定已載入",
+    "實際OCR設定已載入",
+    "安全sessionCookie",
+    "API禁止快取",
+    "私有設定不公開",
+    "API建立合成測試案件",
+    "官方規則產生清單",
+    "同owner可讀案件",
+    "其他owner隔離",
+    "合成案件已清除",
+    "清除後無法讀取"
+  ],
+  "health": {
+    "status": "ok",
+    "service_mode": "api",
+    "llm_provider": "openai_compatible",
+    "llm_configured": true,
+    "llm_verified": true,
+    "ocr_provider": "pymupdf+rapidocr"
+  },
+  "model_requests": 0,
+  "ocr_analysis_requests": 0,
+  "synthetic_case_deleted": true
+}

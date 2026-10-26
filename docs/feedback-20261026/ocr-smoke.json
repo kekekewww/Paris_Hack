@@ -1,0 +1,340 @@
+{
+  "passed": true,
+  "synthetic_only": true,
+  "external_model_requests": 0,
+  "official_profile": "VIE_Claim.2024.01, label checks only; not a verified handwriting benchmark",
+  "source_sha256": {
+    "backend/app/ocr/analyzer.py": "e56022f4cc0068ce271cde7e82d9e0ac365f1e66509afb0fda47e351cdefa555",
+    "backend/app/ocr/form_profiles.py": "6fbac145b27299b7f81d2f43f6bdf21d2841d249cd54be0b39ffd854326c2e32"
+  },
+  "limitations": [
+    "原官方版型尚未做像素校準；以版本文字與可靠欄位標籤比對，不驗表單真偽。",
+    "列印合成、混合圖層及模擬筆跡的測試，不是全面手寫辨識或每處空白檢查的證明。",
+    "來源不明、版型未知、缺少可靠定位、低品質及手寫均仍須人工確認。"
+  ],
+  "results": [
+    {
+      "fixture": "central-cheque-outpatient.pdf",
+      "provider": "pdf_text",
+      "analysis_status": "completed",
+      "is_simulated": false,
+      "requires_human_review": true,
+      "extracted_fields": [
+        "document_type",
+        "insured_name",
+        "policy_number",
+        "identity_number",
+        "contact_phone",
+        "occupation",
+        "application_date",
+        "claim_selection",
+        "payment_method",
+        "tax_declaration"
+      ],
+      "findings": [
+        {
+          "field": "tax_roc_confirmation",
+          "page_number": 1,
+          "location_status": "label"
+        },
+        {
+          "field": "signature",
+          "page_number": 1,
+          "location_status": "label"
+        }
+      ],
+      "elapsed_seconds": 0.015
+    },
+    {
+      "fixture": "central-complete.pdf",
+      "provider": "pdf_text",
+      "analysis_status": "completed",
+      "is_simulated": false,
+      "requires_human_review": true,
+      "extracted_fields": [
+        "document_type",
+        "insured_name",
+        "policy_number",
+        "identity_number",
+        "contact_phone",
+        "occupation",
+        "application_date",
+        "claim_selection",
+        "claim_reason",
+        "accident_datetime",
+        "other_insurer_claim",
+        "payment_method",
+        "account_holder",
+        "bank_name",
+        "bank_branch",
+        "bank_account",
+        "tax_declaration"
+      ],
+      "findings": [
+        {
+          "field": "tax_roc_confirmation",
+          "page_number": 1,
+          "location_status": "label"
+        },
+        {
+          "field": "signature",
+          "page_number": 1,
+          "location_status": "label"
+        }
+      ],
+      "elapsed_seconds": 0.032
+    },
+    {
+      "fixture": "central-handwritten-uncertain.pdf",
+      "provider": "pdf_text+rapidocr",
+      "analysis_status": "uncertain",
+      "is_simulated": false,
+      "requires_human_review": true,
+      "extracted_fields": [
+        "document_type",
+        "insured_name",
+        "policy_number",
+        "identity_number",
+        "contact_phone",
+        "occupation",
+        "application_date",
+        "claim_selection",
+        "claim_reason",
+        "accident_datetime",
+        "other_insurer_claim",
+        "payment_method",
+        "account_holder",
+        "bank_name",
+        "bank_branch",
+        "bank_account",
+        "tax_declaration"
+      ],
+      "findings": [
+        {
+          "field": "other_insurer_claim",
+          "page_number": 1,
+          "location_status": "label"
+        },
+        {
+          "field": "tax_roc_confirmation",
+          "page_number": 1,
+          "location_status": "label"
+        },
+        {
+          "field": "mixed_content",
+          "page_number": 1,
+          "location_status": "unlocated"
+        },
+        {
+          "field": "signature",
+          "page_number": 1,
+          "location_status": "label"
+        }
+      ],
+      "elapsed_seconds": 16.781
+    },
+    {
+      "fixture": "central-missing.pdf",
+      "provider": "pdf_text",
+      "analysis_status": "uncertain",
+      "is_simulated": false,
+      "requires_human_review": true,
+      "extracted_fields": [
+        "document_type",
+        "insured_name",
+        "policy_number",
+        "identity_number",
+        "contact_phone",
+        "occupation",
+        "application_date",
+        "claim_selection",
+        "claim_reason",
+        "accident_datetime",
+        "other_insurer_claim",
+        "payment_method",
+        "tax_declaration"
+      ],
+      "findings": [
+        {
+          "field": "contact_phone",
+          "page_number": 1,
+          "location_status": "label"
+        },
+        {
+          "field": "payment_method",
+          "page_number": 1,
+          "location_status": "label"
+        },
+        {
+          "field": "tax_declaration",
+          "page_number": 1,
+          "location_status": "label"
+        },
+        {
+          "field": "signature",
+          "page_number": 1,
+          "location_status": "label"
+        }
+      ],
+      "elapsed_seconds": 0.016
+    },
+    {
+      "fixture": "central-mixed-layer.pdf",
+      "provider": "pdf_text+rapidocr",
+      "analysis_status": "uncertain",
+      "is_simulated": false,
+      "requires_human_review": true,
+      "extracted_fields": [
+        "document_type",
+        "insured_name",
+        "policy_number",
+        "identity_number",
+        "contact_phone",
+        "occupation",
+        "application_date",
+        "claim_selection",
+        "claim_reason",
+        "accident_datetime",
+        "other_insurer_claim",
+        "payment_method",
+        "tax_declaration"
+      ],
+      "findings": [
+        {
+          "field": "payment_method",
+          "page_number": 1,
+          "location_status": "label"
+        },
+        {
+          "field": "tax_roc_confirmation",
+          "page_number": 1,
+          "location_status": "label"
+        },
+        {
+          "field": "mixed_content",
+          "page_number": 1,
+          "location_status": "unlocated"
+        },
+        {
+          "field": "signature",
+          "page_number": 1,
+          "location_status": "label"
+        }
+      ],
+      "elapsed_seconds": 11.375
+    },
+    {
+      "fixture": "central-scanned.png",
+      "provider": "rapidocr",
+      "analysis_status": "uncertain",
+      "is_simulated": false,
+      "requires_human_review": true,
+      "extracted_fields": [
+        "document_type",
+        "insured_name",
+        "policy_number",
+        "identity_number",
+        "contact_phone",
+        "occupation",
+        "application_date",
+        "claim_selection",
+        "payment_method",
+        "tax_declaration"
+      ],
+      "findings": [
+        {
+          "field": "claim_selection",
+          "page_number": 1,
+          "location_status": "label"
+        },
+        {
+          "field": "payment_method",
+          "page_number": 1,
+          "location_status": "label"
+        },
+        {
+          "field": "tax_declaration",
+          "page_number": 1,
+          "location_status": "unlocated"
+        },
+        {
+          "field": "signature",
+          "page_number": 1,
+          "location_status": "label"
+        }
+      ],
+      "elapsed_seconds": 8.39
+    },
+    {
+      "fixture": "central-tax-continuation.pdf",
+      "provider": "pdf_text",
+      "analysis_status": "uncertain",
+      "is_simulated": false,
+      "requires_human_review": true,
+      "extracted_fields": [
+        "document_type",
+        "insured_name",
+        "policy_number",
+        "identity_number",
+        "contact_phone",
+        "occupation",
+        "application_date",
+        "claim_selection",
+        "claim_reason",
+        "accident_datetime",
+        "other_insurer_claim",
+        "payment_method",
+        "account_holder",
+        "bank_name",
+        "bank_branch",
+        "bank_account",
+        "tax_declaration",
+        "tax_taiwan_resident",
+        "tax_us_person",
+        "tax_us_indicators",
+        "tax_other_residency"
+      ],
+      "findings": [
+        {
+          "field": "tax_signature",
+          "page_number": 3,
+          "location_status": "label"
+        },
+        {
+          "field": "signature",
+          "page_number": 1,
+          "location_status": "label"
+        }
+      ],
+      "elapsed_seconds": 0.031
+    },
+    {
+      "fixture": "central-unversioned.pdf",
+      "provider": "pdf_text",
+      "analysis_status": "uncertain",
+      "is_simulated": false,
+      "requires_human_review": true,
+      "extracted_fields": [
+        "document_type",
+        "insured_name",
+        "policy_number",
+        "identity_number",
+        "application_date",
+        "claim_selection"
+      ],
+      "findings": [
+        {
+          "field": "form_version",
+          "page_number": 1,
+          "location_status": "unlocated"
+        },
+        {
+          "field": "signature",
+          "page_number": 1,
+          "location_status": "label"
+        }
+      ],
+      "elapsed_seconds": 0.032
+    }
+  ]
+}

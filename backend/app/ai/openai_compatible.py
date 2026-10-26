@@ -1,6 +1,7 @@
 """Backend-only, evidence-restricted Chat Completions adapter.
 
-The model may select complete, checked evidence paragraphs. It cannot add facts,
+The model may select complete, checked evidence paragraphs. Reviewed local
+claims turn their supported meaning into direct, conditional answers. It cannot add facts,
 invent URLs, change rule outcomes, or update case state. No credentials are
 created or loaded from files, and there is no default model selection.
 """
@@ -20,7 +21,8 @@ from urllib.parse import urlsplit
 
 import httpx
 
-from .providers import AIError, GroundedRulesProvider, ProviderUnavailableError, validate_assistant_response
+from .providers import (AIError, GroundedRulesProvider, ProviderUnavailableError, is_case_correction,
+                        is_product_question, validate_assistant_response)
 from .retrieval import OfficialRetriever
 
 
@@ -152,15 +154,19 @@ class OpenAICompatibleProvider:
         frame = inspect.currentframe()
         caller = frame.f_back if frame is not None else None
         try:
-            allowed_stages = {"validate_semantics": __package__ + ".semantic_dialogue",
+            semantic_stages = {"validate_semantics", "_extract_additional", "_workflow_answer"}
+            allowed_stages = {**{name: __package__ + ".semantic_dialogue" for name in semantic_stages},
                               "_request_json": __name__, "_openrouter_metadata": __name__, "respond": __name__}
             if (caller is not None and caller.f_code.co_name in allowed_stages
                     and allowed_stages[caller.f_code.co_name] == caller.f_globals.get("__name__")):
                 stage = caller.f_code.co_name
                 line = caller.f_lineno if type(caller.f_lineno) is int else 0
-                if stage == "validate_semantics":
+                if stage in semantic_stages:
                     field = caller.f_locals.get("field")
-                    if type(field) is str and field in {"cause", "inpatient", "outpatient", "emergency", "critical_diagnosis", "surgery"}:
+                    if type(field) is str and field in {"cause", "inpatient", "outpatient", "emergency", "critical_diagnosis", "surgery",
+                            "receipt_type", "payment_method", "insured_relation", "diagnosis_name", "surgery_name", "surgery_date",
+                            "visit_dates", "visit_dates.admission", "visit_dates.discharge", "visit_dates.visit",
+                            "visit_dates.discharge_pending", "policy_products", "deferred_fields"}:
                         fact_field = field
         finally:
             # Do not retain references to frames containing model or user data.
@@ -241,19 +247,33 @@ class OpenAICompatibleProvider:
 
     async def respond(self, case: dict, message: str, document_id: str | None = None) -> dict:
         baseline = await GroundedRulesProvider(self.retriever).respond(case, message, document_id)
+        # Product-code uncertainty is an index result, not a medical intake
+        # question. It must not be replaced with an unrelated semantic dialogue.
+        if is_product_question(message):
+            return validate_assistant_response(baseline, self.retriever)
+        if (self.settings.is_openrouter and case.get("claim_type_id")
+                and baseline["response_type"] == "uncertain" and not is_case_correction(message)
+                and self.retriever.is_preparation_question(message, document_id)):
+            return validate_assistant_response({**baseline, **(self.retriever.answer_gap(message) or {})}, self.retriever)
         if self.settings.is_openrouter and baseline["response_type"] != "answer":
-            from .semantic_dialogue import SAFETY, SYSTEM_PROMPT as semantic_prompt, request_content, validate_semantics
+            from .semantic_dialogue import SAFETY, prompt_for, request_content, validate_semantics
             if SAFETY.search(message):
                 return validate_assistant_response(baseline, self.retriever)
             content = request_content(case, message)
-            generated, metadata = await self._request_json(semantic_prompt, content, max_completion_tokens=4096)
+            generated, metadata = await self._request_json(prompt_for(content), content, max_completion_tokens=4096)
             answer = validate_semantics(generated, content, self.retriever, self._invalid)
             return self._finish(answer, metadata)
         # Other compatible hosts retain their established grounded profile.
         if baseline["response_type"] != "answer":
             return validate_assistant_response(baseline, self.retriever)
+        if self.settings.is_openrouter:
+            gap = self.retriever.answer_gap(message)
+            if gap:
+                return validate_assistant_response({**baseline, **gap}, self.retriever)
         evidence = self.retriever.document_context(document_id, case.get("claim_type_id")) if document_id else []
         evidence += self.retriever.search(message, case.get("claim_type_id"), limit=3)
+        if self.settings.is_openrouter:
+            evidence = self.retriever.answer_context(message, case.get("claim_type_id"), document_id) + evidence
         if re.search(r"應備文件|準備.*哪些文件|哪些文件|文件清單", message):
             evidence = [chunk for rule in self.retriever.registry.get("rules", [])
                         if rule["claim_type_id"] == case.get("claim_type_id")
@@ -311,6 +331,9 @@ class OpenAICompatibleProvider:
                     self._invalid()
         except (KeyError, IndexError, TypeError, ValueError, AttributeError):
             self._invalid()
+        if self.settings.is_openrouter:
+            return self._finish({**baseline, **self.retriever.controlled_answer(message, selected, document_id),
+                                 "provider": self.name, "is_simulated": False}, metadata)
         answer = {**baseline, "message": "\n".join(f"{item['title']}：{item['text']}" for item in selected)
                   + "\n模型僅整理以上已查核段落；適用條件仍依保單與承辦人確認，初步檢查不代表核准。",
                   "source_references": expected_sources, "provider": self.name, "is_simulated": False}

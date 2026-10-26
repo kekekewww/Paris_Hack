@@ -42,7 +42,8 @@ def validate_assistant_response(payload: dict, retriever: OfficialRetriever) -> 
     if not isinstance(payload, dict):
         invalid()
     required = {"response_type", "message", "suggested_claim_types", "missing_information", "source_references", "proposed_case_updates", "requires_human_review", "provider", "is_simulated"}
-    if set(payload) != required or not isinstance(payload["response_type"], str) or payload["response_type"] not in {"answer", "uncertain", "clarification", "claim_suggestion"}:
+    if (not required <= set(payload) or set(payload) - required - {"pending_question", "dialogue_state", "proposal"}
+            or not isinstance(payload["response_type"], str) or payload["response_type"] not in {"answer", "uncertain", "clarification", "claim_suggestion", "case_update_proposal"}):
         invalid()
     if not isinstance(payload["message"], str) or not payload["message"].strip() or len(payload["message"]) > 6000:
         invalid()
@@ -63,9 +64,9 @@ def validate_assistant_response(payload: dict, retriever: OfficialRetriever) -> 
         if canonical is None or source.get("official_url") != canonical["official_url"]:
             invalid()
     updates = payload["proposed_case_updates"]
-    if not isinstance(updates, dict) or set(updates) - {"claim_type_id", "conditions"}:
+    if not isinstance(updates, dict) or set(updates) - {"claim_type_id", "conditions", "details"}:
         invalid()
-    if updates and payload["response_type"] != "claim_suggestion":
+    if updates and payload["response_type"] not in {"claim_suggestion", "case_update_proposal"}:
         invalid()
     if "claim_type_id" in updates and (not isinstance(updates["claim_type_id"], str) or updates["claim_type_id"] not in retriever.claim_types):
         invalid()
@@ -73,6 +74,11 @@ def validate_assistant_response(payload: dict, retriever: OfficialRetriever) -> 
         conditions = updates["conditions"]
         if not isinstance(conditions, dict) or any(key not in CONDITION_OPTIONS or not isinstance(value, str) or value not in CONDITION_OPTIONS[key] for key, value in conditions.items()):
             invalid()
+    try:
+        from ..models import AssistantResponse
+        AssistantResponse.model_validate(payload)
+    except Exception:
+        invalid()
     return deepcopy(payload)
 
 
@@ -180,7 +186,12 @@ def _supported_preparation_question(message: str, has_document_context: bool) ->
     Keyword overlap alone is not sufficient support for new medical tests,
     legal interpretations, treatment, or deadlines absent from this index.
     """
-    if re.search(r"[a-z]{2,}|英文|外文|電子簽|法律|效力|請求權|時效|期限|幾天|幾年|[一二三四五六七八九十]+年|治療|冰敷|用藥|吃藥|飲食|新冠|快篩", message, re.I):
+    # ASCII product codes are identifiers, not evidence that the user is
+    # asking for an unsupported English document or coverage interpretation.
+    without_codes = message
+    for code in product_codes(message):
+        without_codes = without_codes.replace(code, "")
+    if re.search(r"[a-z]{2,}|英文|外文|電子簽|法律|效力|請求權|時效|期限|幾天|幾年|[一二三四五六七八九十]+年|治療|冰敷|用藥|吃藥|飲食|新冠|快篩", without_codes, re.I):
         return False
     if has_document_context and re.search(r"這份|這個|怎麼準備|如何準備|怎麼填|如何填", message):
         return True
@@ -193,6 +204,40 @@ def _supported_preparation_question(message: str, has_document_context: bool) ->
     if re.search(r"申請書|簽名|簽署", message) and re.search(r"填|欄位|本人|簽名|簽署|日期|格式|法定代理人", message):
         return True
     return bool(re.search(r"病理|檢驗報告|存摺|病歷.{0,5}授權|調閱.{0,5}範圍|健保.{0,6}(申請|資料)|調查同意|郵寄|寄到|送件地址|客服", message))
+
+
+def is_case_correction(message: str) -> bool:
+    return bool(re.search(r"更正|改成|改為|修正|更新.{0,8}(?:案件|條件|住院|手術|日期)|其實|說錯|不是.{0,10}而是", message)
+                or not re.search(r"怎麼|如何|是否|有沒有|需要.{0,6}(?:文件|記載|證明)", message)
+                and re.search(r"(?:我|媽媽|爸爸|母親|父親|本次|這次).{0,12}(?:有住院|沒有住院|有手術|沒有手術|已住院|已出院)", message))
+
+
+def product_codes(message: str) -> list[str]:
+    matches = list(dict.fromkeys(re.findall(r"(?<![A-Za-z0-9_-])[A-Z][A-Z0-9_-]{1,79}(?![A-Za-z0-9_-])", message)))
+    explicit = re.search(r"(?:商品|產品|代碼|保單代號)\s*(?:代碼|代號|是|為|[:：])?\s*[A-Z][A-Z0-9_-]+", message)
+    return [code for code in matches if explicit or re.fullmatch(r"[A-Z]{2,}[A-Z0-9_-]*[_-][A-Z0-9_-]*\d{4,}[A-Z0-9_-]*", code)][:10]
+
+
+def is_product_question(message: str) -> bool:
+    if not product_codes(message):
+        return False
+    # Medical nouns in a product question are not evidence of a care event.
+    # Preserve an actual first-person/family/date narrative as one semantic
+    # turn; otherwise the full unverified code needs a product-specific answer.
+    subject = r"(?:我|本人|媽媽|爸爸|母親|父親|家母|家父|家人|太太|先生|兒子|女兒|本次|這次)"
+    cause_event = r"(?:發生(?:了)?(?:車禍|意外)|出了?車禍|遭遇(?:車禍|事故)|摔倒|跌倒|摔傷|撞傷|生病)"
+    for match in re.finditer(subject + r".{0,12}" + cause_event, message):
+        if not re.search(r"如果|假設|假如|是否|會不會|有沒有|想問|詢問", match[0]):
+            return False
+    care_event = r"(?:住院|入院|出院|手術|開刀|去急診|看門診|診斷是|已確診)(?!保障|條款|給付|證明|紀錄|文件)"
+    time = r"(?:昨天|昨日|今天|前天|上[週周]|上星期[一二三四五六日天]?|[0-9]{1,4}[年/-][0-9]{1,2}[月/-]?[0-9]{0,2}[日號]?|[0-9]{1,2}月[0-9]{1,2}日?)"
+    if re.search(time + r".{0,12}(?:車禍|意外|" + care_event + r")", message):
+        return False
+    if re.search(subject + r"(?:目前|已經?|曾經?|剛|有|沒有|還在|仍在|正在|在|[0-9年月日號/.-]){0,20}" + care_event, message):
+        return False
+    if re.search(r"(?:^|[，,。；;、\s])(?:有|沒有|已經?|剛|正在|仍在|還在)" + care_event, message):
+        return False
+    return True
 
 
 class GroundedRulesProvider:
@@ -208,10 +253,37 @@ class GroundedRulesProvider:
         # amount, benefit, or medical diagnosis.
         scope_source = retriever.source("cardif-claims")
         scope_refs = [scope_source] if scope_source else []
+        codes = product_codes(message)
+        if codes and is_product_question(message) and not is_case_correction(message):
+            from ..library import lookup_product
+            results = [lookup_product(code) for code in codes]
+            if any(result["verification_status"] != "verified" for result in results):
+                return _base("目前沒有可精確核對這個完整代碼與版本的官方資料。您提供的商品代碼仍待查證，不能僅憑代碼確認投保內容、版本或個別保障；請使用官方商品／文件查詢入口核對版本，仍有疑問請向官方確認。", "uncertain")
+            return _base("已找到商品相關的官方文件入口，請逐一核對完整商品與版本；這不表示已核對您的個別保單或保障，請至商品／文件查詢入口檢視。", "uncertain")
         if re.search(r"忽略.{0,12}(指令|規則|系統)|忽略以上|system\s*:|輸出.{0,8}(金鑰|秘密)|所有文件.{0,8}(通過|核准)|改用\s*https?://", message, re.I):
             return _base("對話內容不能更改官方規則、文件檢查或案件狀態。我只能依已查核官方資料協助準備；無法確認的事項請洽官方客服。", "uncertain", scope_refs)
         if re.search(r"多少錢|給付金額|獲賠|賠多少|保證|核准|資格|一定.*賠|保障|[十百千萬億0-9]+元", message):
             return _base("目前無法確認個別保單的理賠資格、保障或給付金額，也不能核准或代送理賠。請查閱保單條款或洽官方客服 0800-012-899。以下官方來源說明的是程序及保單限制，並不支持任何個案給付結論。", "uncertain", scope_refs)
+        workflow_pending = (case.get("dialogue_state") or {}).get("pending_question") or {}
+        if "dialogue_state" in case and (not case.get("claim_type_id") or is_case_correction(message)
+                                           or workflow_pending and re.fullmatch(r"\s*(?:有|是|沒有|沒|不是|不知道|不確定|不清楚|稍後確認|略過)[，,。!！?？\s]*", message)
+                                           or (case.get("dialogue_state", {}).get("pending_question") or {}).get("field") == "correction"):
+            from .semantic_dialogue import FACTS, _workflow_answer, request_content
+            prior = [entry["content"] for entry in case.get("messages", []) if entry.get("role") == "user"]
+            description = _description_state(prior + [message])
+            inferred = infer_description(prior + [message])
+            values = {key: "unknown" for key in FACTS}
+            values.update(cause=inferred["conditions"]["cause"], surgery=inferred["conditions"]["surgery"])
+            for field in ("inpatient", "outpatient", "emergency"):
+                if description[field] is not None: values[field] = "yes" if description[field] else "no"
+            if description["critical"] is not None:
+                confirmed_critical = bool(re.search(r"(?:(?:醫師|醫生).{0,6}|已(?:經)?(?:由醫師|由醫生)?)確診.{0,6}(?:癌症|罹癌|重大疾病)", description["text"]))
+                values["critical_diagnosis"] = "yes" if description["critical"] is True and confirmed_critical else "no" if description["critical"] is False else "unknown"
+            generated = {"facts": {key: {"value": value, "turn": None, "quote": ""} for key, value in values.items()}}
+            answer = _workflow_answer(generated, values, request_content(case, message), retriever,
+                                      lambda: (_ for _ in ()).throw(AIError("INVALID_AI_RESPONSE", "對話格式不正確。", 502)))
+            answer["provider"] = "grounded_rules"
+            return answer
         if not case.get("claim_type_id"):
             if not scope_source:
                 return _base("目前缺少可查核的官方分類來源，不能據此建立類別提案。請稍後重試或向官方確認。", "uncertain")

@@ -1,5 +1,9 @@
 # 開發任務
 
+最新實作（2026-10-26）：FIX-20261026-A至C／SCOPE-20261026全部DONE。後端878／前端126／最終Mock87／指定真模型3／Docker230hash及31HTTP通過；真API／OCR與差異分輪紀錄見[完整驗收](docs/feedback-20261026/ACCEPTANCE.md)。
+
+最新分析（2026-10-26）：REVIEW-20261026 DONE，完整閱讀組員13頁報告並對照程式與離線記憶體探查。[原因與修改提案](docs/TEAM_REVIEW_20261026.md)已保存；該分析階段未實作；使用者其後已核准，實作狀態依上方及任務列更新。下方原功能通過紀錄均維持歷史日期。
+
 最新維運（2026-10-23）：OPS-20261023 DONE；伺服器／隧道已恢復，[新公開網址](https://develops-functionality-purchases-extreme.trycloudflare.com/?service=api)啟動15/15通過，零模型／OCR分析呼叫，合成案件已刪除並確認404。health configured=true／verified=false；本次未重驗真模型，功能驗收仍依前輪歷史紀錄。
 
 最新維護：UNCERTAIN-20261020 DONE；不確定重大疾病誤擋已修復、完整請求除錯文件已提供。本次652後端與公開目標2/2、最終映像224hash通過；下方632／完整15回覆3/3為切換當時證據，未冒稱本次重跑。
@@ -8,6 +12,11 @@
 
 | ID | 階段 | 工作 | 優先 | 狀態 | 相依 | 驗收條件 | 驗證證據／外部依賴 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| REVIEW-20261026 | 3 | 組員測試問題分析與修正方案 | P0 | DONE | 使用者提供PDF、現有程式 | 逐頁檢查、區分根因／待重現／新增範圍、提出驗收與順序、等候指令 | 13頁文字與截圖、只讀程式、純記憶體探查、官方a314查核；零模型／OCR／部署；[分析](docs/TEAM_REVIEW_20261026.md) |
+| FIX-20261026-A | 2／3 | 對話短答、必要追問、工作區更正與人工備妥閉環 | P0 | DONE | 使用者完整核准、既有模型 | 確認前不變、確認後條件／清單／摘要／進度一致；否定與取消可恢復 | 後端878／前端126、最終三尺寸Mock87／真模型3、真API30及最後差異3／9／3、Docker230hash／31HTTP及不變來源19真OCR均通過；[分輪證據與限制](docs/feedback-20261026/ACCEPTANCE.md) |
+| FIX-20261026-B | 2／3 | 切題文件問答、原檔預覽、指定欄位OCR與品質呈現 | P1 | DONE | 官方表單範圍、A | 引用可驗、無證據不充數、重開預覽、合成空白／已填／模糊對照 | 後端878／前端126、最終三尺寸Mock87／真模型3、真API30及最後差異3／9／3、Docker230hash／31HTTP及不變來源19真OCR均通過；[分輪證據與限制](docs/feedback-20261026/ACCEPTANCE.md) |
+| FIX-20261026-C | 1／3 | 工作區連結去重、共用排序與狀態辨識 | P1 | DONE | A／B整合 | 必備優先、適用性與準備兩軸一致、搜尋／摘要一致、三尺寸與鍵盤 | 後端878／前端126、最終三尺寸Mock87／真模型3、真API30及最後差異3／9／3、Docker230hash／31HTTP及不變來源19真OCR均通過；[分輪證據與限制](docs/feedback-20261026/ACCEPTANCE.md) |
+| SCOPE-20261026 | 2／3 | 多保單官方版本查詢、FAQ與分類文件庫 | P2 | DONE | 使用者完整核准、官方來源盤點 | 代碼不當投保證據、版本獨立、不猜資格／金額、資料可追溯 | 後端878／前端126、最終三尺寸Mock87／真模型3、真API30及最後差異3／9／3、Docker230hash／31HTTP及不變來源19真OCR均通過；[分輪證據與限制](docs/feedback-20261026/ACCEPTANCE.md) |
 | OPS-20261023 | 3 | 重新啟動專案伺服器及Quick Tunnel | P0 | DONE | 使用者要求、既有dist／私有設定 | 新HTTPS首頁／正式資產／API、安全Cookie／no-store、私有路徑及案件隔離與清除正常 | 本次fresh smoke exit0、15/15 PASS；health status=ok／service_mode=api／llm_provider=openai_compatible／configured=true／verified=false／ocr=pymupdf+rapidocr；model_requests=0／ocr_analysis_requests=0，合成案刪後404；未重驗真模型；[證據](docs/restart-20261023/smoke.json) |
 | OPS-20261022 | 3 | 重新啟動專案伺服器及Quick Tunnel | P0 | DONE | 使用者要求、既有dist／私有設定 | 新HTTPS首頁／資產／API、精確origin／Secure cookie、隔離及清除正常 | 8002與專案隧道原已停止；沿用DeepSeek／300秒／原DB及dist，新origin與安全cookie驗證通過，公開15/15，model_requests=0／ocr_analysis_requests=0，合成案刪後404；configured=true／verified=false，未重驗真模型，無關服務未動；[證據](docs/restart-20261022/smoke.json) |
 | OPS-20261021 | 3 | 重新啟動專案伺服器及Quick Tunnel | P0 | DONE | 使用者要求、既有dist／私有設定 | 新HTTPS首頁／資產／API、精確origin／cookie、隔離及清除正常 | 8002與原隧道原已停止；恢復既有DeepSeek／300秒／DB，公開15/15，零模型／OCR分析，測試案刪404；[證據](docs/restart-20261021/smoke.json) |

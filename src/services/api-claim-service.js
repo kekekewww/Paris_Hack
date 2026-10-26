@@ -99,6 +99,18 @@ export class ApiClaimService {
     return this.request('/claim-types');
   }
 
+  getLibrary({ query = '', category = 'all' } = {}) {
+    return this.request(`/library?${new URLSearchParams({ query, category })}`);
+  }
+
+  getFaq() {
+    return this.request('/faq');
+  }
+
+  getProduct(code) {
+    return this.request(`/products/${encodeURIComponent(code)}`);
+  }
+
   createCase(body) {
     return this.request('/cases', { method: 'POST', json: body });
   }

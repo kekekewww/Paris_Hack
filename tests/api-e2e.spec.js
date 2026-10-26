@@ -76,7 +76,7 @@ async function startDirect(page, claimType = '住院醫療') {
   await page.getByRole('button', { name: claimType, exact: true }).click();
   await page.getByLabel('事故原因', { exact: true }).selectOption('illness');
   await page.getByLabel('是否接受手術', { exact: true }).selectOption('no');
-  const advanced = page.locator('details.advanced-options');
+  const advanced = page.locator('details.advanced-options').filter({has:page.getByText('更多準備條件',{exact:true})});
   await expect(advanced).toHaveJSProperty('open', false);
   await advanced.getByText('更多準備條件', { exact: true }).click();
   await expect(page.getByLabel('預計給付方式', { exact: true })).toBeVisible();
@@ -169,7 +169,8 @@ async function openOfficialSource(page) {
   await details.getByText('文件說明與官方來源', { exact: true }).click();
   await expect(details).toHaveJSProperty('open', true);
   await expect(article.locator('select[data-status-doc="application"]')).toBeVisible();
-  const source = article.getByRole('link', { name: '開啟官方空白表單', exact: false });
+  const source = article.getByRole('link', { name: /^官方空白表單/ });
+  await expect(source).toHaveCount(1);
   const href = await source.getAttribute('href');
   expect(href).toMatch(/^https:\/\/life\.cardif\.com\.tw\/documents\//);
   const opened = page.waitForEvent('popup');
@@ -246,7 +247,7 @@ test('真實 API 引導、官方連結、缺漏 PNG、人工確認及摘要完�
   const createResponse = await created;
   expect(createResponse.status()).toBe(201);
   const item = rememberCase(page, await createResponse.json());
-  const answer = await answered;
+  let answer = await answered;
   expect(answer.case.id).toBe(item.id);
   expect(answer.response.provider).toBe(expectedProvider);
   expect(answer.response.is_simulated).toBe(false);
@@ -261,6 +262,14 @@ test('真實 API 引導、官方連結、缺漏 PNG、人工確認及摘要完�
     expect(patchRequests).toBe(0);
     expect(analysisRequests).toBe(0);
   };
+  expect(answer.response.response_type).toBe('clarification');
+  expect(answer.response.pending_question.field).toBe('payment_method');
+  await assertNotBuilt();
+  const clarified = waitForUIMessageJob(page,{caseId:item.id,context:'給付方式釐清'});
+  await page.getByRole('button',{name:'其他方式',exact:true}).click();
+  answer = await clarified;
+  expect(answer.response.response_type).toBe('claim_suggestion');
+  expect(answer.response.proposed_case_updates.conditions.payment_method).toBe('other');
   const picker = page.locator('fieldset.guided-type-picker');
   const inpatient = picker.getByRole('radio', { name: '住院醫療', exact: true });
   const build = page.getByRole('button', { name: '建立文件清單', exact: true });
@@ -289,9 +298,10 @@ test('真實 API 引導、官方連結、缺漏 PNG、人工確認及摘要完�
   await build.click();
   const builtResponse = await built;
   expect(builtResponse.status()).toBe(200);
-  expect(builtResponse.request().postDataJSON().claim_type_id).toBe('inpatient');
+  expect(builtResponse.request().postDataJSON()).toEqual({proposal_id:answer.response.proposal.id,expected_revision:answer.case.revision,proposal_action:'accept'});
   const builtCase = await builtResponse.json();
   expect(builtCase.claim_type_id).toBe('inpatient');
+  expect(builtCase.dialogue_state.facts.inpatient).toBe('yes');
   expect(builtCase.documents.length).toBeGreaterThan(0);
   await expect(page.getByRole('heading', { name: '文件準備工作區', exact: true })).toBeVisible();
   expect(patchRequests).toBe(1);
@@ -330,7 +340,7 @@ test('真實 API 引導、官方連結、缺漏 PNG、人工確認及摘要完�
   await expect(reopened.getByRole('heading', { name: '分析結果', exact: true })).toBeVisible();
   await expect(reopened.getByRole('button', { name: '已人工確認', exact: true })).toHaveCount(1);
   await expect(reopened.getByRole('button', { name: '已人工確認', exact: true })).toBeDisabled();
-  await expect(reopened.getByRole('button', { name: '開始分析', exact: true })).toBeDisabled();
+  await expect(reopened.getByRole('button', { name: '開始分析', exact: true })).toBeEnabled();
   await page.keyboard.press('Escape');
   await expect(result).toBeFocused();
   await summaryDownload(page, '住院醫療');
@@ -366,6 +376,7 @@ test('真實 API 快速選擇門診與清晰 PNG 分析可保存至摘要', asyn
   expect(answer.source_references.length).toBeGreaterThan(0);
   await expect(page.getByRole('log', { name: '工作區對話', exact: true })).toContainText(answer.message);
   await summaryDownload(page, '醫療門診');
+  await page.evaluate(()=>{document.activeElement?.blur?.();window.scrollTo(0,0)});
   await page.screenshot({ path: testInfo.outputPath('real-api-summary.png'), fullPage: true });
 });
 
@@ -373,7 +384,8 @@ test('真實 PDF 文字擷取、canvas 預覽與人工覆核不冒充核准', as
   const item = await startDirect(page);
   const { dialog, document } = await analyzeUI(page, item, 'application-complete.pdf');
   expect(document.analysis.provider).toBe('pdf_text');
-  expect(document.analysis.analysis_status).toBe('completed');
+  expect(document.analysis.analysis_status).toBe('uncertain');
+  expect(document.analysis.findings).toEqual(expect.arrayContaining([expect.objectContaining({field:'form_version',bounding_box:null,location_status:'unlocated'})]));
   assertRecognizedAndMasked(document.analysis);
   await assertRenderedPDF(dialog);
   await expect(dialog.getByText(/正式審核|理賠核准|人工覆核/).first()).toBeVisible();
@@ -389,16 +401,16 @@ test('真實 PDF 文字擷取、canvas 預覽與人工覆核不冒充核准', as
   expect(qualityFinding).toBeDefined();
   expect(qualityFinding.page_number).toBe(2);
   expect(qualityFinding.bounding_box.page_number).toBe(2);
-  expect(mixed.document.analysis.bounding_boxes.some((box) => box.page_number === 2)).toBe(true);
+  expect(qualityFinding.location_status).toBe('page');
+  expect(mixed.document.analysis.bounding_boxes.some((box) => box.page_number === 2)).toBe(false);
   await mixed.dialog.getByLabel('預覽頁碼', { exact: true }).selectOption('2');
   await expect(mixed.dialog.getByRole('img', { name: '本次上傳PDF第2頁預覽', exact: true })).toBeVisible();
   await assertRenderedPDF(mixed.dialog);
   const marker = mixed.dialog.locator(`button[data-action="finding"][data-finding="${qualityFinding.id}"]`);
-  await expect(marker).toBeVisible();
-  await marker.click();
+  await expect(marker).toHaveCount(0);
   const selected = mixed.dialog.locator(`section[data-finding-id="${qualityFinding.id}"]`);
-  await expect(selected).toHaveClass(/\bselected\b/);
-  await expect(selected).toBeFocused();
+  await selected.scrollIntoViewIfNeeded();
+  await selected.locator('details.finding-details > summary').click();
   await expect(selected.locator('details.finding-details')).toHaveJSProperty('open', true);
   await expect(selected).toBeInViewport({ ratio: 0.5 });
   await expect(selected.getByRole('link', { name: /官方表單參考/ })).toBeVisible();
@@ -600,4 +612,56 @@ test('超過十頁的 PDF 在前端及真實 API 均遭拒絕', async ({ page })
   expect((await response.json()).error.code).toBe('TOO_MANY_PAGES');
   const unchanged = await page.request.get(`/api/v1/cases/${item.id}`);
   expect((await unchanged.json()).documents.find((entry) => entry.id === 'application').status).toBe('not_started');
+});
+
+
+test('真實OCR提醒全部核對後以獨立人工備妥操作同步進度與摘要', async ({ page }) => {
+  const item = await startDirect(page);
+  const {dialog, document} = await analyzeUI(page, item, 'application-missing.png');
+  const analysisId = document.analysis.analysis_id;
+  const originalAnalysis = JSON.stringify(document.analysis);
+  const marker = dialog.locator('button.marker').first();
+  await expect(marker).toBeVisible();
+  const findingId = await marker.getAttribute('data-finding');
+  const located = document.analysis.findings.find(finding=>finding.id===findingId);
+  expect(located?.location_status).toBe('label');
+  expect(located.bounding_box).not.toBeNull();
+  await marker.click();
+  const linkedFinding = dialog.locator(`section[data-finding-id="${findingId}"]`);
+  await expect(linkedFinding).toHaveClass(/\bselected\b/);
+  await expect(linkedFinding).toBeFocused();
+  const ready = dialog.getByRole('button', {name:'我已人工核對並備妥',exact:true});
+  await expect(ready).toBeDisabled();
+  const confirm = dialog.getByRole('button',{name:'我已人工確認',exact:true});
+  const count = await confirm.count();
+  expect(count).toBeGreaterThan(0);
+  for(let index=0;index<count;index++) {
+    const pending = page.waitForResponse(response=>endpoint(response,`/cases/${item.id}/documents/application`,'PATCH'));
+    await confirm.first().click();
+    const response = await pending;
+    expect(response.status()).toBe(200);
+    expect(response.request().postDataJSON().analysis_id).toBe(analysisId);
+    const changed = (await response.json()).documents.find(doc=>doc.id==='application');
+    expect(changed.status).toBe('needs_attention');
+    expect(changed.confirmed_findings.length).toBe(index+1);
+    expect(JSON.stringify(changed.analysis)).toBe(originalAnalysis);
+  }
+  await expect(ready).toBeEnabled();
+  const before = Number(await page.getByRole('progressbar',{name:'文件準備進度'}).getAttribute('aria-valuenow'));
+  const pending = page.waitForResponse(response=>endpoint(response,`/cases/${item.id}/documents/application`,'PATCH'));
+  await ready.click();
+  const response = await pending;
+  expect(response.status()).toBe(200);
+  const prepared = (await response.json()).documents.find(doc=>doc.id==='application');
+  expect(prepared.status).toBe('manual_ready');
+  expect(JSON.stringify(prepared.analysis)).toBe(originalAnalysis);
+  expect(prepared.analysis.requires_human_review).toBe(true);
+  await expect(dialog.getByText('✓ 已人工核對並備妥；原辨識提醒保留。',{exact:true})).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('progressbar',{name:'文件準備進度'})).toHaveAttribute('aria-valuenow',String(before+1));
+  await page.reload();
+  await expect(page.locator('article[data-document-id="application"]')).toContainText('已人工核對並備妥');
+  await page.getByRole('button',{name:'查看準備摘要',exact:true}).click();
+  await expect(page.getByRole('table')).toContainText('已人工核對並備妥');
+  await assertLayout(page);
 });

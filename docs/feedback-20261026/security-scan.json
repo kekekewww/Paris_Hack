@@ -1,0 +1,13 @@
+{
+  "credential_matches": 0,
+  "credential_match_paths": [],
+  "production_key_format_matches": 0,
+  "production_match_paths": [],
+  "files_scanned": 534,
+  "original_design_unchanged": true,
+  "original_design_sha256": {
+    "法國巴黎人壽_理賠申請系統.html": "59a6fd5053e9811560823b3f12637ef0c7bbe7f3aa2fd9a1abe1ea90fad1c8a1",
+    "docs/baseline/original.html": "59a6fd5053e9811560823b3f12637ef0c7bbe7f3aa2fd9a1abe1ea90fad1c8a1"
+  },
+  "private_configuration_not_copied": true
+}

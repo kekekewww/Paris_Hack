@@ -1,0 +1,182 @@
+{
+  "checked_date": "2026-10-26",
+  "scope": "approved_team_feedback_prototype",
+  "all_gates_passed": true,
+  "backend": {
+    "passed": 878,
+    "seconds": 38.87,
+    "warnings": 1,
+    "command": ".venv/Scripts/python.exe -m pytest backend/tests -q"
+  },
+  "frontend_unit": {
+    "passed": 126,
+    "failed": 0,
+    "command": "npm test"
+  },
+  "mock_browser_final": {
+    "passed": 87,
+    "viewports": [
+      1440,
+      768,
+      390
+    ],
+    "command": "playwright test -c playwright.config.js --workers=1"
+  },
+  "api_browser_rounds": [
+    {
+      "passed": 30,
+      "scope": "full_real_http_ocr_before_final_summary_and_guided_deltas"
+    },
+    {
+      "passed": 9,
+      "scope": "centralized_summary_and_manual_ready"
+    },
+    {
+      "passed": 3,
+      "scope": "final_summary_labels_and_visual_capture"
+    },
+    {
+      "passed": 3,
+      "seconds": 52.1,
+      "scope": "final_guided_server_proposal_accept_real_ocr_and_summary"
+    }
+  ],
+  "live_final": {
+    "passed": 3,
+    "minutes": 2.7,
+    "website_message_posts": 11,
+    "note": "Website messages include local safety-boundary replies; message count is not an external-model-request count.",
+    "projects": [
+      {
+        "project": "feedback-desktop-1440",
+        "result": "passed",
+        "message_posts": 4,
+        "message_budget": 8,
+        "cases_created": 1,
+        "cases_deleted_with_get_404": 1,
+        "cleanup_failures": 0,
+        "unexpected_browser_errors": 0,
+        "budget_blocked": false
+      },
+      {
+        "project": "feedback-tablet-768",
+        "result": "passed",
+        "message_posts": 3,
+        "message_budget": 8,
+        "cases_created": 1,
+        "cases_deleted_with_get_404": 1,
+        "cleanup_failures": 0,
+        "unexpected_browser_errors": 0,
+        "budget_blocked": false
+      },
+      {
+        "project": "feedback-mobile-390",
+        "result": "passed",
+        "message_posts": 4,
+        "message_budget": 8,
+        "cases_created": 1,
+        "cases_deleted_with_get_404": 1,
+        "cleanup_failures": 0,
+        "unexpected_browser_errors": 0,
+        "budget_blocked": false
+      }
+    ]
+  },
+  "live_failed_rounds": [
+    {
+      "round": 1,
+      "passed": 1,
+      "failed": 2,
+      "diagnostic": "helper not yet included in safe logging; mobile exact cause not established"
+    },
+    {
+      "round": 2,
+      "passed": 1,
+      "failed": 1,
+      "diagnostic": "_extract_additional:337 visit_dates evidence shape"
+    },
+    {
+      "round": 3,
+      "passed": 2,
+      "failed": 1,
+      "diagnostic": "validate_semantics:126 unused generated message rejected; exact subreason not retained"
+    },
+    {
+      "round": 4,
+      "passed": 2,
+      "failed": 1,
+      "diagnostic": "validate_semantics:149 inpatient state cleared by ordinary guided PATCH"
+    }
+  ],
+  "ocr_module": {
+    "passed": 53,
+    "actual_synthetic_documents": 8,
+    "supported_form": "VIE_Claim.2024.01"
+  },
+  "official_library": {
+    "entry_urls": 302,
+    "pdf_urls": 287,
+    "html_urls": 15,
+    "faq": 8,
+    "exact_product_codes_unverified": [
+      "IHI_C_1131001",
+      "IHO_1131001"
+    ]
+  },
+  "docker": {
+    "image_id": "sha256:76cd3ee95f948eba0e2152e35ce0bf4a350d0109bffa37fe43ee8e9aac92de2a",
+    "matching_files": 230,
+    "http_checks": 31,
+    "actual_ocr_checks_on_unchanged_ocr_sources": 19,
+    "cleaned": true
+  },
+  "public": {
+    "origin": "https://worm-flying-speeches-tales.trycloudflare.com",
+    "checks_passed": 15,
+    "health": {
+      "status": "ok",
+      "service_mode": "api",
+      "llm_provider": "openai_compatible",
+      "llm_configured": true,
+      "llm_verified": true,
+      "ocr_provider": "pymupdf+rapidocr"
+    }
+  },
+  "source_sha256": {
+    "backend/app/errors.py": "855638a02979d9133b7bb51c4c0cf8e426e7aac540d80f2fc850566f091706bc",
+    "backend/app/library.py": "74ce1668d8d29b64b97a04353fec9f89ad62a2d8ac1ead6c52e776063b503215",
+    "backend/app/library_routes.py": "a7ae299434059972871ce5b2eb1902ab667a88673f0411c56d3f37a2ce79cce9",
+    "backend/app/main.py": "56cf24b7fd25ae2fed41b7d873fc541782bca2bdf25b83ba6e9fb32e0e9a324a",
+    "backend/app/message_jobs.py": "44100e6a800972fbc688f2ac46aa8189afb4acea19232e1a65196d2d564ceaf0",
+    "backend/app/models.py": "7fb47afaf913e0c34da5ea894e8ab1779c0f10cbf0a81a363352b8926eb9789f",
+    "backend/app/registry.py": "48bd5480493c1e65f9a734648be20d58219a7219272409cc314fa7cc134aa0b8",
+    "backend/app/rules.py": "6c40b1954a5129630e87313c73ee2a3cb1e2e27e667410a9ed93ab534fe88320",
+    "backend/app/store.py": "f128657938d8af16c9681f2795c0da041029c237fa17410512811b9951170b7b",
+    "backend/app/__init__.py": "7164c292a8857169c943b4a1b03428c388b7c61243d9dcff6392337f7185f31e",
+    "backend/app/ai/conversation.py": "c640c184c84718a96c878c6df30873eef443d0b212dc503a6a760998513d5946",
+    "backend/app/ai/dialogue_privacy.py": "6cf41aa78f6188a0e763eee63ad0a760a9371e023f0fc6b60e04e48c85bda21c",
+    "backend/app/ai/openai_compatible.py": "8bbc2bae2c7eb41c68bfebc185a3bdb6fa2550a99d2786b7fdbd3876b3b2128e",
+    "backend/app/ai/providers.py": "ebda6ab72670a5bac336a8829c39fdeb2c9638d9634b1bd10570186db51fc452",
+    "backend/app/ai/retrieval.py": "b2cb166406e151ff8092a613800415bfd190008a598691829d0775b5460529d0",
+    "backend/app/ai/semantic_dialogue.py": "7cf12cebcd04c48e3249fb82fda64052a5e01853de5acf2dd5c4e8b54cfee284",
+    "backend/app/ai/__init__.py": "75f3e16b21af6b4eb145f462826038f8a64d3d8c2a92b24b4e44f6acff6edfd5",
+    "backend/app/ocr/analyzer.py": "e56022f4cc0068ce271cde7e82d9e0ac365f1e66509afb0fda47e351cdefa555",
+    "backend/app/ocr/form_profiles.py": "6fbac145b27299b7f81d2f43f6bdf21d2841d249cd54be0b39ffd854326c2e32",
+    "backend/app/ocr/__init__.py": "b85c1b5feeb6d2b0d01bd0febb374ac56467ba7924576f9c9cbca37e9f64d98f",
+    "src/app.js": "f8c72284b4fc758a7c37505f1d245e88763248f7704a0c5e78f7860e110bef58",
+    "src/components.js": "72487e0c689714158ea3473390adcdf8bbaf3f2ee099e1dfee9d3eb8edfa173d",
+    "src/file-cache.js": "fc95c6e3be3f2e2663c8a1bf7d3c5bff786fe69d55fdc2ea1de2d0dd2c935312",
+    "src/guided-confirmation.js": "c5183877826b24d36ff1b6eed18b89dec04c3b0f77aa6bdd82a305e163b38663",
+    "src/pdf-preview.js": "1b044aebe19bab1ff13e1ce1183abc6e18810c3e74b6ba589d4254315d17d702",
+    "src/services/api-claim-service.js": "71aad6a25732fd0c903163ab0043d2d03381aae62344aab189599e6f59927541",
+    "src/services/index.js": "dd846987ee4563e28b9bae812f3120705a831713ca53b38afc615fce67343bf5",
+    "src/services/mock-claim-service.js": "37ac6884a9a8ad59784a0e4ddf1a29548780a8821c16256b250cd29b93a76dc3",
+    "src/services/official-library-data.js": "c13eb19e98e6a867e7152121111eb09b6d2ffe08fbadc49cbbc8c21729158161",
+    "src/services/service-error.js": "58c03328be40a4871e0e46bb367fcdf7c3e45f7c963961dd3a2d306e9cb152d7",
+    "src/styles/app.css": "367a43bceb14ac0cf95bf86e67a5b753dce818e49b77c2b837ec2b8dda892dd3",
+    "src/styles/generated.css": "20b1249a9e880c30bd8fa8cc9c5347b2a6c39dd518f02bf1680f34e63192b3ae",
+    "src/styles/tailwind.css": "cc1a7ad0d019ddb1d32d0ecb588ba0ac26ce41d8625dd6c366348b25f83a28ec",
+    "data/official-library.json": "fd986172035de4de33a2cec19a77edf14dd66a127dcdb8fc8991c919c7dcdfcc",
+    "data/official-sources.json": "6d3e80a570806de9419024c151bd14be125c9df3571995df8e2b1554f983c6ec"
+  }
+}

@@ -1,0 +1,403 @@
+{
+  "checked_at": "2026-10-26T02:22:52.654103+00:00",
+  "passed": true,
+  "tag": "cardif-claim-preparation:feedback-20261026",
+  "image_id": "sha256:76cd3ee95f948eba0e2152e35ce0bf4a350d0109bffa37fe43ee8e9aac92de2a",
+  "source_verification": {
+    "checked_at": "2026-10-26T02:19:46.400141+00:00",
+    "host_file_count": 230,
+    "image_file_count": 230,
+    "matching_file_count": 230,
+    "different_paths": []
+  },
+  "security": {
+    "app_file_count": 230,
+    "forbidden_paths": [],
+    "credential_pattern_matches": 0,
+    "private_local_paths": [],
+    "secret_env_names": [],
+    "runtime_uid": 10001,
+    "runtime_gid": 10001
+  },
+  "runtime": {
+    "loopback_origin": "http://127.0.0.1:8028",
+    "user": "10001:10001",
+    "read_only": true,
+    "cap_drop": [
+      "ALL"
+    ],
+    "no_new_privileges": true,
+    "tmpfs_bytes": 67108864,
+    "isolated_volume": true
+  },
+  "synthetic_only": true,
+  "external_model_requests": 0,
+  "final_http_runtime": {
+    "checked_at": "2026-10-26T02:22:41.400307+00:00",
+    "mode": "http-runtime",
+    "image_id": "sha256:76cd3ee95f948eba0e2152e35ce0bf4a350d0109bffa37fe43ee8e9aac92de2a",
+    "container_image_id": "sha256:76cd3ee95f948eba0e2152e35ce0bf4a350d0109bffa37fe43ee8e9aac92de2a",
+    "synthetic_only": true,
+    "model_requests": 0,
+    "checks": [
+      {
+        "check": "actual_container_image_matches_tag",
+        "passed": true
+      },
+      {
+        "check": "grounded_no_model_key",
+        "passed": true
+      },
+      {
+        "check": "container_read_only",
+        "passed": true
+      },
+      {
+        "check": "capabilities_dropped",
+        "passed": true
+      },
+      {
+        "check": "no_new_privileges",
+        "passed": true
+      },
+      {
+        "check": "loopback_port_only",
+        "passed": true
+      },
+      {
+        "check": "user_10001",
+        "passed": true
+      },
+      {
+        "check": "volume_isolated",
+        "passed": true
+      },
+      {
+        "check": "tmpfs_bounded",
+        "passed": true
+      },
+      {
+        "check": "frontend_served",
+        "passed": true
+      },
+      {
+        "check": "frontend_assets",
+        "passed": true
+      },
+      {
+        "check": "library_302_verified",
+        "passed": true
+      },
+      {
+        "check": "library_no_store",
+        "passed": true
+      },
+      {
+        "check": "library_search_empty",
+        "passed": true
+      },
+      {
+        "check": "faq_8_official_sources",
+        "passed": true
+      },
+      {
+        "check": "unknown_product_codes_not_invented",
+        "passed": true
+      },
+      {
+        "check": "oversize_query_rejected",
+        "passed": true
+      },
+      {
+        "check": "private_files_inaccessible",
+        "passed": true
+      },
+      {
+        "check": "create_case_201",
+        "passed": true
+      },
+      {
+        "check": "owner_get_isolation_404",
+        "passed": true
+      },
+      {
+        "check": "owner_mutation_isolation_404",
+        "passed": true
+      },
+      {
+        "check": "owner_delete_isolation_404",
+        "passed": true
+      },
+      {
+        "check": "checklist_real_rules",
+        "passed": true
+      },
+      {
+        "check": "case_patch_recomputes_revision",
+        "passed": true
+      },
+      {
+        "check": "stale_revision_rejected_409",
+        "passed": true
+      },
+      {
+        "check": "forged_ocr_status_rejected",
+        "passed": true
+      },
+      {
+        "check": "manual_ready_without_ocr_rejected",
+        "passed": true
+      },
+      {
+        "check": "bad_upload_magic_rejected",
+        "passed": true
+      },
+      {
+        "check": "restart_persists_identical_case",
+        "passed": true
+      },
+      {
+        "check": "case_delete_200",
+        "passed": true
+      },
+      {
+        "check": "deleted_case_404",
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "actual_scanned_ocr_runtime": {
+    "checked_at": "2026-10-25T20:53:08.906621+00:00",
+    "mode": "ocr",
+    "synthetic_only": true,
+    "model_requests": 0,
+    "checks": [
+      {
+        "check": "grounded_no_model_key",
+        "passed": true
+      },
+      {
+        "check": "create_case_201",
+        "passed": true
+      },
+      {
+        "check": "owner_get_isolation_404",
+        "passed": true
+      },
+      {
+        "check": "owner_mutation_isolation_404",
+        "passed": true
+      },
+      {
+        "check": "owner_delete_isolation_404",
+        "passed": true
+      },
+      {
+        "check": "checklist_real_rules",
+        "passed": true
+      },
+      {
+        "check": "synthetic_scanned_png_real_ocr_200",
+        "passed": true
+      },
+      {
+        "check": "real_rapidocr_not_simulated",
+        "passed": true
+      },
+      {
+        "check": "supported_profile_fields",
+        "passed": true
+      },
+      {
+        "check": "only_masked_fields",
+        "passed": true
+      },
+      {
+        "check": "real_findings_need_attention",
+        "passed": true
+      },
+      {
+        "check": "file_sha256",
+        "passed": true
+      },
+      {
+        "check": "manual_ready_blocked_without_ack",
+        "passed": true
+      },
+      {
+        "check": "acknowledgement_only_not_ready",
+        "passed": true
+      },
+      {
+        "check": "explicit_manual_ready",
+        "passed": true
+      },
+      {
+        "check": "manual_ready_retains_ocr",
+        "passed": true
+      },
+      {
+        "check": "restart_persists_identical_case",
+        "passed": true
+      },
+      {
+        "check": "case_delete_200",
+        "passed": true
+      },
+      {
+        "check": "deleted_case_404",
+        "passed": true
+      }
+    ],
+    "passed": true,
+    "ocr": {
+      "provider": "rapidocr",
+      "is_simulated": false,
+      "analysis_status": "uncertain",
+      "findings_count": 4,
+      "extracted_field_count": 10,
+      "supported_profile_fields_verified": true
+    },
+    "image_id": "sha256:5c784a3deea76b265fcb3d0754b52bf809af3e1d45b21e6cebdaefe52f1b1a1d",
+    "container_image_id": "sha256:5c784a3deea76b265fcb3d0754b52bf809af3e1d45b21e6cebdaefe52f1b1a1d",
+    "image_binding_verified_after_ocr_before_rebuild": true,
+    "source_sha256": {
+      "backend/app/ocr/analyzer.py": "e56022f4cc0068ce271cde7e82d9e0ac365f1e66509afb0fda47e351cdefa555",
+      "backend/app/ocr/form_profiles.py": "6fbac145b27299b7f81d2f43f6bdf21d2841d249cd54be0b39ffd854326c2e32",
+      "backend/app/ocr/__init__.py": "b85c1b5feeb6d2b0d01bd0febb374ac56467ba7924576f9c9cbca37e9f64d98f",
+      "backend/app/models.py": "7fb47afaf913e0c34da5ea894e8ab1779c0f10cbf0a81a363352b8926eb9789f",
+      "backend/app/main.py": "56cf24b7fd25ae2fed41b7d873fc541782bca2bdf25b83ba6e9fb32e0e9a324a",
+      "backend/app/store.py": "f128657938d8af16c9681f2795c0da041029c237fa17410512811b9951170b7b",
+      "backend/app/errors.py": "855638a02979d9133b7bb51c4c0cf8e426e7aac540d80f2fc850566f091706bc",
+      "backend/app/rules.py": "6c40b1954a5129630e87313c73ee2a3cb1e2e27e667410a9ed93ab534fe88320",
+      "backend/app/registry.py": "48bd5480493c1e65f9a734648be20d58219a7219272409cc314fa7cc134aa0b8",
+      "data/official-sources.json": "6d3e80a570806de9419024c151bd14be125c9df3571995df8e2b1554f983c6ec"
+    },
+    "same_ocr_sources_in_final_image": true
+  },
+  "initial_harness_failures": [
+    {
+      "reason": "Harness used claim_application instead of the established document ID application.",
+      "product_change": false,
+      "synthetic_case_cleaned": true
+    },
+    {
+      "reason": "Harness expected form_version as an Analysis property, but the strict contract exposes unknown versions through findings; fixed to require expanded profile fields and no unknown-version finding.",
+      "product_change": false,
+      "synthetic_case_cleaned": true
+    },
+    {
+      "reason": "Harness privacy whitelist omitted the supported masked checkbox status markers; corrected to exact established constants.",
+      "product_change": false,
+      "synthetic_case_cleaned": true
+    }
+  ],
+  "history": [
+    {
+      "mode": "http-runtime",
+      "checked_at": "2026-10-25T20:50:41.904047+00:00",
+      "passed": false,
+      "check_count": 21,
+      "failure_checks": [],
+      "failure_cleanup": true
+    },
+    {
+      "mode": "http-runtime",
+      "checked_at": "2026-10-25T20:51:05.125839+00:00",
+      "passed": true,
+      "check_count": 30,
+      "failure_checks": [],
+      "failure_cleanup": null
+    },
+    {
+      "mode": "http-runtime",
+      "checked_at": "2026-10-25T20:52:02.430965+00:00",
+      "passed": true,
+      "check_count": 30,
+      "failure_checks": [],
+      "failure_cleanup": null
+    },
+    {
+      "mode": "ocr",
+      "checked_at": "2026-10-25T20:52:05.670099+00:00",
+      "passed": false,
+      "check_count": 9,
+      "failure_checks": [
+        "profile_version_identified"
+      ],
+      "failure_cleanup": true
+    },
+    {
+      "mode": "ocr",
+      "checked_at": "2026-10-25T20:52:45.040360+00:00",
+      "passed": false,
+      "check_count": 10,
+      "failure_checks": [
+        "only_masked_fields"
+      ],
+      "failure_cleanup": true
+    },
+    {
+      "mode": "ocr",
+      "checked_at": "2026-10-25T20:53:08.906621+00:00",
+      "passed": true,
+      "check_count": 19,
+      "failure_checks": [],
+      "failure_cleanup": null
+    },
+    {
+      "mode": "http-runtime",
+      "checked_at": "2026-10-25T20:59:32.406728+00:00",
+      "passed": true,
+      "check_count": 31,
+      "failure_checks": [],
+      "failure_cleanup": null
+    },
+    {
+      "mode": "http-runtime",
+      "checked_at": "2026-10-26T02:21:40.195643+00:00",
+      "passed": false,
+      "check_count": 5,
+      "failure_checks": [
+        "no_new_privileges"
+      ],
+      "failure_cleanup": null
+    },
+    {
+      "mode": "http-runtime",
+      "checked_at": "2026-10-26T02:22:10.738586+00:00",
+      "passed": false,
+      "check_count": 9,
+      "failure_checks": [
+        "tmpfs_bounded"
+      ],
+      "failure_cleanup": null
+    },
+    {
+      "mode": "http-runtime",
+      "checked_at": "2026-10-26T02:22:41.400307+00:00",
+      "passed": true,
+      "check_count": 31,
+      "failure_checks": [],
+      "failure_cleanup": null
+    }
+  ],
+  "resource_cleanup": {
+    "checked_at": "2026-10-26T02:22:52.541490+00:00",
+    "passed": true,
+    "dedicated_container_name": "paris-claim-feedback-20261026-verify",
+    "dedicated_volume_name": "paris-claim-feedback-20261026-verify-data",
+    "final_healthcheck_healthy": true,
+    "synthetic_cases_remaining_before_cleanup": 0,
+    "container_removed": true,
+    "volume_removed": true,
+    "unrelated_resources_managed": false,
+    "model_requests": 0
+  },
+  "limitations": [
+    "The actual scanned OCR smoke uses a synthetic printed fixture, not real handwriting or official approval.",
+    "No external model was configured or called in the container; the native model integration has separate evidence.",
+    "Only this acceptance container and volume are created, restarted or removed; unrelated Docker services are not managed."
+  ]
+}

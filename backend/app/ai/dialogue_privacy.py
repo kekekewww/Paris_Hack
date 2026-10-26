@@ -128,7 +128,7 @@ def prepare_dialogue(history: list, current: str) -> list[dict[str, str]]:
             response = reply.get("response")
             if (_document_scope(reply) or not isinstance(response, dict)
                     or not isinstance(response.get("response_type"), str)
-                    or response.get("response_type") not in {"clarification", "claim_suggestion"}):
+                    or response.get("response_type") not in {"clarification", "claim_suggestion", "case_update_proposal"}):
                 continue
         candidates.append((index, "user", item["content"]))
         if paired is not None:

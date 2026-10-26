@@ -40,7 +40,7 @@ async function openDocumentDetails(article) {
 async function openCaseOptions(page) {
   const details = page.locator('details.case-options');
   if (!await details.evaluate((element) => element.open)) {
-    await details.locator('summary').click();
+    await details.locator(':scope > summary').click();
   }
   await expect(details).toHaveJSProperty('open', true);
 }
@@ -64,6 +64,7 @@ async function currentMockCase(page) {
 }
 
 async function chooseGuidedType(page, label = '住院醫療') {
+  await completeGuidedIntake(page);
   await expect(page.locator('fieldset.guided-type-picker')).toBeVisible();
   const radio = page.getByRole('radio', { name: label, exact: true });
   if (!await radio.isVisible()) {
@@ -73,6 +74,22 @@ async function chooseGuidedType(page, label = '住院醫療') {
   await expect(radio).toBeChecked();
   await expect(page).toHaveURL(/#assistant$/);
   return radio;
+}
+
+async function completeGuidedIntake(page) {
+  // Unknown answers are explicit user actions. A candidate cannot bypass the
+  // required condition questions, and these answers never invent clinical facts.
+  for(let count=0;count<4;count++) {
+    await expect.poll(async()=>await page.locator('fieldset.guided-type-picker, .quick-answers button').count()).toBeGreaterThan(0);
+    if(await page.locator('fieldset.guided-type-picker').isVisible())return;
+    const defer=page.getByRole('button',{name:'不知道／稍後確認',exact:true});
+    await expect(defer).toBeVisible();
+    const field=await defer.getAttribute('data-field');
+    expect(['cause','surgery','payment_method']).toContain(field);
+    await defer.click();
+    await expect(page.locator(`.quick-answers button[data-field="${field}"]`)).toHaveCount(0);
+  }
+  await expect(page.locator('fieldset.guided-type-picker')).toBeVisible();
 }
 
 async function simulateNextMockError(page) {
@@ -162,7 +179,7 @@ test('AI 引導確認類型後進入共用工作區並取得準備摘要', async
   await page.getByRole('button', { name: '描述我的狀況', exact: true }).click();
   await page.getByLabel('描述就醫情況', { exact: true }).fill('我上星期車禍住院三天，沒有接受手術，想準備理賠文件。');
   await page.getByRole('button', { name: '送出描述', exact: true }).click();
-  await expect(page.getByRole('button', { name: '建立文件清單', exact: true })).toBeDisabled();
+  await expect(page.locator('button[data-action="build-guided-checklist"]:enabled')).toHaveCount(0);
   await chooseGuidedType(page);
   await page.getByRole('button', { name: '建立文件清單', exact: true }).click();
   await expect(page.getByRole('heading', { name: '文件準備工作區', exact: true })).toBeVisible();
@@ -195,6 +212,7 @@ test('資訊不足會先追問而不直接建立文件清單', async ({ page }) 
   await expect(page.getByRole('button', { name: '建立文件清單', exact: true })).toHaveCount(0);
   await page.getByLabel('描述就醫情況', { exact: true }).fill('因為疾病住院三天，沒有接受手術。');
   await page.getByRole('button', { name: '送出描述', exact: true }).click();
+  await completeGuidedIntake(page);
   await expect(page.getByRole('radio', { name: '住院醫療', exact: true })).toBeVisible();
   await expect(page.getByRole('radio', { name: '住院醫療', exact: true })).not.toBeChecked();
   await expect(page.getByRole('button', { name: '建立文件清單', exact: true })).toBeDisabled();
@@ -204,7 +222,8 @@ test('引導類型須先選擇再獨立建立，改選前不會產生文件清�
   await page.goto('/?service=mock#assistant');
   await page.getByLabel('描述就醫情況', { exact: true }).fill('車禍後住院三天，沒有手術。');
   await page.getByRole('button', { name: '送出描述', exact: true }).click();
-  await expect(page.getByRole('log', { name: '引導對話', exact: true }).getByText(/依您描述的就醫情形/)).toBeVisible();
+  await completeGuidedIntake(page);
+  await expect(page.getByRole('log', { name: '引導對話', exact: true }).getByText(/可以先檢視.*文件準備方向/)).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('guided-before-choice.png'), fullPage: true });
   const inpatient = page.getByRole('radio', { name: '住院醫療', exact: true });
   await expect(inpatient).toBeVisible({ timeout: 1500 });
@@ -272,7 +291,7 @@ test('新的就醫描述立即清除類型選取，回覆後仍須重新選擇',
   expect(updated.id).toBe(intake.id);
   expect(updated.claim_type_id).toBeNull();
   expect(updated.documents).toEqual([]);
-  expect(updated.messages.filter((message) => message.role === 'user')).toHaveLength(2);
+  expect(updated.messages.filter((message) => message.role === 'user')).toHaveLength(intake.messages.filter(message=>message.role==='user').length+1);
   await expect(page).toHaveURL(/#assistant$/);
 });
 
@@ -352,7 +371,7 @@ test('切換理賠類型保留六項條件草稿，修改條件後清單重新�
   for (const [label, value] of values.slice(0, 3)) {
     await page.getByLabel(label, { exact: true }).selectOption(value);
   }
-  const advanced = page.locator('details.advanced-options');
+  const advanced = page.locator('details.advanced-options').filter({has:page.getByText('更多準備條件',{exact:true})});
   if (!await advanced.evaluate((element) => element.open)) {
     await advanced.locator('summary').click();
   }
@@ -364,7 +383,7 @@ test('切換理賠類型保留六項條件草稿，修改條件後清單重新�
     for (const [label, value] of values) {
       await expect(page.getByLabel(label, { exact: true })).toHaveValue(value);
     }
-    await expect(page.locator('details.advanced-options')).toHaveJSProperty('open', true);
+    await expect(advanced).toHaveJSProperty('open', true);
   }
   await page.getByRole('button', { name: '建立文件清單', exact: true }).click();
   await expect(page.locator('article[data-document-id="surgery"]')).toContainText('尚未準備');
@@ -420,7 +439,7 @@ test('首頁建立第二筆案件重新選類型與六項未知條件，編輯�
   for (const [label, value] of previous.slice(0, 3)) {
     await page.getByLabel(label, { exact: true }).selectOption(value);
   }
-  await page.locator('details.advanced-options > summary').click();
+  await page.getByText('更多準備條件',{exact:true}).click();
   for (const [label, value] of previous.slice(3)) {
     await page.getByLabel(label, { exact: true }).selectOption(value);
   }
@@ -445,7 +464,7 @@ test('首頁建立第二筆案件重新選類型與六項未知條件，編輯�
   for (const [label] of previous) {
     await expect(page.getByLabel(label, { exact: true })).toHaveValue('unknown');
   }
-  const advanced = page.locator('details.advanced-options');
+  const advanced = page.locator('details.advanced-options').filter({has:page.getByText('更多準備條件',{exact:true})});
   await expect(advanced).toHaveJSProperty('open', false);
   await advanced.locator('summary').click();
   for (const [label] of previous.slice(3)) {
@@ -610,7 +629,7 @@ test('重新選擇文件會清除舊分析，分析中不可更換輸入', async
   await page.clock.pauseAt(new Date('2026-10-17T04:00:00Z'));
   const file = dialog.getByLabel('選擇文件', { exact: true });
   const scenario = dialog.getByLabel('模擬分析情境', { exact: true });
-  await file.setInputFiles({ name: 'second.png', mimeType: 'image/png', buffer: syntheticPng });
+  await file.setInputFiles({ name: 'second.png', mimeType: 'image/png', buffer: Buffer.concat([syntheticPng,Buffer.from('different synthetic document')]) });
   await expect(dialog.locator('#analysis-results')).toBeEmpty();
   await expect(dialog.getByRole('button', { name: '我已人工確認', exact: true })).toHaveCount(0);
   await scenario.selectOption('complete');
@@ -668,6 +687,7 @@ test('服務失敗顯示錯誤且重試能恢復對話', async ({ page }) => {
   await page.getByRole('button', { name: '送出描述', exact: true }).click();
   await expect(page.getByRole('button', { name: '重試', exact: true })).toBeVisible();
   await page.getByRole('button', { name: '重試', exact: true }).click();
+  await completeGuidedIntake(page);
   await expect(page.getByRole('radio', { name: '住院醫療', exact: true })).toBeVisible();
   await expect(page.getByRole('radio', { name: '住院醫療', exact: true })).not.toBeChecked();
   await expect(page.getByRole('button', { name: '建立文件清單', exact: true })).toBeDisabled();
@@ -741,6 +761,7 @@ test('惡意輸入以純文字顯示，不執行 HTML 事件', async ({ page }) 
   await page.getByLabel('描述就醫情況', { exact: true }).fill(`我住院三天 ${injection}`);
   await page.getByRole('button', { name: '送出描述', exact: true }).click();
   await expect(page.getByText(`我住院三天 ${injection}`, { exact: true })).toBeVisible();
+  await completeGuidedIntake(page);
   await expect(page.getByRole('radio', { name: '住院醫療', exact: true })).toBeVisible();
   await expect(page.getByRole('radio', { name: '住院醫療', exact: true })).not.toBeChecked();
   await expect(page.getByRole('button', { name: '建立文件清單', exact: true })).toBeDisabled();

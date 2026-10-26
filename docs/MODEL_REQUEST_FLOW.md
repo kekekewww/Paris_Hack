@@ -1,8 +1,8 @@
 # 模型請求與除錯流程
 
-更新：2026-10-20（臺灣）。依目前程式實際流程整理；不是通用OpenRouter範例。金鑰值、原始醫療描述與模型原始回覆不應貼入日誌或公開紀錄。
+更新：2026-10-26（臺灣）。依目前程式實際流程整理；不是通用OpenRouter範例。網站使用案件流程v2，資料結構見[API契約](API_CONTRACT.md)。[最新驗收](feedback-20261026/ACCEPTANCE.md)與下方2026-10-20歷史重現分開記錄；金鑰值、原始醫療描述與模型原始回覆不應貼入日誌或公開紀錄。
 
-## 本次錯誤的定位
+## 歷史錯誤的定位（2026-10-20）
 
 使用者提供「可能是重大疾病，但我還不確定」。公開程序的安全日誌兩次記錄：
 
@@ -46,7 +46,7 @@ flowchart TD
 2. POST `/api/v1/cases/{case_id}/message-jobs`，內容為 `{message, document_id?}`。帶同源session cookie；私有金鑰不送前端。
 3. [main.py](../backend/app/main.py) 驗證owner、案件／文件、訊息上限、同案無其他處理中工作；取得快照後交給 [MessageJobManager](../backend/app/message_jobs.py)。HTTP202僅代表已排入背景工作，不代表模型成功。
 4. `complete_message → validated_conversation_response → conversation.respond → OpenAICompatibleProvider.respond`。每次先執行本機規則辨別分支，再決定是否送外部模型，不是每一則回答都由LLM生成。
-5. 完成外部與最終schema驗證後重新取得案件鎖，核對owner／未刪除、claim type與conditions仍等於快照。只有成功才同時保存本輪user與assistant兩則；對話提案本身不直接更新官方清單。
+5. 完成外部與最終schema驗證後重新取得案件鎖，核對owner／未刪除及案件類型、conditions、details與dialogue_state快照，避免舊描述覆蓋最新狀態。只有成功才同時保存本輪user與assistant兩則、遞增revision；有提案時由伺服器建立一次性的proposal.id／base_revision／changes並保存原updates。對話提案本身不直接更新正式條件或官方清單。
 6. 前端每3秒GET同一job。成功才更新case及畫面；失敗顯示error，保留輸入供人工重試。未通過的本輪提問與回答都不會進成功歷史，後續模型不會自動記得那次失敗內容。
 
 ## 三種分流與外送內容
@@ -54,14 +54,14 @@ flowchart TD
 | 分流 | 模型實際取得 | 模型輸出與伺服器處理 |
 | --- | --- | --- |
 | 安全／範圍邊界 | 不呼叫模型 | 規則拒絕判資格、金額、核准、改規則等；仍明示本機來源 |
-| 語意引導 | `{dialogue, confirmed_case}` | `{facts, question, message}`；伺服器驗證引文、未知／否定、追問與候選 |
-| 官方文件問答 | `{query, evidence:[{id,title,text}]}` | 只回`{evidence_ids:[...]}`，最多3個；伺服器重建完整官方段落、URL及頁碼 |
+| 語意引導v2 | `{dialogue,confirmed_case,dialogue_state,workflow_version:2,revision,pending_questions}` | `{facts,question,message,condition_facts,details}`；伺服器驗原文支持、最新更正、否定與欄位事件，依狀態決定下一題、候選及變更提案 |
+| 官方文件問答 | `{query, evidence:[{id,title,text}]}` | 只回`{evidence_ids:[...]}`，最多3個；伺服器核對完整證據後產生受控切題回答、條件、URL及頁碼 |
 
 語意的dialogue包含本次必要訊息及最多8則合格歷史，最多9則／合計6000字。當前原文與遮罩後皆須1–4000字；歷史user最多1000、assistant最多600，只留完整安全句段、必要短答前問句及最後引導回覆。文件問答、分析內容及不明配對排除。**不是完整案件記憶。**
 
-confirmed_case只含已確認claim_type_id與conditions.cause／surgery；不附整案、文件／OCR、cookie、key。文件問答只附本次遮罩query，不附對話歷史或confirmed_case。遮罩是盡力辨識明顯姓名、電話、身分證、地址、保單號與憑證，並非全面去識別保證。
+新版confirmed_case包含已確認claim_type_id、準備conditions與最小details（關係、診斷／術名、部分日期、商品碼／版本）；dialogue_state包含已驗草稿facts／conditions／details、略過欄位與待答問題，active_proposal已剔除。6000字僅是dialogue預算，結構化摘要另外計入請求。這些欄位亦驗證明顯識別資料／憑證，未知年分不猜、未查商品碼不推保障。不附整案、文件／OCR、cookie、key。文件問答只附本次遮罩query與公開證據，不附對話歷史、dialogue_state或confirmed_case。遮罩是盡力辨識明顯姓名、電話、身分證、地址、保單號與憑證，並非全面去識別保證。
 
-OpenRouter外層messages固定兩則：system prompt加上一則JSON字串user content。多輪歷史放在該JSON的dialogue內，**不是把完整歷史直接展開成外部messages陣列**。系統提示原文可直接讀 [semantic_dialogue.py的SYSTEM_PROMPT](../backend/app/ai/semantic_dialogue.py)；文件選證據提示位於 [openai_compatible.py](../backend/app/ai/openai_compatible.py)。
+OpenRouter外層messages固定兩則：system prompt加上一則JSON字串user content。多輪歷史放在該JSON的dialogue內，**不是把完整歷史直接展開成外部messages陣列**。目前網站使用WORKFLOW_PROMPT，未帶v2狀態的舊profile保留相容SYSTEM_PROMPT；原文可讀 [semantic_dialogue.py](../backend/app/ai/semantic_dialogue.py)；文件選證據提示位於 [openai_compatible.py](../backend/app/ai/openai_compatible.py)。
 
 ## 真正的OpenRouter請求
 
@@ -97,13 +97,13 @@ OpenRouter外層messages固定兩則：system prompt加上一則JSON字串user c
 | 外部傳輸 | 300秒、禁止redirect、回覆≤64KiB、HTTP200 | 逾時LLM_TIMEOUT；429為LLM_RATE_LIMITED；其他傳輸問題LLM_PROVIDER_ERROR；超64KiB為INVALID_LLM_RESPONSE |
 | JSON與metadata | model精確1017或canonical20261017；cost有限0–US$0.05；三項正整數token及加總相符，completion不超當次cap | INVALID_LLM_RESPONSE |
 | 完成狀態 | choices恰1、finish_reason=stop；無refusal／tool_calls；content可解析JSON | INVALID_LLM_RESPONSE；length也拒絕 |
-| 語意profile | 六facts精確schema、已知值有允許user turn逐字quote、否定／不確定不作肯定；未知不得推出住院／確診，追問須對應未知，message≤500字且無禁止內容 | INVALID_LLM_RESPONSE |
+| 語意profile | 六facts精確schema、已知值有允許user turn逐字quote、否定／不確定不作肯定；v2另驗condition_facts／details的來源、欄位事件與最新更正。message≤500字且無禁止內容，伺服器依已驗狀態決定實際下一題 | INVALID_LLM_RESPONSE |
 | 證據profile | 根鍵只能evidence_ids、1–3個唯一且存在於本次檢索白名單 | INVALID_LLM_RESPONSE |
 | 最終公開回覆 | AssistantResponse schema、合法官方URL／source／page、非模擬，案件未變更 | INVALID_AI_RESPONSE／INVALID_PROVIDER_RESPONSE／MESSAGE_CASE_CHANGED等 |
 
 六facts為cause、inpatient、outpatient、emergency、critical_diagnosis、surgery。cause為unknown/accident/illness，其餘unknown/yes/no；unknown必須turn=null、quote空字串。這裡的「事實來源」是user對話引文，與文件問答的「官方引用」不同。
 
-對本次句子的合法內部回覆可如下（格式示意，不是假稱取得的原始模型回覆）：
+對歷史句子的合法舊profile內部回覆可如下（格式示意，不是假稱取得的原始模型回覆；v2另可有condition_facts與details）：
 
 ```json
 {
@@ -164,7 +164,7 @@ Get-Content .local/uncertain-dialogue-20261020/app-safe.stderr.log -Tail 30
 
 不要把Authorization、Cookie、完整prompt／回覆或含個資的HAR貼到對話。通常只需記錄case/job的本機識別、時間、error.code與安全stage／line，再用無個資句子重現。
 
-## 本次修復與驗證
+## 歷史修復與驗證（2026-10-20）
 
 修正已發布到原公開網址，模型／key／300秒／官方文件規則未變。舊全句veto改為逐子句核對使用者已提出的同一疾病疑慮，只允許有依據的不確定重述；「尚未確診」須使用者明講，不能從「我不確定」推定。未知下的確診肯定、無據否認、新癌症、跨句／「且」及就醫詞洗白仍拒絕。新例外對未識別的癌字詞採保守拒絕，不是本輪新增所有癌症病名辨識。
 
@@ -175,3 +175,17 @@ TDD先取得3個合法措辭誤擋RED／10個拒絕負例PASS，再補同句就�
 最終映像 `cardif-claim-preparation:uncertain-safe-20261020`／`sha256:a54e187ac8158ef0e80c99b3f9fd156b38a9e941fa1bac464d65d07fa606a74f` 真build且224同路徑hash與主機一致；空.local、無環境檔／資料庫，離線臨時容器已清理。未重跑未變的前端69、完整15回覆三尺寸／OCR／容器持久性，這些是[上一輪差異證據](DEEPSEEK_SETUP.md)，不當作本輪重跑。有限規則與語意驗證仍不等於全面語言正確性證明。
 
 完整安全紀錄：[修正前](uncertain-dialogue-20261020/before.json)、[初修真重驗](uncertain-dialogue-20261020/after.json)、[最終UI兩案](uncertain-dialogue-20261020/ui-final.json)、[最終離線測試](uncertain-dialogue-20261020/tests.json)、[映像核對](uncertain-dialogue-20261020/image-safe-check.json)。沒有保存原始模型回覆、醫療文件或cookie。最終runtime與log位置見[STATUS](../STATUS.md)。
+
+## 2026-10-26 案件與提案狀態
+
+新對話成功保存時遞增case.revision；正式條件與文件清單不因描述直接修改。模型完成後仍須原文引證／欄位事件／否定／最新更正驗證；伺服器依已驗事實與pending_question一次詢問一事，未知可略過。
+
+v2的`question`／`message`為相容欄位，提示固定為`scope`／「已記錄您提供的資訊。」；這段文字不顯示給使用者，原有內容／隱私驗證仍保留。實際追問與提案由伺服器依真模型擷取且通過驗證的事實生成。日期使用`visit_dates.admission`等平面證據鍵，每欄必須完整提供value／turn／quote；不能回巢狀visit_dates容器。
+
+引導中先選類型、再按建立清單：若選型與目前有效伺服器提案相同，前端提交proposal_id／expected_revision／accept，由伺服器套用原提案並保留已驗就醫事實；選擇其他類型仍走明確修改路徑，不接受另一類型的提案。不能跳過選型或讓聊天自動建立清單。
+
+候選／更正回傳proposal.id／base_revision／changes，前端顯示差異與確認／取消。PATCH帶proposal_id、expected_revision及proposal_action；伺服器核對本案原提案、版本、內容與一次性狀態，舊卡409。短答「是」可理解為看過提案，但不能取代正式確認按鈕；拒絕提案不等於沒有住院。新對話或文件操作會遞增版本，後續仍需確認時旋轉成新的有效提案；前端不可重送舊卡作為目前同意。
+
+目前問題的quick answers以結構化pending_question.options綁定欄位與值。只有完全對應目前問題的選項標籤或值可當作欄位操作；自由文字中的「其他」「沒有」「不是」不能跨題套用。外部模型分支仍先完成真實請求及輸出驗證，再消費合法UI選項，不將選項成功冒稱模型成功。
+
+文件問答仍使用真模型選證據ID，逐項受控答案由伺服器組成；未支持細問不以通用段落充數。無精確商品碼對應則明示待查證，混合事故描述與商品碼仍處理事件語意。新版完整驗收見[本輪報告](feedback-20261026/ACCEPTANCE.md)，歷史錯誤及費用證據不視為本輪成功。

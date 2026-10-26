@@ -33,7 +33,10 @@ def test_text_pdf_reports_real_extraction_and_redacts_private_values():
     result = analyze((FIXTURES / "application-complete.pdf").read_bytes())
     assert result["provider"] == "pdf_text"
     assert result["is_simulated"] is False
-    assert result["analysis_status"] == "completed"
+    # This original simplified demo has no supported official version marker.
+    # High native-text confidence must not claim a complete form inspection.
+    assert result["analysis_status"] == "uncertain"
+    assert any(f["field"] == "form_version" and f["bounding_box"] is None for f in result["findings"])
     assert result["requires_human_review"] is True
     assert result["confidence"] > 0.8
     assert {f["field"] for f in result["extracted_fields"]} >= {"insured_name", "identity_number", "application_date"}

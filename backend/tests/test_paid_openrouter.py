@@ -391,7 +391,11 @@ def test_openrouter_document_query_is_redacted_without_sending_case_history_or_f
     provider = adapter.OpenAICompatibleProvider(settings(model=requested_model), transport=httpx.MockTransport(handler))
     answer = asyncio.run(provider.respond(case, query))
     selected = observed["selected"]
-    assert answer["message"].startswith(f"{selected['title']}：{selected['text']}\n")
+    assert answer["message"].startswith("直接回答：申請書請檢查")
+    assert all(field in answer["message"] for field in (
+        "姓名", "保單號碼", "身分證字號", "聯絡方式", "申請項目", "付款方式", "稅務聲明選項", "申請人簽名與日期"))
+    assert "適用條件：" in answer["message"] and "法律真實性" in answer["message"]
+    assert "來源 [1]：保險金申請書（第 1 頁）" in answer["message"]
     canonical = next(chunk for chunk in provider.retriever.chunks if chunk["knowledge_id"] == selected["id"])
     assert answer["source_references"] == provider.retriever.references([canonical])
     assert answer["proposed_case_updates"] == {} and case == before

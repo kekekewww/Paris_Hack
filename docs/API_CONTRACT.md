@@ -1,12 +1,41 @@
 # 理賠準備服務 API 契約 v1
 
-> 目前（2026-10-20）已依新授權改用 `deepseek/deepseek-v4.1-flash-1017`，固定 DeepSeek 官方供應商。必要當前訊息與有限歷史送模型；原始上傳檔與 OCR 不送。實際真請求、公開流程及 gate 狀態見 [本輪驗收](DEEPSEEK_SETUP.md) 與 [STATUS](../STATUS.md)；先前 free 路由的結果保留為歷史。
+> 更新：2026-10-26。模型為 `deepseek/deepseek-v4.1-flash-1017`，固定 DeepSeek 官方供應商。語意請求包含必要當前訊息、有限歷史與已驗證的最小案件摘要／對話草稿；原始上傳檔與 OCR 不送。最新驗收狀態見 [組員回饋驗收](feedback-20261026/ACCEPTANCE.md) 與 [STATUS](../STATUS.md)；[前輪模型驗收](DEEPSEEK_SETUP.md) 與 free 路由結果保留為歷史。
 
 本契約自 Phase 1 起固定前端與後端的資料語意。前端僅呼叫 `src/services/index.js` 匯出的服務；`MockClaimService` 與 `ApiClaimService` 使用相同的方法及回傳資料形狀。官方規則與下載網址來自 `data/official-sources.json`，不是由 UI 或 AI 自行拼接。
 
-外部文件問答內部請求只包含本次必要遮罩query與官方證據，不帶歷史或文件內容；回傳仍為既有AssistantResponse，模型只能挑證據ID，完整段落與引用由後端重建，不變更本契約形狀或官方需求。
+外部文件問答內部請求只包含本次必要遮罩query與公開官方證據，不帶對話歷史或使用者文件內容。模型只能挑證據ID，由後端根據已查核證據產生受控的切題回答／適用條件與引用；資料不足明示未知，不改官方需求。2026-10-26新增案件摘要、提案及分析定位欄位，定義如下。
 
 ## 服務選擇與展示邊界
+
+### 2026-10-26 案件流程擴充
+
+此節定義新版網站契約；後方未帶結構化流程的舊語意profile僅供向後相容，不能代替新版API驗收。
+
+引導頁仍先選取類型，再獨立建立清單。選型符合當前有效伺服器提案時，提交`proposal_id`／`expected_revision`／`proposal_action:'accept'`，保留已驗證對話事實；改選其他類型則提交明確的類型／條件PATCH，不接受原類型提案。兩種操作皆保留版本與owner檢查。
+
+- `Case.revision` 為非負整數，每次保存案件遞增，舊案件讀取時預設0。`Case.details` 為正式確認資料，`Case.dialogue_state.details/conditions/facts` 為對話草稿，不能直接覆寫正式條件或官方清單。
+- `details` 包含 `insured_relation: unknown/self/spouse/parent/child/other`、可為null的 `diagnosis_name/surgery_name/surgery_date`、`visit_dates:{admission,discharge,visit,discharge_pending}`、`policy_products:[{code,version,verification_status:'unverified'}]` 與 `deferred_fields`。部分日期保留原始月日，不猜年份；出院未知獨立標記。使用者提供的商品碼不等於已核對投保或保障。
+- `dialogue_state` 包含受限 `facts`、`conditions`、`details`、`deferred_fields`、`pending_question` 與伺服器保管的 `active_proposal`。待答問題為 `{field,kind:'fact'|'proposal',asked_at_revision,prompt,options:[{label,value}]}`。短答須綁定目前問題，否定提案不能當成否定住院事實。
+- `AssistantResponse.response_type` 新增 `case_update_proposal`；新增可選 `pending_question`、`dialogue_state` 及 `proposal:{id,base_revision,changes:[{field,before,after}]}`。新訊息可保存草稿，但正式條件與文件清單在明確接受前不變。
+- `PATCH /cases/{id}` 新增 `details`、`expected_revision`、`proposal_id`、`proposal_action:'accept'|'reject'`。提案操作必須帶原ID與revision，伺服器核對本案有效原提案及內容，不能以客戶端夾帶更新取代。過期／已用／跨案或版本不符回409 `STALE_PROPOSAL`，接受時內容不符回409 `INVALID_PROPOSAL`；拒絕夾帶修改回422 `INVALID_PROPOSAL`。未帶版本的舊手動PATCH仍會遞增revision，使舊提案失效。
+- `Document.status` 新增 `manual_ready`（已人工核對並備妥），與 `precheck_passed`、`uploaded` 不同。文件PATCH新增 `analysis_id`；確認finding與人工備妥必須對應目前分析。未確認完不可標人工備妥；全部確認也不自動算備妥，須另外明確操作。分析結果、缺漏、覆核旗標不因人工備妥被改寫。過期分析回409 `STALE_ANALYSIS`、未核完回409 `UNCONFIRMED_FINDINGS`。
+- `FileMetadata.sha256` 為可選64位小寫hex摘要，用於同分頁原檔與分析版本匹配。原檔僅受限記憶體暫存，不放SQLite／localStorage／sessionStorage；刪案與換檔清理。重新整理後需重選，不能用同檔名當成相同原檔。
+- `Finding.bounding_box` 可為null，新增 `location_status:'label'|'unlocated'|'page'`；頂層 `Analysis.bounding_boxes` 只放有可靠定位的框。找不到欄位位置時顯示文字提醒，無原檔時不疊假定位框。confidence僅留內部品質與契約，不顯示成使用者百分比。
+
+### 官方文件庫與FAQ
+
+| 前端方法 | GET端點 | 回傳 |
+| --- | --- | --- |
+| `getLibrary({query?,category?})` | `/library?query=&category=all` | `{schema_version,checked_at,scope_note,categories,documents,total,query,category}` |
+| `getFaq()` | `/faq` | `[{id,question,answer,sources,scope_note}]` |
+| `getProduct(code)` | `/products/{code}` | `{requested_code,normalized_code,verification_status,product_name,versions,candidate_sources?,scope_note}` |
+
+query最多200字、category最多80字；商品碼最多80字且只允許ASCII英數、底線、連字號或點。未知分類／查詢回空目錄，未知商品回未驗證且versions空，不假造成功。所有查詢只讀 `data/official-library.json` 的封存官方allowlist，不抓取使用者網址。
+
+分類包含 `id/label/document_count/preparation_supported`；文件包含 `id/title/category_id/category_label/document_type/official_url/product_code/version/checked_at/verification_status/page_number/page_count/source_page_url/scope_note`，另可有 `asset_code/version_status/version_note`。`product_code:null` 或版本未確認不可用檔名推定。`candidate_sources` 只供相關條款核對，不是精確商品版本匹配。未支援險種僅供文件查詢，不能建立假準備清單。
+
+目錄與FAQ採獨立載入／錯誤狀態，不阻斷既有兩條準備流程；Mock使用同一封存來源並維持模擬對話／OCR標示。
 
 ```js
 import { createClaimService } from '/src/services/index.js';
@@ -30,11 +59,11 @@ API 建構參數為 `{ baseUrl = '/api/v1', timeout = 15000, messageTimeout = 33
 | `getClaimTypes()` | GET | `/claim-types` | — | `ClaimType[]` |
 | `createCase(input)` | POST | `/cases` | `CreateCase` JSON | `Case` |
 | `getCase(id)` | GET | `/cases/{id}` | — | `Case` |
-| `updateCase(id, updates)` | PATCH | `/cases/{id}` | `{claim_type_id?, conditions?}` | `Case` |
+| `updateCase(id, updates)` | PATCH | `/cases/{id}` | `{claim_type_id?, conditions?, details?, expected_revision?, proposal_id?, proposal_action?}` | `Case` |
 | `sendMessage(id, message, {document_id?})` | POST＋GET | `/cases/{id}/message-jobs` → `/cases/{id}/message-jobs/{job_id}` | `{message, document_id?}` | 提交202，查詢工作直到成功，方法仍回 `{case: Case, response: AssistantResponse}` |
 | 同步相容端點 | POST | `/cases/{id}/messages` | `{message, document_id?}` | `{case: Case, response: AssistantResponse}`；代理可能提早中止，網站不使用此長請求 |
 | `getChecklist(id)` | GET | `/cases/{id}/checklist` | — | `Document[]` |
-| `updateDocument(id, docId, updates)` | PATCH | `/cases/{id}/documents/{docId}` | `{status?, confirmed_findings?}` | `Case` |
+| `updateDocument(id, docId, updates)` | PATCH | `/cases/{id}/documents/{docId}` | `{status?, confirmed_findings?, analysis_id?}` | `Case` |
 | `analyzeDocument(id, docId, file, options?)` | POST | `/cases/{id}/documents/{docId}/analyze` | `multipart/form-data` 的 `file` | `Case` |
 | `getSource(id)` | GET | `/sources/{id}` | — | `Source` |
 | `deleteCase(id)` | DELETE | `/cases/{id}` | — | `{deleted: true, id}` |
@@ -82,12 +111,36 @@ type CreateCase = {
   entry_path: 'guided' | 'direct';
   claim_type_id?: ClaimTypeId | null;
   conditions?: Partial<Conditions>;
+  details?: Partial<CaseDetails>;
+};
+type CaseDetails = {
+  insured_relation: 'unknown' | 'self' | 'spouse' | 'parent' | 'child' | 'other';
+  diagnosis_name: string | null;
+  surgery_name: string | null;
+  surgery_date: string | null;
+  visit_dates: {admission: string | null; discharge: string | null; visit: string | null; discharge_pending: boolean};
+  policy_products: {code: string; version: string | null; verification_status: 'unverified'}[];
+  deferred_fields: string[];
+};
+type PendingQuestion = {
+  field: string; kind: 'fact' | 'proposal'; asked_at_revision: number;
+  prompt: string; options: {label: string; value: string}[];
+};
+type Proposal = {id: string; base_revision: number; changes: {field: string; before: unknown; after: unknown}[]};
+type DialogueState = {
+  facts: Record<string, string>; conditions: Record<string, string>;
+  details: CaseDetails; deferred_fields: string[];
+  pending_question: PendingQuestion | null;
+  active_proposal: (Proposal & {updates: object}) | null; // 由伺服器保存與驗證，客戶端不可取代
 };
 type Case = {
   id: string;
   entry_path: 'guided' | 'direct';
   claim_type_id: ClaimTypeId | null;
   conditions: Conditions;
+  details: CaseDetails;
+  dialogue_state: DialogueState;
+  revision: number;
   documents: Document[];
   messages: Message[];
   created_at: string; // ISO 8601 UTC
@@ -103,7 +156,7 @@ type Case = {
 
 ```ts
 type DocumentStatus = 'not_started' | 'uploaded' | 'processing'
-  | 'precheck_passed' | 'needs_attention' | 'not_applicable';
+  | 'precheck_passed' | 'needs_attention' | 'manual_ready' | 'not_applicable';
 type Document = {
   id: string;
   title: string;
@@ -121,13 +174,13 @@ type Document = {
   status: DocumentStatus;
   analysis: Analysis | null;
   confirmed_findings: string[];
-  file: {name: string; type: string; size: number} | null;
+  file: {name: string; type: string; size: number; sha256?: string | null} | null;
 };
 ```
 
 `requirement_type` 與 `status` 分開管理。條件已知不成立時可由規則標為 `not_applicable`，未知時保留 `conditional` 與人工確認提示。必要文件不能由使用者標為不適用。
 
-文件 PATCH 允許 `status: 'not_started' | 'uploaded' | 'not_applicable'`；`uploaded` 表示使用者自行備妥，沒有宣稱做過 OCR；若目前分析仍有疑點，嘗試標記自行備妥會維持 `needs_attention`。分析狀態由分析端點產生，不能手動標為通過。重設為 `not_started` 會清除該文件的分析與檔案中繼資料。`confirmed_findings` 只能使用目前分析已存在的 finding ID；確認疑點不會清除疑點、提高信心或變成核准。
+文件 PATCH 允許 `status: 'not_started' | 'uploaded' | 'not_applicable' | 'manual_ready'`；`uploaded` 表示使用者自行備妥，沒有宣稱做過 OCR；若目前分析仍有疑點，嘗試標記自行備妥會維持 `needs_attention`。分析狀態由分析端點產生，不能手動標為通過。重設為 `not_started` 會清除該文件的分析與檔案中繼資料。`confirmed_findings` 只能使用目前分析已存在的 finding ID；確認疑點不會清除疑點、提高信心或變成核准。確認須帶目前analysis_id；所有提醒確認後，另明確提交manual_ready才記為人工備妥，保留原分析結果。
 
 布林型官方條件使用 `yes/no/unknown` 選項映射；例如 `surgery` 對應 `had_surgery`。官方規則仍標 `review_required` 時，即使某一條件不成立也保留人工確認，不自動免附（例如非首次癌症申請仍可能依病況要求病理資料）。
 
@@ -142,15 +195,18 @@ type Message = {
   response?: AssistantResponse;
 };
 type AssistantResponse = {
-  response_type: 'clarification' | 'claim_suggestion' | 'answer' | 'uncertain';
+  response_type: 'clarification' | 'claim_suggestion' | 'case_update_proposal' | 'answer' | 'uncertain';
   message: string;
   suggested_claim_types: ClaimType[];
   missing_information: string[];
   source_references: Source[];
-  proposed_case_updates: {claim_type_id?: ClaimTypeId; conditions?: Partial<Conditions>};
+  proposed_case_updates: {claim_type_id?: ClaimTypeId | null; conditions?: Partial<Conditions>; details?: Partial<CaseDetails>};
   requires_human_review: boolean;
   provider: string;
   is_simulated: boolean;
+  pending_question?: PendingQuestion | null;
+  dialogue_state?: DialogueState | null;
+  proposal?: Proposal | null;
 };
 ```
 
@@ -160,13 +216,13 @@ type AssistantResponse = {
 
 語意模式送出必要的當前訊息，加最多8則符合條件的歷史，合計最多9則／6000字；歷史只取role／content，再由伺服器加上本次dialogue的turn索引。當前訊息為1–4000字，超長拒絕，遮罩後完整保留。歷史user每則最多1000字、assistant最多600字，先遮罩再取完整句段後綴；無安全完整句段則排除。保留最後安全引導回覆，以及「有／沒有／是／不是」短答所需的前一個結構化 `clarification` 問句；必要問句須完整保留遮罩後內容；預算排掉或縮減問句時，短答也排除。帶 `document_id`、`answer`、`uncertain`及不明配對的輪次不納入，合格舊格式獨立user可保留。
 
-語意模型的內部user JSON固定為 `{dialogue:[{turn,role,content}],confirmed_case:{claim_type_id,conditions:{cause,surgery}}}`；turn從1起算，confirmed_case只含伺服器已確認的最小狀態。此分支不帶官方evidence；文件問答另走既有證據ID分支。原始上傳檔、OCR／抽取全文、分析欄位、cookie、金鑰及完整案件物件不自動附加。對明顯識別資料的遮罩是盡力處理，不是全面去識別；使用者主動輸入的對話仍可能含未匹配個人與就醫資訊，這些必要文字屬本輪授權的外送範圍。
+網站使用的語意v2內部user JSON為 `{dialogue:[{turn,role,content}],confirmed_case:{claim_type_id,conditions,details},dialogue_state,workflow_version:2,revision,pending_questions}`；turn從1起算。confirmed_case只含已確認類型、本頁Conditions定義的九項準備條件及最小details；dialogue_state附已驗草稿、略過欄位與待答問題，剔除active_proposal。pending_questions依user turn綁定當時的待答問題，避免把「沒有」套用到其他欄位。6000字只限制dialogue，結構化摘要另外計入請求。未帶dialogue_state的舊相容profile仍只送類型及cause／surgery。語意分支不帶官方evidence；文件問答另走證據ID分支。原始上傳檔、OCR／抽取全文、分析欄位、cookie、金鑰及完整案件物件不附加。明顯識別資料與憑證採盡力遮罩／拒絕，不是全面去識別；必要對話與診斷／日期等摘要仍可能包含就醫資訊。
 
-內部模型輸出固定 `{facts,question,message}`。facts固定cause／inpatient／outpatient／emergency／critical_diagnosis／surgery六欄，每欄固定 `{value,turn,quote}`：cause為unknown／accident／illness，其餘為unknown／yes／no；unknown需turn=null且quote空字串，已知值需user turn逐字引文及來源語境／領域合理性／直接矛盾檢查。question採允許的追問enum，message為1–500字短對話，不得含URL、文件要求、金額、資格核准、處置指示或與facts矛盾。這是有限防護，不宣稱完整語意查核。
+v2模型輸出根鍵限 `{facts,question,message,condition_facts?,details?}`；舊相容profile限前三項。facts固定cause／inpatient／outpatient／emergency／critical_diagnosis／surgery六欄，每欄固定 `{value,turn,quote}`：cause為unknown／accident／illness，其餘為unknown／yes／no；unknown需turn=null且quote空字串，已知值需user turn逐字引文及來源語境／領域合理性／直接矛盾檢查。condition_facts及details每個新欄位亦須帶 `{value,turn,quote}`，另驗最新更正、欄位事件關聯與日期；不是任意Case資料。question採允許的追問enum，message為1–500字短對話，不得含URL、文件要求、金額、資格核准、處置指示或與facts矛盾。伺服器依已驗狀態決定實際下一題與受控訊息，不直接顯示模型自由文字。這是有限防護，不宣稱完整語意查核。
 
 模型請求的 `max_completion_tokens` 僅OpenRouter語意分支為4096；官方證據及一般相容profile維持1800。completion metadata不得超過當次cap，`finish_reason=length`即使零費用仍拒絕。整體deadline300秒、JSON schema／1–500字message／6000字輸入保持，不自動重試、換模型或備援。
 
-公開 `AssistantResponse` 與sendMessage的request／response欄位不變，前端不傳內部facts、history或cap物件。伺服器對應registry候選與canonical引用；新案件有可支持候選才產生 `proposed_case_updates`，確認後由既有 `updateCase` 寫入。已選類型的案件只回 `clarification` 提醒確認後調整，更新提案為空。模型不能決定官方文件要求、建立清單或直接改案件；官方來源、完整段落、規則與清單由伺服器決定。上傳或對話中的指令不得覆寫規則。完整question enum與本輪驗收見 [LLM整合說明](LLM_INTEGRATION.md) 及 [語意對話紀錄](SEMANTIC_CONVERSATION.md)。
+`sendMessage` 的輸入仍為message及可選document_id；回傳包裝仍為 `{case,response}`，但Case及AssistantResponse已新增本頁定義的v2欄位，不能沿用「所有回應欄位不變」的舊假設。前端不傳內部facts、history或cap物件。伺服器對應registry候選與canonical引用；新案件有可支持候選才產生 `proposed_case_updates`，使用者獨立選類型並確認後才寫入。已選類型案件可回 `case_update_proposal` 與結構化差異；只有使用者明確接受且伺服器確認提案版本／內容未變，才更新案件。模型不能決定官方文件要求、建立清單或直接改案件；官方來源、規則與清單由伺服器決定。上傳或對話中的指令不得覆寫規則。[目前請求流程](MODEL_REQUEST_FLOW.md)及[最新驗收](feedback-20261026/ACCEPTANCE.md)另行記錄；舊profile驗收保留為歷史。
 
 ## 上傳與初步分析
 
@@ -179,7 +235,8 @@ type BoundingBox = {page_number: number; x: number; y: number; width: number; he
 type Finding = {
   id: string; field: string; field_name: string; severity: string;
   message: string; suggestion: string; confidence: number;
-  page_number: number; bounding_box: BoundingBox;
+  page_number: number; bounding_box: BoundingBox | null;
+  location_status: 'label' | 'unlocated' | 'page';
   source_id: string; requires_human_review: boolean;
 };
 type Analysis = {
@@ -202,7 +259,7 @@ type Analysis = {
 
 低品質影像先做真實影像清晰度預檢。全部頁面因品質不足而跳過 OCR 時，`provider='quality_precheck'`、`is_simulated=false`、`analysis_status='uncertain'`、`extracted_fields=[]`，只提供 `image_quality` 人工確認 finding；不回傳已辨識欄位、空白欄位或文件類型結論。其形狀仍是相同的 Analysis，不新增品質量測欄位。UI 必須明示未執行 OCR。混合文件若有文字層／清晰掃描頁，provider 按實際執行的 `pdf_text`／`rapidocr` 回傳，但有品質不足頁時整體仍 uncertain。清晰度閾值是工程預檢條件，不是官方理賠文件要求；官方連結僅供表單參考。
 
-品質提示的 page_number 與 bounding_box.page_number 必須是實際跳過頁；位置為人工提示區，不是模型定位。`confidence` 是保守調整後的初步參考，品質不足時上限 0.49，並非校準正確率、文字純平均或整份文件完整率；全部品質預檢時為 0，UI 不呈現成模型辨識信心。
+品質提示的page_number必須是實際跳過頁，location_status為page；無可靠欄位定位時bounding_box可為null，不能當作精確缺漏框。頂層bounding_boxes僅含可靠label定位，UI以finding自身ID及bounding_box配對，不以過濾後的陣列索引猜測。`confidence` 是保守調整後的內部品質參考，品質不足時上限0.49，並非校準正確率、文字純平均或整份文件完整率；全部品質預檢時為0，UI不呈現信心百分比。
 
 ## 官方來源
 
@@ -225,6 +282,7 @@ type Analysis = {
 | 431 | `HEADERS_TOO_LARGE` | 請求標頭超過 16 KB |
 | 429 | `RATE_LIMITED` / `CASE_LIMIT` / `MESSAGE_LIMIT` / `MESSAGE_JOB_LIMIT` | 每 IP／每分鐘配額、owner 案件、案件對話或程序工作容量上限；RATE_LIMITED 附 Retry-After |
 | 409 | `CASE_EXISTS` / `MESSAGE_JOB_ACTIVE` / `MESSAGE_CASE_CHANGED` / `MESSAGE_JOB_CANCELLED` | 案件ID衝突、已有對話、等待途中情境改變或工作已取消 |
+| 409 | `STALE_PROPOSAL` / `INVALID_PROPOSAL` / `STALE_ANALYSIS` / `UNCONFIRMED_FINDINGS` | 提案版本／內容不符、分析已換版或尚未逐項核對；取消提案夾帶修改另回422 `INVALID_PROPOSAL` |
 | 404 | `MESSAGE_JOB_NOT_FOUND` | 工作不屬於目前owner／案件、已過期或被清除 |
 | 503 | `MESSAGE_JOB_UNAVAILABLE` / `MESSAGE_JOB_FAILED` | 服務關閉或工作未預期失敗，隱藏內部例外 |
 | 503 | `OCR_BUSY` / `OCR_TIMEOUT` / `OCR_UNAVAILABLE` | OCR 單工容量、處理預算或模型不可用 |

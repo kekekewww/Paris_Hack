@@ -12,6 +12,13 @@ const memoryStorage = () => {
   return { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key), values };
 };
 const makeMock = storage => new MockClaimService({ delay: 0, storage: storage ?? memoryStorage(), registry });
+// Explicitly defer unknown document-rule conditions before reviewing a candidate.
+// Clinical assertions below still inspect the unchanged original user description.
+async function askUntilReview(service,id,message) {
+  let result=await service.sendMessage(id,message);
+  for(let count=0;count<4&&['cause','surgery','receipt_type','payment_method'].includes(result.response.pending_question?.field);count++)result=await service.sendMessage(id,'不知道，稍後確認');
+  return result;
+}
 const directCase = service => service.createCase({ entry_path: 'direct', claim_type_id: 'inpatient', conditions: { cause: 'illness', surgery: 'no', receipt_type: 'unknown' } });
 const demoFile = () => new File(['%PDF-1.4 synthetic'], 'synthetic-application.pdf', { type: 'application/pdf' });
 const apiJobId = '12345678-1234-4234-8234-123456789abc';
@@ -70,12 +77,13 @@ test('guided intake asks when unknown and proposes a class without committing it
   assert.equal(unknown.response.response_type, 'clarification');
   assert.deepEqual(unknown.response.suggested_claim_types, []);
   assert.ok(unknown.response.missing_information.length);
-  const suggested = await service.sendMessage(item.id, '因為肺炎住院三天，沒有手術');
+  const suggested = await askUntilReview(service,item.id, '因為肺炎住院三天，沒有手術');
   assert.equal(suggested.case.claim_type_id, null);
   assert.ok(suggested.response.suggested_claim_types.some(type => type.id === 'inpatient'));
   assert.equal(suggested.response.proposed_case_updates.claim_type_id, 'inpatient');
   assert.equal(suggested.case.conditions.cause, 'unknown');
-  assert.equal(suggested.case.messages.length, 4);
+  assert.equal(suggested.case.messages[2].content,'因為肺炎住院三天，沒有手術');
+  assert.ok(suggested.case.messages.length>=4);
   const updated = await service.updateCase(item.id, suggested.response.proposed_case_updates);
   assert.equal(updated.claim_type_id, 'inpatient');
   assert.ok(updated.documents.length);
@@ -106,7 +114,8 @@ test('accident intake narrows the question after admission is explicitly denied'
   assert.deepEqual(accident.response.suggested_claim_types, []);
   const denied = await service.sendMessage(item.id, '沒有住院');
   assert.equal(denied.response.response_type, 'clarification');
-  for (const setting of ['急診', '門診']) assert.ok(denied.response.message.includes(setting));
+  assert.equal(denied.response.pending_question.field,'outpatient');
+  assert.ok(denied.response.message.includes('門診'));
   assert.match(denied.response.message, /未就醫|還沒.*就醫|尚未.*就醫/);
   assert.doesNotMatch(denied.response.message, /癌症|重大疾病/);
   assert.deepEqual(denied.response.suggested_claim_types, []);
@@ -118,7 +127,7 @@ test('an affirmative emergency or outpatient visit permits only an uncommitted o
   for (const message of ['已到急診就醫，沒有住院', '只有急診，沒有住院', '沒有住院，只有門診']) {
     const service = makeMock();
     const item = await service.createCase({ entry_path: 'guided' });
-    const { case: current, response } = await service.sendMessage(item.id, message);
+    const { case: current, response } = await askUntilReview(service,item.id, message);
     assert.equal(response.response_type, 'claim_suggestion', message);
     assert.deepEqual(response.suggested_claim_types.map(type => type.id), ['outpatient'], message);
     assert.equal(response.proposed_case_updates.claim_type_id, 'outpatient', message);
@@ -161,7 +170,7 @@ test('uncertain, explicitly denied and recommended admission is not a completed 
 test('an emergency navigation candidate explicitly leaves applicability to the policy and official confirmation', async () => {
   const service = makeMock();
   const item = await service.createCase({ entry_path: 'guided' });
-  const { case: current, response } = await service.sendMessage(item.id, '已到急診就醫，沒有住院');
+  const { case: current, response } = await askUntilReview(service,item.id, '已到急診就醫，沒有住院');
   assert.equal(response.proposed_case_updates.claim_type_id, 'outpatient');
   assert.match(response.message, /急診.*個別保單.*官方確認/);
   assert.equal(response.requires_human_review, true);
@@ -173,7 +182,7 @@ test('a later explicit admission resolves old uncertainty without losing acciden
   const service = makeMock();
   const item = await service.createCase({ entry_path: 'guided' });
   await service.sendMessage(item.id, '我出車禍，沒有手術，不確定有沒有住院');
-  const { response } = await service.sendMessage(item.id, '確認了，我已住院三天');
+  const { response } = await askUntilReview(service,item.id, '確認了，我已住院三天');
   assert.equal(response.response_type, 'claim_suggestion');
   assert.equal(response.proposed_case_updates.claim_type_id, 'inpatient');
   assert.equal(response.proposed_case_updates.conditions.cause, 'accident');
@@ -191,7 +200,7 @@ test('a current care correction supersedes the previous unconfirmed suggestion',
     const service = makeMock();
     const item = await service.createCase({ entry_path: 'guided' });
     await service.sendMessage(item.id, previous);
-    const { case: current, response } = await service.sendMessage(item.id, correction);
+    const { case: current, response } = await askUntilReview(service,item.id, correction);
     assert.equal(response.response_type, 'claim_suggestion', correction);
     assert.equal(response.proposed_case_updates.claim_type_id, wanted, correction);
     assert.equal(response.proposed_case_updates.conditions.surgery, expectedSurgery, correction);
@@ -220,7 +229,7 @@ test('a current cancer diagnosis can resolve old uncertainty and can be withdraw
   const service = makeMock();
   const item = await service.createCase({ entry_path: 'guided' });
   await service.sendMessage(item.id, '疑似癌症，還沒有確診');
-  const diagnosed = await service.sendMessage(item.id, '醫師已確診癌症');
+  const diagnosed = await askUntilReview(service,item.id, '醫師已確診癌症');
   assert.equal(diagnosed.response.proposed_case_updates.claim_type_id, 'critical_illness');
   const corrected = await service.sendMessage(item.id, '更正，目前還未確診癌症');
   assert.equal(corrected.response.response_type, 'clarification');
@@ -243,7 +252,7 @@ test('worry about cancer is not evidence of a confirmed diagnosis', async () => 
 test('a no-medical-care correction withdraws the earlier cancer candidate', async () => {
   const service = makeMock();
   const item = await service.createCase({ entry_path: 'guided' });
-  const diagnosed = await service.sendMessage(item.id, '已由醫師確診癌症');
+  const diagnosed = await askUntilReview(service,item.id, '已由醫師確診癌症');
   assert.equal(diagnosed.response.proposed_case_updates.claim_type_id, 'critical_illness');
   const { case: current, response } = await service.sendMessage(item.id, '更正，我尚未就醫');
   assert.equal(response.response_type, 'clarification');
@@ -270,14 +279,14 @@ for (const message of ['還不能確診癌症', '無法確診癌症']) {
 test('an explicit current visit clears old disease, surgery and admission facts before new navigation', async () => {
   const service = makeMock();
   const item = await service.createCase({ entry_path: 'guided' });
-  const prior = await service.sendMessage(item.id, '我因肺炎住院並做過手術');
+  const prior = await askUntilReview(service,item.id, '我因肺炎住院並做過手術');
   assert.equal(prior.response.proposed_case_updates.claim_type_id, 'inpatient');
   assert.equal(prior.response.proposed_case_updates.conditions.cause, 'illness');
   assert.equal(prior.response.proposed_case_updates.conditions.surgery, 'yes');
   const changed = await service.sendMessage(item.id, '本次是車禍，沒有住院');
   assert.equal(changed.response.response_type, 'clarification');
   assert.deepEqual(changed.response.proposed_case_updates, {});
-  const { case: current, response } = await service.sendMessage(item.id, '有去急診');
+  const { case: current, response } = await askUntilReview(service,item.id, '有去急診');
   assert.equal(response.proposed_case_updates.claim_type_id, 'outpatient');
   assert.equal(response.proposed_case_updates.conditions.cause, 'accident');
   assert.equal(response.proposed_case_updates.conditions.surgery, 'unknown');
@@ -294,7 +303,7 @@ test('a bare emergency term needs an affirmative visit before becoming a navigat
   assert.equal(bare.response.response_type, 'clarification');
   assert.deepEqual(bare.response.suggested_claim_types, []);
   assert.deepEqual(bare.response.proposed_case_updates, {});
-  const { case: current, response } = await service.sendMessage(item.id, '有去急診');
+  const { case: current, response } = await askUntilReview(service,item.id, '有去急診');
   assert.equal(response.proposed_case_updates.claim_type_id, 'outpatient');
   assert.match(response.message, /急診.*個別保單.*官方確認/);
   assert.equal(current.claim_type_id, null);
@@ -335,7 +344,9 @@ test('manual updates cannot bypass precheck or mark a required document inapplic
   const item = await directCase(service);
   await assert.rejects(service.updateDocument(item.id, 'application', { status: 'precheck_passed' }), error => error.code === 'INVALID_DOCUMENT_STATUS');
   await assert.rejects(service.updateDocument(item.id, 'application', { status: 'not_applicable' }), error => error.code === 'REQUIRED_DOCUMENT');
-  await assert.rejects(service.updateDocument(item.id, 'application', { confirmed_findings: ['invented'] }), error => error.code === 'INVALID_FINDING');
+  await assert.rejects(service.updateDocument(item.id, 'application', { confirmed_findings: ['invented'] }), error => error.code === 'ANALYSIS_REQUIRED');
+  const checked=await service.analyzeDocument(item.id,'application',demoFile());
+  await assert.rejects(service.updateDocument(item.id,'application',{analysis_id:checked.documents[0].analysis.analysis_id,confirmed_findings:['invented']}),error=>error.code==='INVALID_FINDING');
 });
 
 test('mock OCR is explicitly simulated and confirmation never erases missing-field results', async () => {
@@ -348,7 +359,7 @@ test('mock OCR is explicitly simulated and confirmation never erases missing-fie
   assert.equal(doc.analysis.is_simulated, true);
   assert.ok(doc.analysis.findings.length);
   assert.ok(doc.analysis.bounding_boxes.every(box => ['x', 'y', 'width', 'height'].every(key => box[key] >= 0 && box[key] <= 1)));
-  const confirmed = await service.updateDocument(item.id, 'application', { confirmed_findings: doc.analysis.findings.map(finding => finding.id) });
+  const confirmed = await service.updateDocument(item.id, 'application', { analysis_id:doc.analysis.analysis_id, confirmed_findings: doc.analysis.findings.map(finding => finding.id) });
   assert.equal(confirmed.documents.find(document => document.id === 'application').status, 'needs_attention');
   assert.equal(confirmed.documents.find(document => document.id === 'application').analysis.requires_human_review, true);
   const prepared = await service.updateDocument(item.id, 'application', { status: 'uploaded' });

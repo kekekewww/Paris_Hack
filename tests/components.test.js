@@ -34,7 +34,8 @@ test('mixed PDF quality hints remain manual references beside actual text extrac
   assert.ok(html.includes('Real OCR · PDF文字擷取'));
   assert.ok(html.includes('官方表單參考'));
   assert.ok(html.includes('部分內容未可靠辨識'));
-  assert.ok(html.includes('初步檢查參考信心'));
+  assert.ok(!html.includes('初步檢查參考信心'));
+  assert.ok(!html.includes('99%'));
   assert.ok(!html.includes('框線依辨識位置'));
 });
 
@@ -70,7 +71,8 @@ test('claim selection asks for a type before showing conditions and groups optio
   for(const field of ['payment_method','first_claim','diagnosis_has_surgery_details'])assert.ok(advanced.includes(`name="${field}"`));
   for(const field of ['cause','surgery','receipt_type'])assert.ok(selected.indexOf(`name="${field}"`)<selected.indexOf('<details class="advanced-options"'));
   assert.match(selected,/<option value="remittance" selected>/);
-  assert.equal((selected.match(/<option value="unknown"/g)||[]).length,6);
+  assert.equal((selected.match(/<option value="unknown"/g)||[]).length,7);
+  assert.ok(selected.includes('name="detail-insured_relation"'));
 });
 
 test('claim-specific extra conditions are revealed when relevant',()=>{

@@ -167,11 +167,12 @@ def test_concrete_openrouter_hosted_model_is_not_rejected_as_a_router_alias():
     assert respond_with(handler)["provider"] == "openai_compatible"
 
 
-def test_openrouter_id_selection_uses_full_canonical_text_and_official_references():
+def test_openrouter_id_selection_uses_reviewed_direct_answer_and_official_references():
     answer = respond_with(lambda request: httpx.Response(200, json=envelope({"evidence_ids": ["surgery-condition"]})))
-    assert answer["message"] == (
-        "何時另附手術文件：有手術、而診斷書缺少部位或方式時，另備手術證明；診斷書已記載，或未手術，指南說明可免另外提供。"
-        "\n模型僅整理以上已查核段落；適用條件仍依保單與承辦人確認，初步檢查不代表核准。")
+    assert answer["message"].startswith("直接回答：已手術且診斷書未載明手術部位或方式時，需另附手術證明。 [1]\n")
+    assert "適用條件：診斷書已記載手術部位與方式，或本次未手術，可依指南免另附" in answer["message"]
+    assert "來源 [1]：住院醫療日額申請注意須知（第 3 頁）" in answer["message"]
+    assert "保單" in answer["message"] and "初步檢查不代表正式核准" in answer["message"]
     assert {(source["source_id"], source["page_number"]) for source in answer["source_references"]} == {
         ("cardif-inpatient-guide", 3)}
     assert all(source["official_url"].startswith("https://life.cardif.com.tw/") for source in answer["source_references"])
@@ -199,8 +200,9 @@ def test_selected_document_id_preserves_all_canonical_conditions_and_sources():
     item["documents"] = [{"id": "surgery"}]
     answer = asyncio.run(provider.respond(item, QUESTION, "surgery"))
     assert answer["message"].startswith(
-        "手術證明文件：由醫療院所提供；已手術且診斷書未記載手術部位、方式時另附。 "
-        "有手術且診斷書未寫明手術部位、方式時另附；無手術或已記載者，依此指南不需另附。\n")
+        "直接回答：已手術且診斷書未載明手術部位或方式時，需另附手術證明。 [1][2]\n")
+    assert "診斷書已記載手術部位與方式，或本次未手術，可依指南免另附" in answer["message"]
+    assert "個案適用" in answer["message"] and "初步檢查不代表正式核准" in answer["message"]
     assert {(source["source_id"], source["page_number"]) for source in answer["source_references"]} == {
         ("cardif-inpatient-guide", 3), ("cardif-general-documents", None)}
 

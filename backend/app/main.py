@@ -1,6 +1,7 @@
 """同源理賠準備服務；不提供正式送件、資格判定或給付計算。"""
 import asyncio
 import copy
+import hashlib
 import inspect
 import mimetypes
 import os
@@ -24,7 +25,7 @@ from starlette.exceptions import HTTPException
 
 from .errors import ApiError
 from .message_jobs import MessageJobManager
-from .models import Analysis, AssistantResponse, Case, Conditions, CreateCase, DocumentUpdate, MessageInput, UpdateCase
+from .models import Analysis, AssistantResponse, Case, CaseDetails, DialogueState, Conditions, CreateCase, DocumentUpdate, MessageInput, UpdateCase
 from .registry import get_source, validate_official_url
 from .rules import build_checklist, get_claim_types
 from .store import CaseStore
@@ -198,6 +199,8 @@ def create_app() -> FastAPI:
             await message_jobs.shutdown()
 
     app = FastAPI(title="理賠文件準備 API", version="1.0.0", lifespan=lifespan)
+    from .library_routes import router as library_router
+    app.include_router(library_router)
     app.state.store = store
     app.state.message_jobs = message_jobs
     # 固定數量鎖避免任意 case ID 請求耗盡記憶體；同一案件寫入保持序列。
@@ -232,6 +235,9 @@ def create_app() -> FastAPI:
         item = store.get(identifier, owner)
         if item is None:
             raise ApiError("CASE_NOT_FOUND", "找不到此案件，請重新開始。", 404)
+        item.setdefault("revision", 0)
+        item.setdefault("details", CaseDetails().model_dump())
+        item.setdefault("dialogue_state", DialogueState(details=item["details"], conditions=item["conditions"]).model_dump())
         return item
 
     def read_case(identifier, request):
@@ -244,6 +250,14 @@ def create_app() -> FastAPI:
         return document
 
     def save_case_for_owner(item, owner):
+        item["revision"] = item.get("revision", 0) + 1
+        state = item.get("dialogue_state") or {}
+        active = state.get("active_proposal")
+        if active and active["base_revision"] != item["revision"]:
+            state["active_proposal"] = None
+            if (state.get("pending_question") or {}).get("kind") == "proposal":
+                state["pending_question"] = {"field": "correction", "kind": "fact", "asked_at_revision": item["revision"],
+                                             "prompt": "案件或文件已變更，先前提案已失效。請重新描述要調整的項目。", "options": []}
         item["updated_at"] = utc_now()
         Case.model_validate(item)
         return store.save(item, owner)
@@ -290,11 +304,47 @@ def create_app() -> FastAPI:
         async with lock_for(snapshot["id"]):
             # 重新讀取並合併最新案件；案件已刪除／到期時絕不重建。
             item = read_case_for_owner(snapshot["id"], owner)
-            if item["claim_type_id"] != snapshot["claim_type_id"] or item["conditions"] != snapshot["conditions"]:
+            if (item["claim_type_id"] != snapshot["claim_type_id"] or item["conditions"] != snapshot["conditions"]
+                    or item.get("details") != snapshot.get("details")
+                    or item.get("dialogue_state") != snapshot.get("dialogue_state")):
                 raise ApiError("MESSAGE_CASE_CHANGED", "案件條件已變更，請依最新情況重新提問。", 409)
             if data.document_id:
                 find_document(item, data.document_id)
             timestamp = utc_now()
+            next_revision = item.get("revision", 0) + 1
+            previous_proposal = copy.deepcopy(item["dialogue_state"].get("active_proposal"))
+            if response.get("dialogue_state") is not None:
+                item["dialogue_state"] = response["dialogue_state"]
+            if "pending_question" in response:
+                item["dialogue_state"]["pending_question"] = response["pending_question"]
+            if item["dialogue_state"].get("pending_question"):
+                item["dialogue_state"]["pending_question"]["asked_at_revision"] = next_revision
+                response["pending_question"] = copy.deepcopy(item["dialogue_state"]["pending_question"])
+            updates = response.get("proposed_case_updates") or {}
+            if (not updates and previous_proposal and previous_proposal["base_revision"] == item["revision"]
+                    and (item["dialogue_state"].get("pending_question") or {}).get("kind") == "proposal"):
+                # A conversational acknowledgement is not an acceptance. Keep
+                # its reviewable content, but rotate the one-use id/revision.
+                updates = copy.deepcopy(previous_proposal["updates"])
+                response["proposed_case_updates"] = updates
+                response["response_type"] = "case_update_proposal" if item["claim_type_id"] else "claim_suggestion"
+            item["dialogue_state"]["active_proposal"] = None
+            if updates:
+                changes = []
+                def difference(before, patch, prefix=""):
+                    for key, value in patch.items():
+                        field = f"{prefix}.{key}" if prefix else key
+                        previous = before.get(key) if isinstance(before, dict) else None
+                        if isinstance(value, dict):
+                            difference(previous or {}, value, field)
+                        elif previous != value:
+                            changes.append({"field": field, "before": previous, "after": value})
+                difference(item, updates)
+                proposal = {"id": str(uuid.uuid4()), "base_revision": next_revision, "changes": changes}
+                response["proposal"] = proposal
+                item["dialogue_state"]["active_proposal"] = {**proposal, "updates": copy.deepcopy(updates)}
+            if response.get("dialogue_state") is not None:
+                response["dialogue_state"] = copy.deepcopy(item["dialogue_state"])
             item["messages"].extend([
                 {"id": str(uuid.uuid4()), "role": "user", "content": data.message, "created_at": timestamp},
                 {"id": str(uuid.uuid4()), "role": "assistant", "content": response["message"], "response": response, "created_at": timestamp},
@@ -335,6 +385,7 @@ def create_app() -> FastAPI:
         timestamp = utc_now()
         item = {"id": str(uuid.uuid4()), "entry_path": data.entry_path, "claim_type_id": data.claim_type_id,
                 "conditions": data.conditions.model_dump(), "documents": [], "messages": [],
+                "details": data.details.model_dump(), "dialogue_state": DialogueState(details=data.details, conditions=data.conditions.model_dump()).model_dump(), "revision": 0,
                 "created_at": timestamp, "updated_at": timestamp}
         item["documents"] = build_checklist(item)
         Case.model_validate(item)
@@ -348,10 +399,38 @@ def create_app() -> FastAPI:
     async def update_case(case_id: str, data: UpdateCase, request: Request):
         async with lock_for(case_id):
             item = read_case(case_id, request)
-            if "claim_type_id" in data.model_fields_set:
-                item["claim_type_id"] = data.claim_type_id
-            if data.conditions is not None:
-                item["conditions"].update(data.conditions.model_dump(exclude_unset=True))
+            if data.expected_revision is not None and data.expected_revision != item["revision"]:
+                raise ApiError("STALE_PROPOSAL", "案件已變更，請重新檢視最新提案。", 409)
+            patch = data.model_dump(exclude_unset=True, exclude={"expected_revision", "proposal_id", "proposal_action"})
+            if data.proposal_id:
+                active = item["dialogue_state"].get("active_proposal")
+                if (not active or data.proposal_id != active["id"] or active["base_revision"] != item["revision"]
+                        or data.expected_revision != item["revision"]):
+                    raise ApiError("STALE_PROPOSAL", "這份提案已過期或已處理，請重新確認。", 409)
+                if data.proposal_action == "reject":
+                    if patch:
+                        raise ApiError("INVALID_PROPOSAL", "取消提案不能同時修改案件。", 422)
+                    item["dialogue_state"]["active_proposal"] = None
+                    item["dialogue_state"]["pending_question"] = {"field": "correction", "kind": "fact", "asked_at_revision": item["revision"] + 1,
+                                                                  "prompt": "請告訴我哪一項需要更正；其他已知資訊會保留。", "options": []}
+                    return save_case(item, request)
+                if patch and patch != active["updates"]:
+                    raise ApiError("INVALID_PROPOSAL", "提案內容已變更，請重新確認差異。", 409)
+                patch = active["updates"]
+            if "claim_type_id" in patch:
+                item["claim_type_id"] = patch["claim_type_id"]
+            if "conditions" in patch:
+                item["conditions"].update(patch["conditions"])
+            if "details" in patch:
+                from .ai.semantic_dialogue import _merge_details
+                item["details"] = _merge_details(item["details"], patch["details"])
+            item["dialogue_state"]["active_proposal"] = None
+            item["dialogue_state"]["pending_question"] = None
+            item["dialogue_state"]["conditions"] = copy.deepcopy(item["conditions"])
+            item["dialogue_state"]["details"] = copy.deepcopy(item["details"])
+            item["dialogue_state"].setdefault("facts", {}).update({field: item["conditions"][field] for field in ("cause", "surgery")})
+            if "claim_type_id" in patch and not data.proposal_id:
+                item["dialogue_state"]["facts"].update({field: "unknown" for field in ("inpatient", "outpatient", "emergency", "critical_diagnosis")})
             item["documents"] = build_checklist(item, item["documents"])
             return save_case(item, request)
 
@@ -385,13 +464,22 @@ def create_app() -> FastAPI:
         async with lock_for(case_id):
             item = read_case(case_id, request)
             doc = find_document(item, document_id)
+            analysis = doc.get("analysis")
+            if "confirmed_findings" in data.model_fields_set or data.status == "manual_ready":
+                # Acknowledgement belongs to one analysis, never just to a
+                # document ID whose contents may have changed meanwhile.
+                if not analysis and data.confirmed_findings:
+                    raise ApiError("INVALID_FINDING", "只能確認本次分析中存在的待確認項目。")
+                if not analysis or data.analysis_id != analysis["analysis_id"]:
+                    raise ApiError("STALE_ANALYSIS", "分析版本已變更，請重新開啟本次結果後確認。", 409)
             if "status" in data.model_fields_set:
-                if data.status not in {"not_started", "uploaded", "not_applicable"}:
+                if data.status not in {"not_started", "uploaded", "not_applicable", "manual_ready"}:
                     raise ApiError("INVALID_DOCUMENT_STATUS", "分析狀態由文件檢查產生，不能直接手動標記通過。")
                 if data.status == "not_applicable" and doc["requirement_type"] == "required":
                     raise ApiError("REQUIRED_DOCUMENT", "必要文件不能標為不適用，請向官方確認。")
                 uncertain = doc.get("analysis") and (doc["analysis"]["findings"] or doc["analysis"]["requires_human_review"] or doc["analysis"]["analysis_status"] == "uncertain")
-                doc["status"] = "needs_attention" if data.status == "uploaded" and uncertain else data.status
+                if data.status != "manual_ready":
+                    doc["status"] = "needs_attention" if data.status == "uploaded" and uncertain else data.status
                 if data.status == "not_started":
                     doc.update(analysis=None, confirmed_findings=[], file=None)
             if "confirmed_findings" in data.model_fields_set:
@@ -399,6 +487,13 @@ def create_app() -> FastAPI:
                 if data.confirmed_findings is None or any(identifier not in valid_ids for identifier in data.confirmed_findings):
                     raise ApiError("INVALID_FINDING", "只能確認本次分析中存在的待確認項目。")
                 doc["confirmed_findings"] = list(dict.fromkeys(data.confirmed_findings))
+                if doc["status"] == "manual_ready" and not valid_ids <= set(doc["confirmed_findings"]):
+                    doc["status"] = "needs_attention"
+            if data.status == "manual_ready":
+                required = {finding["id"] for finding in analysis["findings"]}
+                if not required <= set(doc["confirmed_findings"]):
+                    raise ApiError("UNCONFIRMED_FINDINGS", "請先逐項核對本次提醒，再明確標記已人工核對並備妥。", 409)
+                doc["status"] = "manual_ready"
             return save_case(item, request)
 
     @app.post("/api/v1/cases/{case_id}/documents/{document_id}/analyze")
@@ -423,24 +518,34 @@ def create_app() -> FastAPI:
                 signatures = {"application/pdf": data.startswith(b"%PDF-"), "image/jpeg": data.startswith(b"\xff\xd8\xff"), "image/png": data.startswith(b"\x89PNG\r\n\x1a\n")}
                 if not signatures[content_type]:
                     raise ApiError("INVALID_FILE", "檔案內容與宣告格式不符，請選擇有效文件。")
-                try:
-                    from .ocr.analyzer import analyze_document
-                    raw = await asyncio.wait_for(run_in_threadpool(analyze_document, data, filename, content_type, copy.deepcopy(doc)), timeout=90)
-                    result = Analysis.model_validate(raw).model_dump()
-                    if result["is_simulated"] or result["document_id"] != document_id:
-                        raise ApiError("INVALID_PROVIDER_RESPONSE", "分析服務回傳資料未通過查核。", 503)
-                except ApiError:
-                    raise
-                except ImportError:
-                    raise ApiError("OCR_UNAVAILABLE", "OCR 服務尚未可用，請稍後重試。", 503) from None
-                except TimeoutError:
-                    raise ApiError("OCR_TIMEOUT", "文件分析逾時，請縮減檔案或稍後重試。", 503) from None
-                except ValidationError:
-                    raise ApiError("INVALID_PROVIDER_RESPONSE", "分析服務回傳格式不正確，請稍後重試。", 503) from None
-                except Exception as error:
-                    raise _public_provider_error(error) from None
+                snapshot = copy.deepcopy(item)
+                snapshot_doc = copy.deepcopy(doc)
+            # OCR owns its own bounded provider lock. Releasing the case lock
+            # allows cancellation and edits without letting late results win.
+            try:
+                from .ocr.analyzer import analyze_document
+                raw = await asyncio.wait_for(run_in_threadpool(analyze_document, data, filename, content_type, snapshot_doc), timeout=90)
+                result = Analysis.model_validate(raw).model_dump()
+                if result["is_simulated"] or result["document_id"] != document_id:
+                    raise ApiError("INVALID_PROVIDER_RESPONSE", "分析服務回傳資料未通過查核。", 503)
+            except ApiError:
+                raise
+            except ImportError:
+                raise ApiError("OCR_UNAVAILABLE", "OCR 服務尚未可用，請稍後重試。", 503) from None
+            except TimeoutError:
+                raise ApiError("OCR_TIMEOUT", "文件分析逾時，請縮減檔案或稍後重試。", 503) from None
+            except ValidationError:
+                raise ApiError("INVALID_PROVIDER_RESPONSE", "分析服務回傳格式不正確，請稍後重試。", 503) from None
+            except Exception as error:
+                raise _public_provider_error(error) from None
+            async with lock_for(case_id):
+                item = read_case(case_id, request)
+                doc = find_document(item, document_id)
+                if (any(item[field] != snapshot[field] for field in ("claim_type_id", "conditions", "details"))
+                        or doc != snapshot_doc):
+                    raise ApiError("ANALYSIS_CASE_CHANGED", "分析期間案件或文件已變更，請依最新內容重新分析。", 409)
                 doc["analysis"] = result
-                doc["file"] = {"name": filename, "type": content_type, "size": len(data)}
+                doc["file"] = {"name": filename, "type": content_type, "size": len(data), "sha256": hashlib.sha256(data).hexdigest()}
                 doc["confirmed_findings"] = []
                 doc["status"] = "needs_attention" if result["findings"] or result["requires_human_review"] or result["analysis_status"] == "uncertain" or result["confidence"] < 0.8 else "precheck_passed"
                 return save_case(item, request)
