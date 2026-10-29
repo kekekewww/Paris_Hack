@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "paris-claim-demo",
+  "account_id": "d57bbca4c9dc2b423b71f17a4ff3e174",
+  "main": "cloudflare/worker.js",
+  "compatibility_date": "2026-10-29",
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": {"enabled": false},
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "containers": [{
+    "class_name": "ClaimBackend",
+    "scheduling_policy": "durable_object",
+    "images": {"base": {"dockerfile": "./Dockerfile"}}
+  }],
+  "durable_objects": {"bindings": [
+    {"name": "CLAIM_BACKEND", "class_name": "ClaimBackend"},
+    {"name": "CASE_STORAGE", "class_name": "ClaimStore"}
+  ]},
+  "migrations": [{"tag": "v1", "new_sqlite_classes": ["ClaimBackend", "ClaimStore"]}]
+}

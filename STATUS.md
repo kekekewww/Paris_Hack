@@ -3,7 +3,7 @@
 更新：2026-10-30（臺灣）。**Cloudflare固定雲端與Runtime金鑰部署驗收通過。**
 
 - current_phase：Phase 3／固定雲端展示 DONE。
-- current_task：DEPLOY-20261029 DONE；部署產品提交fab6d94已推送GitHub main並核對遠端SHA一致，後續交付提交僅更新文件。
+- current_task：DEPLOY-20261029 DONE；部署產品fab6d94及交付文件已推送GitHub main，最後補入相同已驗wrangler.jsonc配置；最終版本以main HEAD為準。
 - last_completed_task：真模型三尺寸、真OCR、雲端容器停止／冷啟後持久案件與最終HTTP45驗收。
 - last_successful_test：全後端1045／Node225、三尺寸Mock87、受控Runtime key browser12、雲端HTTP83／4真分析、三尺寸16則真助手回覆／134.367秒、終驗HTTP45；232映像檔hash一致。冷啟停止194.7秒後觀察新boot、正確映像、原案一致及刪404。
 - public_url：https://paris-claim-demo.kevinyaungputra.workers.dev
