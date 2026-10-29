@@ -41,6 +41,7 @@ class OpenAICompatibleSettings:
     model: str
     base_url: str = DEFAULT_BASE_URL
     timeout_seconds: float | None = None
+    request_scoped: bool = False
 
     def __post_init__(self):
         if not isinstance(self.api_key, str) or not self.api_key.strip() or not isinstance(self.model, str) or not self.model.strip():
@@ -84,6 +85,13 @@ class OpenAICompatibleSettings:
 
     @classmethod
     def from_environment(cls):
+        from ..runtime_keys import current_runtime_settings, runtime_llm_keys_enabled
+
+        if runtime_llm_keys_enabled():
+            settings = current_runtime_settings()
+            if settings is None:
+                raise AIError("KEY_REQUIRED", "請先設定本次示範用的 OpenRouter 金鑰，再使用 AI 對話。", 401)
+            return settings
         # Deliberately does not reuse OPENAI_API_KEY or inspect .env files.
         timeout = os.getenv("LLM_TIMEOUT_SECONDS")
         try:
@@ -145,8 +153,10 @@ class OpenAICompatibleProvider:
         self.settings = settings
         self.retriever = retriever or OfficialRetriever()
         self.transport = transport
-        verification_snapshot(settings)
-        self._verification_epoch = _verification_epoch
+        self._track_verification = not settings.request_scoped
+        if self._track_verification:
+            verification_snapshot(settings)
+        self._verification_epoch = _verification_epoch if self._track_verification else None
 
     @staticmethod
     def _invalid():
@@ -238,7 +248,7 @@ class OpenAICompatibleProvider:
 
     def _finish(self, answer: dict, metadata) -> dict:
         validated = validate_assistant_response(answer, self.retriever)
-        if (metadata is not None and self.transport is None
+        if (self._track_verification and metadata is not None and self.transport is None
                 and self._verification_epoch is _verification_epoch
                 and _settings_fingerprint(self.settings) == _verification_fingerprint):
             global _verified_metadata

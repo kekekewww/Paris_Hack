@@ -6,9 +6,15 @@ import os
 from .providers import AIError, GroundedRulesProvider, UnavailableLLMProvider, validate_assistant_response
 from .openai_compatible import OpenAICompatibleProvider, OpenAICompatibleSettings, verification_snapshot
 from .retrieval import OfficialRetriever
+from ..runtime_keys import current_runtime_settings, runtime_llm_keys_enabled
 
 
 def provider_status() -> dict:
+    if runtime_llm_keys_enabled():
+        # Runtime keys have no cross-request verification history. Observing
+        # one must not reset or replace the server configuration's evidence.
+        return {"llm_provider": "openai_compatible", "llm_configured": current_runtime_settings() is not None,
+                "llm_verified": False}
     mode = os.getenv("LLM_PROVIDER", "grounded_rules").strip().lower()
     if mode in ("", "grounded_rules"):
         verification_snapshot(None)

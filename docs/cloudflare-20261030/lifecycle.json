@@ -1,0 +1,14 @@
+{
+  "mode": "finish",
+  "passed": true,
+  "failure": null,
+  "stage": "status HTTP",
+  "idle_seconds": 194.7,
+  "status_http": 200,
+  "stopped_observed": true,
+  "case_preserved": true,
+  "restart_observed": true,
+  "boot_changed": true,
+  "image_matches": true,
+  "deleted_then_404": true
+}

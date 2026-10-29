@@ -1,5 +1,7 @@
 # 開發任務
 
+最新部署（2026-10-30）：DEPLOY-20261029 DONE。Cloudflare沿用Workers Paid，固定網址、Runtime key、獨立SQLite DO及Container真API／OCR／模型通過。後端1045／Node225、Mock87／runtime key browser12、雲端HTTP83＋最終45、真助手三尺寸16則、232映像hash及實際冷啟保存通過。[本次完整驗收](docs/cloudflare-20261030/ACCEPTANCE.md)。下方舊日期與數字均保留為歷史。
+
 最新實作（2026-10-26）：FIX-20261026-A至C／SCOPE-20261026全部DONE。後端878／前端126／最終Mock87／指定真模型3／Docker230hash及31HTTP通過；真API／OCR與差異分輪紀錄見[完整驗收](docs/feedback-20261026/ACCEPTANCE.md)。
 
 最新分析（2026-10-26）：REVIEW-20261026 DONE，完整閱讀組員13頁報告並對照程式與離線記憶體探查。[原因與修改提案](docs/TEAM_REVIEW_20261026.md)已保存；該分析階段未實作；使用者其後已核准，實作狀態依上方及任務列更新。下方原功能通過紀錄均維持歷史日期。
@@ -12,6 +14,7 @@
 
 | ID | 階段 | 工作 | 優先 | 狀態 | 相依 | 驗收條件 | 驗證證據／外部依賴 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| DEPLOY-20261029 | 3 | 完整Cloudflare雲端部署及網址帶入展示金鑰 | P0 | DONE | 使用者要求部署，已核對既有Workers Paid | 電腦關機仍可用；真API／模型／OCR及持久案件；key不入程式碼、DB或日誌；固定雲端網址與驗收 | Workers Static Assets＋native Container＋SQLite DO；後端1045／Node225、Mock87／key browser12、真HTTP83＋終驗45、三尺寸真助手16則、4次真分析、232hash、停止及冷啟後保留；[固定網址與完整證據](docs/cloudflare-20261030/ACCEPTANCE.md) |
 | GH-20261026 | 3 | 將最終版上傳指定GitHub儲存庫 | P0 | DONE | 使用者指定kekekewww/Paris_Hack | 金鑰／本機資料不入Git，測試通過，遠端main與本機提交一致 | 最終產品基準7f19bd6已推送main並核對SHA；上傳前後端878／前端126通過，18提交／525 blobs歷史稽核無真憑證或案件資料；[儲存庫](https://github.com/kekekewww/Paris_Hack) |
 | REVIEW-20261026 | 3 | 組員測試問題分析與修正方案 | P0 | DONE | 使用者提供PDF、現有程式 | 逐頁檢查、區分根因／待重現／新增範圍、提出驗收與順序、等候指令 | 13頁文字與截圖、只讀程式、純記憶體探查、官方a314查核；零模型／OCR／部署；[分析](docs/TEAM_REVIEW_20261026.md) |
 | FIX-20261026-A | 2／3 | 對話短答、必要追問、工作區更正與人工備妥閉環 | P0 | DONE | 使用者完整核准、既有模型 | 確認前不變、確認後條件／清單／摘要／進度一致；否定與取消可恢復 | 後端878／前端126、最終三尺寸Mock87／真模型3、真API30及最後差異3／9／3、Docker230hash／31HTTP及不變來源19真OCR均通過；[分輪證據與限制](docs/feedback-20261026/ACCEPTANCE.md) |

@@ -1,0 +1,66 @@
+{
+  "date_taiwan": "2026-10-30",
+  "public_url": "https://paris-claim-demo.kevinyaungputra.workers.dev",
+  "worker_version": "95fbf09b-4c2d-40d5-8909-2b18b3fd1942",
+  "image_digest": "sha256:da0d6c05a195b179e0a6a6170eaaf4792aa9579be0742c5b5106880396761b00",
+  "backend": {
+    "passed": 1045,
+    "failures": 0,
+    "existing_warnings": 1
+  },
+  "node": {
+    "passed": 225,
+    "failures": 0
+  },
+  "mock_browser": {
+    "passed": 87,
+    "viewports": [
+      1440,
+      768,
+      390
+    ]
+  },
+  "runtime_key_browser": {
+    "passed": 12,
+    "viewports": [
+      1440,
+      768,
+      390
+    ],
+    "transport": "controlled; not real provider"
+  },
+  "cloud_http": {
+    "passed": 83,
+    "real_analysis_requests": 4,
+    "upload_bytes": 5945747
+  },
+  "live_browser": {
+    "passed_dimensions": 3,
+    "validated_assistant_responses": 16,
+    "document_answers": 1,
+    "response_metadata_observed": false,
+    "cost_within_guarded_maximum": true
+  },
+  "image_matching_files": 232,
+  "initial_live_failures": [
+    {
+      "passed": false,
+      "verification_code": "DOCUMENT_ANSWER_EVIDENCE_INVALID",
+      "failure_codes": [
+        "DOCUMENT_ANSWER_EVIDENCE_INVALID",
+        "KEY_USAGE_PROOF_INVALID"
+      ],
+      "latency_ms": 60314,
+      "dimensions_completed_count": 1,
+      "model_responses_count": 6
+    }
+  ],
+  "other_failures": [
+    "Initial default container scheduling rejected by existing account; migrated to native durable_object policy.",
+    "Initial real case creation HTTP422: official medical-authorization flag collided with credential suffix guard; precise enum exception and full-contract regressions passed.",
+    "First Mock run had no configured installed browser; stopped, selected installed Chrome and all87 passed.",
+    "First live harness expected old full evidence paragraph; changed to independently checked reviewed nine-field answer, official page and legal limits. Initial zero usage delta retained without claiming its cause.",
+    "Initial lifecycle begin assertion had no stage marker; failure retained, later added stage/cleanup guards. Cannot confirm whether an anonymous empty synthetic fixture was created; any such fixture has24h TTL."
+  ],
+  "all_required_deployment_gates_passed": true
+}

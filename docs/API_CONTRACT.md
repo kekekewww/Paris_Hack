@@ -1,12 +1,38 @@
 # 理賠準備服務 API 契約 v1
 
-> 更新：2026-10-26。模型為 `deepseek/deepseek-v4.1-flash-1017`，固定 DeepSeek 官方供應商。語意請求包含必要當前訊息、有限歷史與已驗證的最小案件摘要／對話草稿；原始上傳檔與 OCR 不送。最新驗收狀態見 [組員回饋驗收](feedback-20261026/ACCEPTANCE.md) 與 [STATUS](../STATUS.md)；[前輪模型驗收](DEEPSEEK_SETUP.md) 與 free 路由結果保留為歷史。
+> 更新：2026-10-30，新增可選Runtime金鑰與HTTPCaseStore契約；雲端實測狀態另見[部署紀錄](CLOUDFLARE_DEPLOYMENT.md)。模型為 `deepseek/deepseek-v4.1-flash-1017`，固定 DeepSeek 官方供應商。語意請求包含必要當前訊息、有限歷史與已驗證的最小案件摘要／對話草稿；原始上傳檔與 OCR 不送。既有功能驗收見 [組員回饋驗收](feedback-20261026/ACCEPTANCE.md) 與 [STATUS](../STATUS.md)；[前輪模型驗收](DEEPSEEK_SETUP.md) 與 free 路由結果保留為歷史。
+
+Cloudflare私有維運另提供`GET /__internal/backend`，只接受部署內部Bearer憑證，無query／無憑證404，回傳`{running:boolean,boot_id:UUID|null,image_matches:boolean}`且no-store。此端點不啟動、停止或執行容器命令，不屬於前端服務契約；請求本身仍算DO活動。`/__internal/cases`則僅用於已驗證的後端儲存協定，皆不得使用模型key作內部憑證。
 
 本契約自 Phase 1 起固定前端與後端的資料語意。前端僅呼叫 `src/services/index.js` 匯出的服務；`MockClaimService` 與 `ApiClaimService` 使用相同的方法及回傳資料形狀。官方規則與下載網址來自 `data/official-sources.json`，不是由 UI 或 AI 自行拼接。
 
 外部文件問答內部請求只包含本次必要遮罩query與公開官方證據，不帶對話歷史或使用者文件內容。模型只能挑證據ID，由後端根據已查核證據產生受控的切題回答／適用條件與引用；資料不足明示未知，不改官方需求。2026-10-26新增案件摘要、提案及分析定位欄位，定義如下。
 
 ## 服務選擇與展示邊界
+
+### 可選 Runtime 金鑰模式
+
+`RUNTIME_LLM_KEYS=true` 才啟用；未設定或false保留原本後端環境金鑰模式。前端可從入口 `?key=<短期OpenRouter金鑰>` 擷取一次、移除參數，僅於分頁記憶體保留；重整即失效。重複參數、格式錯誤或無法清除網址時拒絕使用。不得將金鑰存入案件、cookie、localStorage／sessionStorage或產物，也不放在API query／JSON。初始URL仍可能保留於上游請求、瀏覽器診斷與Navigation Timing，不能宣稱已全面抹除；不外送這些資料至分析／RUM。
+
+API只在以下請求接收單一 `X-OpenRouter-Key` 標頭，格式為 `sk-or-v1-` 加64位小寫hex；不得在文件或測試報告填真值：
+
+| Method | 路徑 | Runtime 行為 |
+| --- | --- | --- |
+| GET | `/api/v1/health` | 可不帶key；合法key時本次 `llm_configured=true`，無key時false；格式錯誤422 |
+| POST | `/api/v1/cases/{id}/messages` | 必須合法key；缺少401，重複／格式錯誤422 |
+| POST | `/api/v1/cases/{id}/message-jobs` | 同上；背景工作綁定本次key，完成／失敗／取消後釋放 |
+
+前端只將標頭送到同源及符合白名單的最終URL，拒絕轉址；工作輪詢、案件CRUD、來源、清單與分析請求不帶模型key。Cloudflare gateway另外拒絕API query中的 `key`。後端Runtime模式不回退 `LLM_API_KEY`，固定官方OpenRouter、`deepseek/deepseek-v4.1-flash-1017`與300秒，原模型、費用、來源及語意驗證保持。缺key不影響非對話功能。
+
+Runtime模式 `llm_provider='openai_compatible'`，health的 `llm_verified` 一律false：此模式不保留或共用跨請求的模型成功紀錄，須由當次真對話結果判斷。下方關於 `llm_verified=true` 的歷史成功定義只適用原本環境金鑰模式。Health不會呼叫模型。
+
+### 可選 HTTPCaseStore
+
+沒有 `CASE_STORE_URL`／`CASE_STORE_TOKEN` 時維持本機SQLite。任一設定非空就選遠端，兩者須同時有效，錯誤配置回啟動失敗 `INVALID_CASE_STORE_CONFIG`，不靜默換成本機庫。遠端僅接受自己的HTTPS `*.workers.dev/__internal/cases`（443、無帳密／query／fragment），獨立內部token僅由後端以Bearer標頭送出，不是使用者模型key。Worker內部端點不是公開前端API；無有效內部憑證回404。
+
+遠端協定為單一POST JSON `{op, owner_hash?, id?, case?, expected_revision?}`，操作為 `cleanup/create/get/save/delete`，成功回 `{result}`。只傳owner的SHA256摘要與結構化案件；原cookie、模型key、原檔與抽取全文不傳入儲存。既有公開API與owner語意不變。SQLite Durable Object在每次操作及排程alarm清理建立後24小時到期案，每owner最多20案；save的 `expected_revision` 為本次新revision減1，不符回 `409 CASE_CONFLICT`，不覆寫較新資料。內部legacy案件僅在雙方皆缺revision時允許相容保存，網站新案件使用revision0並逐次遞增。
+
+HTTP adapter單次10秒、不重試、不跟隨轉址、不採用環境代理；不可用或非預期回應只回已遮罩的503 `CASE_STORE_UNAVAILABLE`，不洩漏token／上游原文。單一內部命令最多1MiB，過大回413 `PAYLOAD_TOO_LARGE`。案件持久性獨立於Container，但工作狀態仍在Container記憶體；休眠／重啟會清除未完成工作，不自動重送。TTL／刪除不代表Cloudflare備份已立即物理抹除。
 
 ### 2026-10-26 案件流程擴充
 
@@ -89,7 +115,7 @@ type MessageJob =
 
 真實後端會以 `claim_session` 的 HttpOnly、SameSite=Strict cookie 識別匿名 owner；adapter 使用同源 cookie，不在 JSON 或 JavaScript 暴露 token。HTTPS 須配置 Secure cookie。不同 owner、已刪除或到期案件均回 `404 CASE_NOT_FOUND`。案件自建立起固定保留 24 小時，每 owner 最多 20 件，每案最多 100 回成功對話。API 回應 `Cache-Control: no-store`；跨來源需符合明確 allowlist，不能只更改前端 `baseUrl` 連外。
 
-真實health的 `llm_configured` 只代表外部模式必填設定齊備，health本身不發送模型請求。OpenRouter只在本程序、同配置使用真實預設transport，且實際模型、費用、token一致性及當次cap（語意4096／證據1800）、`finish_reason=stop`、語意／事實引文或官方證據、最終回覆與引用全部驗證後，`llm_verified` 才為true。free費用必須恰0；指定DeepSeek付費profile只接受原1017或官方canonical 20261017完整model ID，cost有限且在0–US$0.05間，並固定DeepSeek供應商及單價cap。[模型設定](DEEPSEEK_SETUP.md)。重啟、停用或觀察到配置變更會清除，不靠旗標或離線fixture設true；它表示同程序歷史真成功，不保證即時容量。其他未實測的相容服務保持未驗證。預設grounded_rules不是生成式模型，兩旗標皆false，每則仍依provider／is_simulated標示。
+原本環境金鑰模式health的 `llm_configured` 只代表外部模式必填設定齊備，health本身不發送模型請求。OpenRouter只在本程序、同配置使用真實預設transport，且實際模型、費用、token一致性及當次cap（語意4096／證據1800）、`finish_reason=stop`、語意／事實引文或官方證據、最終回覆與引用全部驗證後，`llm_verified` 才為true。free費用必須恰0；指定DeepSeek付費profile只接受原1017或官方canonical 20261017完整model ID，cost有限且在0–US$0.05間，並固定DeepSeek供應商及單價cap。[模型設定](DEEPSEEK_SETUP.md)。重啟、停用或觀察到配置變更會清除，不靠旗標或離線fixture設true；它表示同程序歷史真成功，不保證即時容量。其他未實測的相容服務保持未驗證。預設grounded_rules不是生成式模型，兩旗標皆false，每則仍依provider／is_simulated標示。
 
 ## 案件與條件
 
@@ -271,6 +297,11 @@ type Analysis = {
 
 | HTTP | code | 情況 |
 | --- | --- | --- |
+| 401 | `KEY_REQUIRED` | Runtime模式對話建立請求缺本次金鑰；不回退伺服器key |
+| 422 | `KEY_INVALID` | Runtime health／對話金鑰重複或格式錯誤；Cloudflare API query含key亦拒絕 |
+| 409 | `CASE_CONFLICT` | 遠端案件儲存revision與expected_revision不符，須重新載入 |
+| 413 | `PAYLOAD_TOO_LARGE` | 遠端內部案件命令超過1MiB |
+| 503 | `INVALID_CASE_STORE_CONFIG` / `CASE_STORE_UNAVAILABLE` | 遠端設定不合法會啟動失敗；遠端傳輸或非預期回應回固定錯誤 |
 | 404 | `CASE_NOT_FOUND` / `DOCUMENT_NOT_FOUND` / `SOURCE_NOT_FOUND` | 查無案件、文件、來源 |
 | 422 | `VALIDATION_ERROR` | 無效類別、條件、情境或訊息 |
 | 422 | `INVALID_DOCUMENT_STATUS` / `REQUIRED_DOCUMENT` / `INVALID_FINDING` | 不允許的手動狀態或不存在的疑點 |

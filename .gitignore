@@ -20,6 +20,10 @@ test-results-message-wait/
 !.env.example
 !.env.production.example
 .local/
+.vercel/
+.wrangler/
+.dev.vars
+.dev.vars.*
 public/pdfjs/
 *.sqlite*
 *.db

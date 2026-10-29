@@ -1,5 +1,7 @@
 # 理賠文件準備助手
 
+> 已完成 [Cloudflare 展示網站](https://paris-claim-demo.kevinyaungputra.workers.dev) 部署，沿用既有Workers Paid，電腦關機仍可使用。後端1045／Node225、Mock87、真HTTP83＋終驗45、三尺寸真助手16則回覆、真OCR與容器冷啟保存均通過。[驗收報告](docs/cloudflare-20261030/ACCEPTANCE.md)／[部署及金鑰連結格式](docs/CLOUDFLARE_DEPLOYMENT.md)。下方Quick Tunnel與舊數字保留為歷史。
+
 > 2026-10-26 組員回饋完整修改已完成並通過驗收：後端878／前端126、三尺寸Mock87／真模型3、真API與OCR及Docker終驗通過。[變更與證據](docs/feedback-20261026/ACCEPTANCE.md)。
 
 > 最新依使用者授權改用DeepSeek V4.1 Flash 1017及新key，固定官方供應商，300秒等待與文件規則保持。[目前設定與真實驗證](docs/DEEPSEEK_SETUP.md)／[續作狀態](STATUS.md)。舊free的成功、限流與INVALID均保留為歷史證據，不當作新程序驗收。
@@ -15,7 +17,7 @@
 | 模式 | 對話 | 文件檢查 | 保存方式 |
 | --- | --- | --- | --- |
 | `?service=mock` | 固定展示邏輯，有模擬標示 | 完整／缺漏／模糊的指定情境 | 分頁 sessionStorage；不存原檔 |
-| `?service=api` | 展示服務已設定指定 DeepSeek；提供真語意對話與官方證據問答，語意4096／證據1800。未配置金鑰的本機預設grounded_rules | PDF文字擷取／本機RapidOCR；品質不足先提示重傳 | SQLite結構化結果；不持久保存原檔或抽取全文 |
+| `?service=api` | 已配置外部模型時提供真語意對話與官方證據問答，語意4096／證據1800。未配置金鑰的本機預設grounded_rules；runtime模式須由本次分頁提供key | PDF文字擷取／本機RapidOCR；品質不足先提示重傳 | 預設SQLite；Cloudflare模式為獨立SQLite Durable Object。皆只存結構化結果，不持久保存原檔或抽取全文 |
 
 `grounded_rules` **不是生成式LLM**。明確設定 `openai_compatible`、官方OpenRouter端點及指定DeepSeek模型後，模型理解引導與一般補充的描述，伺服器依經驗證的事實管理追問；文件問答由模型選證據、伺服器核對後組成切題回答。安全、資格與金額等限制仍由規則處理，每則訊息依實際來源標示。原free設定可選且保留零費用護欄。
 
@@ -25,7 +27,7 @@
 
 模型擷取有原文支持的事實及案件資訊，伺服器管理逐題追問與官方文件規則。引導先釐清cause／surgery／payment，未知可略過，再由使用者獨立選型建立；工作區更正顯示差異，明確確認後才套用，過期提案拒絕。人工備妥與OCR結果分開；原檔可在同分頁受限記憶體恢復，重整後重選。外部失敗明確報錯，不自動重試／換模型或假回退。OpenAI／Gemini仍暫緩。
 
-目前展示：[理賠準備助手](https://worm-flying-speeches-tales.trycloudflare.com/?service=api)。模型最多300秒，後端310秒、網頁整體330秒，以背景工作查詢結果；一般請求15秒。正式dist與Docker均以API為預設，Mock仍可透過明確query使用。這是臨時Quick Tunnel，需保持電腦與服務執行；新網址不會繼承舊網址的瀏覽器工作階段。
+先前展示：[Quick Tunnel 理賠準備助手](https://worm-flying-speeches-tales.trycloudflare.com/?service=api)。模型最多300秒，後端310秒、網頁整體330秒，以背景工作查詢結果；一般請求15秒。正式dist與Docker均以API為預設，Mock仍可透過明確query使用。這是歷史臨時網址，需保持電腦與服務執行，不能視為目前雲端部署成功；新網址不會繼承舊網址的瀏覽器工作階段。
 
 ## 歷史驗收
 
@@ -39,7 +41,7 @@
 
 預算修正後AI離線400項、完整後端477項通過（1項既有Starlette警告、108.76秒），新映像7c6afbc9…建置成功並部署語意4096；前端58／Mock87及預算修正前471項結果保留。新程序公開live首輪200、真provider、非模擬及AI標示通過，第二輪限流，整次1項失敗（39.5秒），完整gate仍BLOCKED。另一次4096工作區真探測雖stop／cost0，仍因事實來源驗證被拒，沒有放寬防護。公開HTTP、verified、容器與最終gate以 [語意對話紀錄](docs/SEMANTIC_CONVERSATION.md) 為準。
 
-Health 的 `llm_configured` 只表示設定齊備；`llm_verified=true` 只表示同一程序、同一配置曾有通過驗證的真實請求，重啟或配置變更即失效。它不保證即時可用，也不表示目前這則回覆來自模型。前輪公開住院文件問答曾回 `503 / LLM_RATE_LIMITED`，不列為新的模型成功證據；前輪實測見 [OpenRouter 驗收紀錄](docs/OPENROUTER_ACCEPTANCE.md)。OpenAI／Gemini 是可選後續項目，不阻擋 MVP。
+原本環境金鑰模式的 Health `llm_configured` 只表示設定齊備；`llm_verified=true` 只表示同一程序、同一配置曾有通過驗證的真實請求，重啟或配置變更即失效。它不保證即時可用，也不表示目前這則回覆來自模型。前輪公開住院文件問答曾回 `503 / LLM_RATE_LIMITED`，不列為新的模型成功證據；前輪實測見 [OpenRouter 驗收紀錄](docs/OPENROUTER_ACCEPTANCE.md)。OpenAI／Gemini 是可選後續項目，不阻擋 MVP。
 
 Phase 1 證據見 [前端驗收報告](docs/PHASE1_ACCEPTANCE.md)；前輪 Phase 2／3 原型範圍的整合與交付驗收見 [OpenRouter 驗收紀錄](docs/OPENROUTER_ACCEPTANCE.md)。固定網域、常駐部署與商業級保險服務驗收不在本次 MVP 範圍。
 
@@ -84,11 +86,27 @@ macOS／Linux 對應命令為 `python3.12 -m venv .venv`、`.venv/bin/python -m 
 
 ## OpenRouter 模型
 
-OpenRouter目前依使用者新授權使用 `LLM_MODEL=deepseek/deepseek-v4.1-flash-1017`，以 `LLM_PROVIDER=openai_compatible` 與固定 `LLM_BASE_URL=https://openrouter.ai/api/v1` 啟用。付費profile只允許這個requested model及DeepSeek官方供應商，不自動改用其他模型；原 `openrouter/free` profile仍保留且要求零費用。新key只保存在後端私有 `.local/secrets/.env.openrouter`，啟動時明確映射至 canonical `LLM_API_KEY`；不在前端、Git、Docker build args或映像提供秘密值。[新設定與真實驗證](docs/DEEPSEEK_SETUP.md)
+OpenRouter目前依使用者新授權使用 `LLM_MODEL=deepseek/deepseek-v4.1-flash-1017`，以 `LLM_PROVIDER=openai_compatible` 與固定 `LLM_BASE_URL=https://openrouter.ai/api/v1` 啟用。付費profile只允許這個requested model及DeepSeek官方供應商，不自動改用其他模型；原 `openrouter/free` profile仍保留且要求零費用。本機環境金鑰模式的key只保存在後端私有 `.local/secrets/.env.openrouter`，啟動時明確映射至 canonical `LLM_API_KEY`；不在前端、Git、Docker build args或映像提供秘密值。[新設定與真實驗證](docs/DEEPSEEK_SETUP.md)
 
 `LLM_TIMEOUT_SECONDS=300`，OpenRouter預設及最高等待五分鐘；後端310秒、前端330秒。前端以背景工作與短請求查詢結果，避免展示隧道中斷長HTTP請求。[長等待說明](docs/LLM_WAIT.md)
 
 DeepSeek請求設定 `provider.only=["deepseek"]`、`require_parameters=true`、`allow_fallbacks=false`與 `reasoning.effort=low`。單價上限為每百萬token輸入US$0.30／輸出US$1.20，固定request／image費率上限0；回覆cost必須為有限數字且在0–US$0.05間，這是事後驗證而非退款或供應商硬停。新key的總額上限US$2及2026-11-19到期已由官方GET確認，未修改帳號。`max_completion_tokens` 維持語意4096／官方證據1800，來源、事實、正常完成與用量檢查不變。預設 `grounded_rules` 不需要金鑰；OpenAI／Gemini 尚未啟用或驗證。[LLM整合說明](docs/LLM_INTEGRATION.md)
+
+## 可選的 URL 金鑰與雲端案件保存
+
+未設定 `RUNTIME_LLM_KEYS` 或設為 `false` 時，後端沿用原本 `LLM_*` 設定及驗證紀錄。設定 `RUNTIME_LLM_KEYS=true` 才啟用使用者明確要求的短期 Demo 模式：以 `https://<展示網域>/?key=<短期OpenRouter金鑰>` 開啟，前端讀取一次後立即移除 `key` 參數；金鑰僅保留於本分頁記憶體，不寫入瀏覽器儲存、cookie、案件或建置產物。重新整理／重開分頁後須再次使用含金鑰的連結。請勿將實際連結提交 Git 或放入測試紀錄。
+
+前端只對同源 `GET /api/v1/health`、`POST /api/v1/cases/{id}/messages` 與 `POST /api/v1/cases/{id}/message-jobs` 加上 `X-OpenRouter-Key`。查詢工作、案件操作與 OCR 不帶模型key；轉址拒絕，不將標頭轉送外站。後端將金鑰隔離於當次請求／工作，固定使用已授權 DeepSeek 模型、原300秒與費用／來源防護，不回退伺服器的 `LLM_API_KEY`。未帶key送出對話回 `401 KEY_REQUIRED`，格式不合法回 `422 KEY_INVALID`；缺key仍可使用官方資料、案件及真實文件分析。
+
+Runtime 模式的 health 只依該次合法標頭回 `llm_configured`，無key為false；`llm_verified` 一律false，不共用其他訪客或先前工作的成功紀錄。這不是模型失敗，必須依實際對話結果驗證串接。原本環境金鑰模式仍使用同程序、同配置的歷史成功語意。
+
+URL金鑰是使用者接受的展示取捨。清除網址不能消除初始HTTP請求、上游紀錄、瀏覽器診斷或 Navigation Timing 的原始網址；`no-referrer`、CSP與`no-store`亦不能保證所有副本都抹除。此部署不加入分析／RUM；不可將完整URL、效能紀錄、標頭或網路trace外送至分析服務。只使用短期、限額key及合成資料。
+
+本機未設定 `CASE_STORE_URL`／`CASE_STORE_TOKEN` 時仍使用 `CASE_DB_PATH` 的SQLite。任一遠端設定有值就選 `HTTPCaseStore`，必須同時提供自己的HTTPS `*.workers.dev/__internal/cases` 及獨立內部憑證，設定不完整會啟動失敗，沒有退回容器暫存磁碟。內部憑證由Cloudflare Worker secret注入，不是模型key，不放URL或前端。
+
+上述三個可選變數須顯式傳入Python程序環境；Cloudflare配置會注入，現有Docker Compose未轉交，僅改根目錄`.env`不會啟用這三項功能。本機Python亦不自動讀取`.env`。
+
+Cloudflare配置以獨立SQLite Durable Object保存結構化案件，保持cookie owner隔離、建立後24小時TTL、每owner20案及revision版本比對（CAS），與Container休眠／重啟分離。刪除與TTL使案件不可存取，不代表平台備份立即物理抹除。Container仍只有一個實例與一個Uvicorn worker；未完成的對話工作存在其記憶體，容器重啟會失效，不自動重試付費請求。部署方式與實測結果由[Cloudflare部署紀錄](docs/CLOUDFLARE_DEPLOYMENT.md)追蹤。
 
 ## 檢查與測試
 
@@ -114,7 +132,7 @@ npm run test:api
 
 測試後關閉此終端機，避免測試環境變數影響日常展示。若要使用其他獨立服務，可用 `CLAIM_API_BASE_URL`、`CLAIM_API_SERVER_COMMAND`，並同步設定該服務正確的 origin；已有 8000 服務時 Playwright 會重用，不能假定測試設定已更改它的資料庫或配額。
 
-健康檢查可使用 `Invoke-RestMethod http://127.0.0.1:8000/api/v1/health`。成功只表示 API 存活，請同時核對 `service_mode`、`llm_provider`、`llm_configured`、`llm_verified` 與 `ocr_provider`，並以實際合成文件完成上傳檢查。`llm_verified` 只記錄同程序、同配置的過往真實成功；health不發送推論請求，也不保證供應商此刻可用。
+健康檢查可使用 `Invoke-RestMethod http://127.0.0.1:8000/api/v1/health`。成功只表示 API 存活，請同時核對 `service_mode`、`llm_provider`、`llm_configured`、`llm_verified` 與 `ocr_provider`，並以實際合成文件完成上傳檢查。環境金鑰模式的 `llm_verified` 記錄同程序、同配置的過往真實成功；Runtime模式一律false。Health不發送推論請求，也不保證供應商此刻可用。
 
 已啟動的本機API也可執行 `.venv/Scripts/python.exe scripts/smoke_api.py --include-ocr`。腳本只接受loopback網址，以合成PDF／PNG真正呼叫API、核對來源與隔離，最後刪除自己建立的案件。它使用既有後端設定；若已啟用OpenRouter，對話會使用該配置並可能產生費用或消耗免費配額，不自行切換模型。容器改用 `--base-url http://127.0.0.1:8001` 等實際本機埠。
 
@@ -126,6 +144,7 @@ npm run test:api
 
 Docker Compose 預設只將服務綁定到 `127.0.0.1:8000`，SQLite 使用具名 volume。建置／啟動與可選 Caddy HTTPS 步驟見 [部署說明](docs/DEPLOYMENT.md)；固定主機與自有網域的部署仍需相應主機、DNS 及授權。Quick Tunnel 臨時展示不需要自有網域。
 
+- [Cloudflare部署](docs/CLOUDFLARE_DEPLOYMENT.md)：雲端架構、URL金鑰與部署驗收狀態。
 - [API 契約](docs/API_CONTRACT.md)：方法、欄位、來源及錯誤語意。
 - [架構](docs/ARCHITECTURE.md)、[官方來源查核](docs/OFFICIAL_SOURCES.md)。
 - [本輪語意對話](docs/SEMANTIC_CONVERSATION.md)、[LLM 整合與驗證狀態](docs/LLM_INTEGRATION.md)、[OpenRouter 前輪驗收](docs/OPENROUTER_ACCEPTANCE.md)、[歷史助手追問修復](docs/ASSISTANT_FOLLOWUP.md)。

@@ -6,7 +6,9 @@ const invalidJob = () => { throw new ServiceError('INVALID_RESPONSE', '對話工
 
 /** HTTP implementation of the shared claim service contract. */
 export class ApiClaimService {
-  constructor({ baseUrl = '/api/v1', timeout = 15000, analysisTimeout = 95000, messageTimeout = 330000, messagePollInterval = 3000, fetchImpl = globalThis.fetch } = {}) {
+  #runtimeHeadersFor;
+
+  constructor({ baseUrl = '/api/v1', timeout = 15000, analysisTimeout = 95000, messageTimeout = 330000, messagePollInterval = 3000, fetchImpl = globalThis.fetch, runtimeHeadersFor = () => ({}) } = {}) {
     // Backslashes can be treated as URL separators by browsers. Keep document
     // uploads on a same-origin path, including when configuration is supplied.
     if (typeof baseUrl !== 'string' || !/^\/(?!\/)/.test(baseUrl) || /[\\?#\s]/.test(baseUrl)) {
@@ -15,6 +17,10 @@ export class ApiClaimService {
     if (typeof fetchImpl !== 'function') {
       throw new TypeError('API 服務需要可使用的 fetch。');
     }
+    if (typeof runtimeHeadersFor !== 'function') {
+      throw new TypeError('執行期金鑰標頭必須由函式提供。');
+    }
+    this.#runtimeHeadersFor = runtimeHeadersFor;
     if (!Number.isFinite(timeout) || timeout <= 0) {
       throw new TypeError('API 逾時時間必須大於零。');
     }
@@ -33,7 +39,8 @@ export class ApiClaimService {
 
   async request(path, { method = 'GET', json, formData, timeoutMs = this.timeout, expectedStatus } = {}) {
     const controller = new AbortController();
-    const headers = { Accept: 'application/json' };
+    const url = `${this.baseUrl}${path}`;
+    const headers = { ...this.#runtimeHeadersFor(url, method), Accept: 'application/json' };
     const options = {
       method,
       headers,
@@ -59,7 +66,7 @@ export class ApiClaimService {
         }, timeoutMs);
       });
       const request = async () => {
-        const response = await this.fetchImpl(`${this.baseUrl}${path}`, options);
+        const response = await this.fetchImpl(url, options);
         if (response.ok && expectedStatus !== undefined && response.status !== expectedStatus) {
           throw new ServiceError('INVALID_RESPONSE', '服務回傳了非預期的 HTTP 狀態，請稍後重試。', response.status);
         }

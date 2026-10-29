@@ -2,11 +2,13 @@ import {createClaimService} from './services/index.js';
 import {escape,types,statuses,isReady,shell,serviceInfo,guided,guidedChoices,selection,workspace,summary,uploadDialog,analysisResult,docCard,sortDocuments,filterDocuments,currentProposal,libraryPage,faqPage,sourceLink} from './components.js';
 import {FilePreviewCache,fingerprintFile,fileMatchesMetadata} from './file-cache.js';
 import {guidedConfirmationPayload} from './guided-confirmation.js';
+import {consumeRuntimeKey} from './runtime-key.js';
 
+const runtimeKey=consumeRuntimeKey(location,history);
 const params=new URLSearchParams(location.search);
 // 顯式設定，API失敗時不會轉成Mock。
 const mode=params.get('service')||import.meta.env.VITE_SERVICE_MODE||'mock';
-const service=createClaimService({mode});
+const service=createClaimService({mode,runtimeHeadersFor:runtimeKey.headersFor});
 const state={case:null,claimTypes:[],source:null,health:null,selected:null,directConditions:{},directDetails:{},guidedChoice:null,assistantOpen:false,editing:false,route:'triage',busy:false,documentFilter:'all',documentSearch:'',library:null,faq:null,libraryQuery:'',libraryCategory:'all',libraryError:null,faqError:null};
 const fileCache=new FilePreviewCache();
 const app=document.querySelector('#app');

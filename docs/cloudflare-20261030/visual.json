@@ -1,0 +1,20 @@
+[
+  {
+    "width": 1440,
+    "passed": true,
+    "page_errors": 0,
+    "cleanup": true
+  },
+  {
+    "width": 768,
+    "passed": true,
+    "page_errors": 0,
+    "cleanup": true
+  },
+  {
+    "width": 390,
+    "passed": true,
+    "page_errors": 0,
+    "cleanup": true
+  }
+]

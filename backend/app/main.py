@@ -28,6 +28,7 @@ from .message_jobs import MessageJobManager
 from .models import Analysis, AssistantResponse, Case, CaseDetails, DialogueState, Conditions, CreateCase, DocumentUpdate, MessageInput, UpdateCase
 from .registry import get_source, validate_official_url
 from .rules import build_checklist, get_claim_types
+from .runtime_keys import detached_runtime_operation, runtime_llm_request
 from .store import CaseStore
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -99,7 +100,11 @@ class RequestProtection:
 
         async def invoke(app_receive):
             try:
-                await self.app(scope, app_receive, secure_send)
+                with runtime_llm_request(scope):
+                    await self.app(scope, app_receive, secure_send)
+            except ApiError as error:
+                if not response_started:
+                    await reject(error.code, error.message, error.status)
             except Exception:
                 # 不讓含文件／供應商內容的例外文字進入 ASGI server 堆疊日誌。
                 if not response_started:
@@ -174,7 +179,11 @@ def create_app() -> FastAPI:
     mimetypes.add_type("text/javascript", ".mjs")
     mimetypes.add_type("application/wasm", ".wasm")
     db_path = Path(os.getenv("CASE_DB_PATH", str(ROOT / ".local" / "cases.sqlite3")))
-    store = CaseStore(db_path)
+    if os.getenv("CASE_STORE_URL") or os.getenv("CASE_STORE_TOKEN"):
+        from .remote_store import HTTPCaseStore
+        store = HTTPCaseStore.from_environment()
+    else:
+        store = CaseStore(db_path)
     message_jobs = MessageJobManager()
 
     @asynccontextmanager
@@ -211,7 +220,7 @@ def create_app() -> FastAPI:
 
     origins = {item.strip().rstrip("/") for item in os.getenv("ALLOWED_ORIGINS", "http://127.0.0.1:8000,http://localhost:8000,http://127.0.0.1:5174,http://localhost:5174").split(",") if item.strip()}
     app.add_middleware(CORSMiddleware, allow_origins=sorted(origins), allow_credentials=True,
-                       allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"], allow_headers=["Content-Type"])
+                       allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"], allow_headers=["Content-Type", "X-OpenRouter-Key"])
     app.add_middleware(RequestProtection, allowed_origins=origins,
                        limit=int(os.getenv("RATE_LIMIT_REQUESTS", "120")), secure_cookie=os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true")
 
@@ -444,7 +453,8 @@ def create_app() -> FastAPI:
         async with lock_for(case_id):
             snapshot = prepare_message(case_id, owner, data)
             # 舊相容端點也共用背景工作的容量，不能繞過全域長請求上限。
-            job = message_jobs.submit(case_id, owner, lambda: bounded_complete_message(snapshot, owner, data))
+            with detached_runtime_operation(lambda: bounded_complete_message(snapshot, owner, data)) as operation:
+                job = message_jobs.submit(case_id, owner, operation)
         return await message_jobs.wait_result(case_id, owner, job["id"])
 
     @app.post("/api/v1/cases/{case_id}/message-jobs", status_code=202)
@@ -452,7 +462,8 @@ def create_app() -> FastAPI:
         owner = request.state.owner
         async with lock_for(case_id):
             snapshot = prepare_message(case_id, owner, data)
-            return message_jobs.submit(case_id, owner, lambda: bounded_complete_message(snapshot, owner, data))
+            with detached_runtime_operation(lambda: bounded_complete_message(snapshot, owner, data)) as operation:
+                return message_jobs.submit(case_id, owner, operation)
 
     @app.get("/api/v1/cases/{case_id}/message-jobs/{job_id}")
     async def get_message_job(case_id: str, job_id: str, request: Request):

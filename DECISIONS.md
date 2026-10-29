@@ -85,3 +85,13 @@
 56. 使用者要求上傳最終程式碼至kekekewww/Paris_Hack，已核對該公開儲存庫為空且既有帳號有ADMIN權限。採Git推送至main，保留本機開發分支與提交紀錄，不覆蓋既有遠端歷史、不變更儲存庫可見性。憑證、案件DB、原始上傳檔、依賴目錄與建置產物維持排除，僅提供可自行配置的.env範本；上傳前先做可達歷史與最終樹安全檢查及必要測試。
 
 57. 上傳前重驗後端878／前端126通過；獨立只讀稽核18個可達commit、128 trees、525 blobs（14,204,160 bytes）與326唯一路徑，未發現真憑證、案件DB或上傳原檔，key樣式命中均為合成測試fixture。既有GitHub CLI認證透過Git credential helper使用，不讀出token值；最終產品7f19bd6已推送main，遠端HEAD／main SHA一致，GitHub工具另確認預設分支main及原公開設定。此後只補交付紀錄，不修改產品程式；沒有PR、正式部署或額外模型請求。
+
+## 2026-10-30
+
+58. 使用者要求固定雲端展示並明確接受限時／限額OpenRouter金鑰透過URL帶入，此授權是專案原「金鑰僅在伺服器」規則的Demo例外。採可選RUNTIME_LLM_KEYS，每分頁閉包保存、同步移除query，只在同源health及兩個訊息建立路由送標頭；後端ContextVar與背景工作隔離，不使用全域金鑰fallback，不寫案件或共用驗證紀錄。初始URL仍經瀏覽器／Cloudflare且Navigation Timing可能保留，禁止Analytics／RUM外送；不宣稱正式憑證保護。真值不入Git、產物或部署環境。
+
+59. 已核對Vercel與Cloudflare皆為指定email的既有認證；使用者其後選Cloudflare並詢問沿用方案，Dashboard與Wrangler確認既有Workers Paid，沒有開通訂閱。選Workers Static Assets＋原FastAPI Container＋獨立SQLite Durable Object，保留原生OCR與300秒背景工作，電腦不需持續開機。首次default scheduling真部署遭帳號拒絕，改固定Wrangler4.155.0與原生Durable Object Container API／durable_object排程；不使用不相容的SDK。固定具名路由為單容器、standard-1、180秒閒置，無平台max_instances硬上限；映像只於冷啟載入新版，不打斷活躍工作，不改其他網站或DNS。
+
+60. Container暫存磁碟不當持久案件庫，使用獨立ClaimStore DO並以另一個內部secret保護HTTPS儲存回呼，避免同一actor啟動死鎖。保留owner hash、24小時TTL／alarm、20案、CAS及只存結構化結果；平台備份不保證立即物理抹除。真雲端建立案422揭露authorization尾綴誤擋既有insurer_requested_medical_authorization，先取得Python6項RED／Worker完整條件RED，再只允許此欄位三個enum值；憑證及raw-file拒絕不放寬。新增三類真app遠端契約，最終全後端1045／Node211通過，雲端HTTP83項與4次真分析通過；完整真模型與持久性另依最終驗收結果結案。
+
+61. 最終雲端gate以實證通過：後端1045／Node225、三尺寸Mock87、受控key browser12、雲端真HTTP83／4分析及最後版本45、真助手三尺寸16則／134.367秒、232映像hash同源。初輪live只因舊全文證據斷言失敗，改以新版reviewed九欄位／法真實限制／唯一官方p1檢查，18個離線正負例與真流程通過；首輪用量差額0不推定原因，終輪唯讀總額有增加但非逐請求收據。管理CLI無法可靠顯示新版生命週期，補獨立內部憑證保護的唯讀status與boot label；停止所有後端流量194.7秒後實際觀察running=false，再讀案取得running=true／新boot／正確映像、原案一致並刪404。最後私有status只改Worker，後端／前端與真模型驗收同映像；終驗45項另驗此最後版本。舊失敗及早期未記階段的lifecycle assertion保留；可能未確認的匿名空白合成fixture依24hTTL清理，不宣稱全面清零。沒有共享模型key上雲、沒有開通訂閱、沒有變更其他站點。[完整驗收](docs/cloudflare-20261030/ACCEPTANCE.md)
