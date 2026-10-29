@@ -95,3 +95,5 @@
 60. Container暫存磁碟不當持久案件庫，使用獨立ClaimStore DO並以另一個內部secret保護HTTPS儲存回呼，避免同一actor啟動死鎖。保留owner hash、24小時TTL／alarm、20案、CAS及只存結構化結果；平台備份不保證立即物理抹除。真雲端建立案422揭露authorization尾綴誤擋既有insurer_requested_medical_authorization，先取得Python6項RED／Worker完整條件RED，再只允許此欄位三個enum值；憑證及raw-file拒絕不放寬。新增三類真app遠端契約，最終全後端1045／Node211通過，雲端HTTP83項與4次真分析通過；完整真模型與持久性另依最終驗收結果結案。
 
 61. 最終雲端gate以實證通過：後端1045／Node225、三尺寸Mock87、受控key browser12、雲端真HTTP83／4分析及最後版本45、真助手三尺寸16則／134.367秒、232映像hash同源。初輪live只因舊全文證據斷言失敗，改以新版reviewed九欄位／法真實限制／唯一官方p1檢查，18個離線正負例與真流程通過；首輪用量差額0不推定原因，終輪唯讀總額有增加但非逐請求收據。管理CLI無法可靠顯示新版生命週期，補獨立內部憑證保護的唯讀status與boot label；停止所有後端流量194.7秒後實際觀察running=false，再讀案取得running=true／新boot／正確映像、原案一致並刪404。最後私有status只改Worker，後端／前端與真模型驗收同映像；終驗45項另驗此最後版本。舊失敗及早期未記階段的lifecycle assertion保留；可能未確認的匿名空白合成fixture依24hTTL清理，不宣稱全面清零。沒有共享模型key上雲、沒有開通訂閱、沒有變更其他站點。[完整驗收](docs/cloudflare-20261030/ACCEPTANCE.md)
+
+62. 已將部署產品fab6d94推送使用者指定GitHub main，遠端SHA一致；後續僅補交付文件與精確金鑰措辭，不修改已驗產品、部署或重呼叫模型。最後獨立release覆核CLEAR；真key未存部署設定不代表執行時從未經過雲端，文件明確區分。

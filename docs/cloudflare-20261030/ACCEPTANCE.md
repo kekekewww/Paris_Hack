@@ -10,7 +10,7 @@
 
 最後Worker版本`95fbf09b-4c2d-40d5-8909-2b18b3fd1942`，Wrangler4.155.0、原生durable_object容器排程；映像`sha256:da0d6c05a195b179e0a6a6170eaaf4792aa9579be0742c5b5106880396761b00`。單一具名路由、standard-1、180秒閒置；沒有平台max_instances硬上限。新映像在下次冷啟採用，不強制打斷活躍工作。
 
-Runtime key只在當次分頁記憶體及必要同源標頭出現；後端依請求／工作隔離，缺key不使用伺服器fallback。文件需求仍來自官方規則，真實模型固定已授權DeepSeek／OpenRouter；300秒模型、310秒後端、330秒網頁與費用／來源／語意守門保留。health的verified刻意逐請求為false，不能用它代替本次模型結果。
+前端Runtime key只在當次分頁記憶體及必要同源標頭出現；後端依請求／工作隔離並送往OpenRouter，缺key不使用伺服器fallback。文件需求仍來自官方規則，真實模型固定已授權DeepSeek／OpenRouter；300秒模型、310秒後端、330秒網頁與費用／來源／語意守門保留。health的verified刻意逐請求為false，不能用它代替本次模型結果。
 
 ## 證據
 
